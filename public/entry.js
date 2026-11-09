@@ -1,34 +1,23 @@
-/* Online Sphere boot screen: finish the logo intro after exactly seven seconds, then route into the member app. */
+/* Online Sphere entry gate. The logo animation is visible for 7 seconds, then members land on the dashboard. */
 (() => {
   'use strict';
-
   const INTRO_DURATION_MS = 7000;
-  const startedAt = performance.now();
+  const bootStarted = performance.now();
   const status = document.getElementById('bootStatus');
 
-  function hasExistingSession() {
+  function hasSavedSession() {
     try {
-      // Keep compatibility with the current authentication page and dashboard.
-      return Boolean(
-        localStorage.getItem('onlineSphereToken') ||
-        sessionStorage.getItem('onlineSphereSession')
-      );
+      // localStorage token is supported for existing accounts; new auth also supports session tokens.
+      return Boolean(localStorage.getItem('onlineSphereToken') || sessionStorage.getItem('onlineSphereSession'));
     } catch (_) {
       return false;
     }
   }
 
-  const authenticated = hasExistingSession();
-  if (status) {
-    status.textContent = authenticated
-      ? 'Opening your dashboard…'
-      : 'Preparing secure account access…';
-  }
+  const authenticated = hasSavedSession();
+  if (status) status.textContent = authenticated ? 'Opening your dashboard…' : 'Preparing secure account access…';
 
-  const remaining = Math.max(0, INTRO_DURATION_MS - (performance.now() - startedAt));
   window.setTimeout(() => {
-    window.location.replace(
-      authenticated ? './public/dashboard.html' : './public/auth.html'
-    );
-  }, remaining);
+    window.location.replace(authenticated ? './public/dashboard.html' : './public/auth.html');
+  }, Math.max(0, INTRO_DURATION_MS - (performance.now() - bootStarted)));
 })();

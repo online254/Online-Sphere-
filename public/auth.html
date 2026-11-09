@@ -1,699 +1,91 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <meta
-        name="theme-color"
-        content="#07111f"
-    >
-
-    <title>Online Sphere | Account Access</title>
-
-    <link
-        rel="stylesheet"
-        href="style.css"
-    >
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07111f">
+  <title>Account access | Online Sphere</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{color-scheme:dark;--bg:#07111f;--panel:#101e31;--line:#ffffff1a;--text:#f4f7ff;--muted:#a7b5ca;--blue:#2563eb;--purple:#7c3aed}*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:22px;background:radial-gradient(ellipse at 10% 5%,#2563eb25,transparent 38%),radial-gradient(ellipse at 90% 95%,#7c3aed24,transparent 40%),var(--bg);color:var(--text);font:14px/1.6 'DM Sans',sans-serif}button,input{font:inherit}.card{width:min(100%,440px);padding:30px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(145deg,#122139,#0b1728);box-shadow:0 25px 80px #0005}.brand{display:flex;align-items:center;gap:11px;margin-bottom:25px;font:700 18px 'Space Grotesk',sans-serif}.mark{width:39px;height:39px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(135deg,var(--blue),var(--purple))}.brand b{color:#91aaff}.tabs{display:grid;grid-template-columns:1fr 1fr;padding:5px;border:1px solid var(--line);border-radius:13px;background:#050d18}.tabs button{padding:10px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-weight:700;cursor:pointer}.tabs button.active{background:linear-gradient(110deg,var(--blue),var(--purple));color:white}h1{font:700 27px 'Space Grotesk',sans-serif;margin:22px 0 4px}p{color:var(--muted);margin:0 0 20px}.field{margin:15px 0}.field label{display:block;margin-bottom:7px;font-size:12px;font-weight:700}.field input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:11px;background:#07111f;color:white;outline:none}.field input:focus{border-color:#638aff;box-shadow:0 0 0 3px #2563eb20}.submit{width:100%;padding:13px;border:0;border-radius:12px;background:linear-gradient(110deg,var(--blue),var(--purple));color:white;font-weight:700;cursor:pointer}.submit:disabled{opacity:.6;cursor:wait}.notice{display:none;margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:12px;overflow-wrap:anywhere}.notice.show{display:block}.notice.error{color:#ffb8b8;background:#e5484812}.notice.info{color:#c3d3ff;background:#2563eb16}.switch{margin:18px 0 0;text-align:center;font-size:12px}.switch button{border:0;background:none;color:#b1c3ff;font-weight:700;cursor:pointer}.security{margin-top:22px;padding-top:15px;border-top:1px solid var(--line);color:#8294a8;font-size:11px} [hidden]{display:none!important}@media(max-width:480px){.card{padding:23px 18px}}
+  </style>
 </head>
-
-<body class="auth-page">
-
-    <main class="auth-container">
-
-        <div class="auth-card">
-
-            <!-- LOGO -->
-
-            <a
-                href="index.html"
-                class="auth-logo"
-            >
-                <span class="brand-logo">
-                    OS
-                </span>
-
-                <span class="brand-text">
-                    <strong>ONLINE</strong>
-                    <span>SPHERE</span>
-                </span>
-            </a>
-
-
-            <!-- LOGIN -->
-
-            <section
-                class="auth-panel active"
-                id="loginPanel"
-            >
-
-                <span class="section-label">
-                    ACCOUNT ACCESS
-                </span>
-
-                <h1>
-                    Welcome back
-                </h1>
-
-                <p class="auth-description">
-                    Sign in to access your Online Sphere
-                    account.
-                </p>
-
-
-                <form id="loginForm">
-
-                    <div class="form-group">
-
-                        <label for="loginEmail">
-                            Email Address
-                        </label>
-
-                        <input
-                            id="loginEmail"
-                            type="email"
-                            placeholder="you@example.com"
-                            autocomplete="email"
-                            required
-                        >
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label for="loginPassword">
-                            Password
-                        </label>
-
-                        <input
-                            id="loginPassword"
-                            type="password"
-                            placeholder="Enter your password"
-                            autocomplete="current-password"
-                            required
-                        >
-
-                    </div>
-
-
-                    <button
-                        class="modal-primary auth-submit"
-                        type="submit"
-                    >
-                        Sign In
-                    </button>
-
-                </form>
-
-
-                <p class="auth-switch">
-                    Don't have an account?
-
-                    <button
-                        type="button"
-                        id="showRegister"
-                    >
-                        Create one
-                    </button>
-                </p>
-
-            </section>
-
-
-            <!-- REGISTER -->
-
-            <section
-                class="auth-panel"
-                id="registerPanel"
-            >
-
-                <span class="section-label">
-                    CREATE ACCOUNT
-                </span>
-
-                <h1>
-                    Join Online Sphere
-                </h1>
-
-                <p class="auth-description">
-                    Create your digital account in
-                    a few simple steps.
-                </p>
-
-
-                <form id="registerForm">
-
-                    <div class="form-group">
-
-                        <label for="registerName">
-                            Full Name
-                        </label>
-
-                        <input
-                            id="registerName"
-                            type="text"
-                            placeholder="Your full name"
-                            autocomplete="name"
-                            required
-                        >
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label for="registerEmail">
-                            Email Address
-                        </label>
-
-                        <input
-                            id="registerEmail"
-                            type="email"
-                            placeholder="you@example.com"
-                            autocomplete="email"
-                            required
-                        >
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label for="registerPhone">
-                            Phone Number
-                        </label>
-
-                        <input
-                            id="registerPhone"
-                            type="tel"
-                            placeholder="07XXXXXXXX"
-                            autocomplete="tel"
-                        >
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label for="registerPassword">
-                            Password
-                        </label>
-
-                        <input
-                            id="registerPassword"
-                            type="password"
-                            placeholder="At least 8 characters"
-                            minlength="8"
-                            autocomplete="new-password"
-                            required
-                        >
-
-                    </div>
-
-
-                    <button
-                        class="modal-primary auth-submit"
-                        type="submit"
-                    >
-                        Create Account
-                    </button>
-
-                </form>
-
-
-                <p class="auth-switch">
-                    Already have an account?
-
-                    <button
-                        type="button"
-                        id="showLogin"
-                    >
-                        Sign in
-                    </button>
-                </p>
-
-            </section>
-
-
-            <!-- SECURITY NOTICE -->
-
-            <div class="auth-security">
-
-                🔐 Your password is securely
-                processed by the server.
-
-            </div>
-
-        </div>
-
-    </main>
-
-
-    <!-- TOAST -->
-
-    <div class="toast">
-
-        <div class="toast-icon">
-            ✓
-        </div>
-
-        <div>
-
-            <strong>
-                Online Sphere
-            </strong>
-
-            <p>
-                Welcome.
-            </p>
-
-        </div>
-
-        <button
-            type="button"
-            aria-label="Close notification"
-        >
-            ×
-        </button>
-
-    </div>
-
-
+<body>
+  <main class="card">
+    <a class="brand" href="../index.html"><span class="mark">◎</span><span>ONLINE <b>SPHERE</b></span></a>
+    <div class="tabs" role="tablist" aria-label="Account access"><button id="loginTab" class="active" type="button" role="tab" aria-selected="true">Sign in</button><button id="registerTab" type="button" role="tab" aria-selected="false">Create account</button></div>
+    <h1 id="title">Welcome back</h1><p id="subtitle">Sign in to continue to your dashboard.</p>
+    <form id="authForm" novalidate>
+      <div class="field" id="nameField" hidden><label for="fullName">Full name</label><input id="fullName" autocomplete="name" minlength="2"></div>
+      <div class="field"><label for="email">Email address</label><input id="email" type="email" autocomplete="email" required></div>
+      <div class="field" id="phoneField" hidden><label for="phone">Phone number (optional)</label><input id="phone" type="tel" autocomplete="tel"></div>
+      <div class="field"><label for="password">Password</label><input id="password" type="password" minlength="8" autocomplete="current-password" required></div>
+      <button class="submit" id="submitButton" type="submit">Sign in</button>
+      <div class="notice" id="notice" role="status" aria-live="polite"></div>
+    </form>
+    <p class="switch" id="switchText">New to Online Sphere? <button id="switchButton" type="button">Create an account</button></p>
+    <div class="security">Protect your password and verification codes. Never share your M-Pesa PIN. On successful sign in, you’ll go straight to the member dashboard.</div>
+  </main>
 <script>
-
-/* =========================================================
-   ONLINE SPHERE AUTHENTICATION
-========================================================= */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-
-        const loginPanel =
-            document.getElementById(
-                "loginPanel"
-            );
-
-        const registerPanel =
-            document.getElementById(
-                "registerPanel"
-            );
-
-        const showRegister =
-            document.getElementById(
-                "showRegister"
-            );
-
-        const showLogin =
-            document.getElementById(
-                "showLogin"
-            );
-
-
-        /* -------------------------------------------------
-           PANEL SWITCHING
-        ------------------------------------------------- */
-
-        showRegister.addEventListener(
-            "click",
-            () => {
-
-                loginPanel.classList.remove(
-                    "active"
-                );
-
-                registerPanel.classList.add(
-                    "active"
-                );
-
-            }
-        );
-
-
-        showLogin.addEventListener(
-            "click",
-            () => {
-
-                registerPanel.classList.remove(
-                    "active"
-                );
-
-                loginPanel.classList.add(
-                    "active"
-                );
-
-            }
-        );
-
-
-        /* -------------------------------------------------
-           TOAST
-        ------------------------------------------------- */
-
-        const toast =
-            document.querySelector(
-                ".toast"
-            );
-
-        const toastTitle =
-            toast.querySelector(
-                "strong"
-            );
-
-        const toastMessage =
-            toast.querySelector(
-                "p"
-            );
-
-        const toastClose =
-            toast.querySelector(
-                "button"
-            );
-
-
-        let toastTimer;
-
-
-        function showToast(
-            title,
-            message,
-            warning = false
-        ) {
-
-            toastTitle.textContent =
-                title;
-
-            toastMessage.textContent =
-                message;
-
-            toast.classList.toggle(
-                "warning",
-                warning
-            );
-
-            toast.classList.add(
-                "show"
-            );
-
-            clearTimeout(
-                toastTimer
-            );
-
-            toastTimer =
-                setTimeout(
-                    () => {
-
-                        toast.classList.remove(
-                            "show"
-                        );
-
-                    },
-                    4000
-                );
-
-        }
-
-
-        toastClose.addEventListener(
-            "click",
-            () => {
-
-                toast.classList.remove(
-                    "show"
-                );
-
-            }
-        );
-
-
-        /* -------------------------------------------------
-           REGISTER
-        ------------------------------------------------- */
-
-        const registerForm =
-            document.getElementById(
-                "registerForm"
-            );
-
-
-        registerForm.addEventListener(
-            "submit",
-            async event => {
-
-                event.preventDefault();
-
-
-                const fullName =
-                    document.getElementById(
-                        "registerName"
-                    ).value.trim();
-
-
-                const email =
-                    document.getElementById(
-                        "registerEmail"
-                    ).value.trim();
-
-
-                const phone =
-                    document.getElementById(
-                        "registerPhone"
-                    ).value.trim();
-
-
-                const password =
-                    document.getElementById(
-                        "registerPassword"
-                    ).value;
-
-
-                const submitButton =
-                    registerForm.querySelector(
-                        "button[type='submit']"
-                    );
-
-
-                submitButton.disabled =
-                    true;
-
-                submitButton.textContent =
-                    "Creating...";
-
-
-                try {
-
-                    const response =
-                        await fetch(
-                            "/api/auth/register",
-                            {
-                                method: "POST",
-
-                                headers: {
-                                    "Content-Type":
-                                        "application/json"
-                                },
-
-                                body:
-                                    JSON.stringify({
-                                        fullName,
-                                        email,
-                                        phone,
-                                        password
-                                    })
-                            }
-                        );
-
-
-                    const data =
-                        await response.json();
-
-
-                    if (!response.ok) {
-
-                        throw new Error(
-                            data.message ||
-                            "Registration failed."
-                        );
-
-                    }
-
-
-                    localStorage.setItem(
-                        "onlineSphereToken",
-                        data.token
-                    );
-
-
-                    showToast(
-                        "Account Created",
-                        "Your Online Sphere account is ready."
-                    );
-
-
-                    setTimeout(
-                        () => {
-
-                            window.location.href =
-                                "index.html";
-
-                        },
-                        1200
-                    );
-
-
-                } catch (error) {
-
-                    showToast(
-                        "Registration Failed",
-                        error.message,
-                        true
-                    );
-
-                } finally {
-
-                    submitButton.disabled =
-                        false;
-
-                    submitButton.textContent =
-                        "Create Account";
-
-                }
-
-            }
-        );
-
-
-        /* -------------------------------------------------
-           LOGIN
-        ------------------------------------------------- */
-
-        const loginForm =
-            document.getElementById(
-                "loginForm"
-            );
-
-
-        loginForm.addEventListener(
-            "submit",
-            async event => {
-
-                event.preventDefault();
-
-
-                const email =
-                    document.getElementById(
-                        "loginEmail"
-                    ).value.trim();
-
-
-                const password =
-                    document.getElementById(
-                        "loginPassword"
-                    ).value;
-
-
-                const submitButton =
-                    loginForm.querySelector(
-                        "button[type='submit']"
-                    );
-
-
-                submitButton.disabled =
-                    true;
-
-                submitButton.textContent =
-                    "Signing in...";
-
-
-                try {
-
-                    const response =
-                        await fetch(
-                            "/api/auth/login",
-                            {
-                                method: "POST",
-
-                                headers: {
-                                    "Content-Type":
-                                        "application/json"
-                                },
-
-                                body:
-                                    JSON.stringify({
-                                        email,
-                                        password
-                                    })
-                            }
-                        );
-
-
-                    const data =
-                        await response.json();
-
-
-                    if (!response.ok) {
-
-                        throw new Error(
-                            data.message ||
-                            "Login failed."
-                        );
-
-                    }
-
-
-                    localStorage.setItem(
-                        "onlineSphereToken",
-                        data.token
-                    );
-
-
-                    showToast(
-                        "Login Successful",
-                        "Welcome back to Online Sphere."
-                    );
-
-
-                    setTimeout(
-                        () => {
-
-                            window.location.href =
-                                "index.html";
-
-                        },
-                        1000
-                    );
-
-
-                } catch (error) {
-
-                    showToast(
-                        "Login Failed",
-                        error.message,
-                        true
-                    );
-
-                } finally {
-
-                    submitButton.disabled =
-                        false;
-
-                    submitButton.textContent =
-                        "Sign In";
-
-                }
-
-            }
-        );
-
+(() => {
+  'use strict';
+  const API_BASE = String(window.ONLINE_SPHERE_API_URL || '').replace(/\/$/, '');
+  const form = document.getElementById('authForm');
+  const notice = document.getElementById('notice');
+  const button = document.getElementById('submitButton');
+  const password = document.getElementById('password');
+  let mode = new URLSearchParams(location.search).get('mode') === 'register' ? 'register' : 'login';
+  const setNotice = (message, kind = 'info') => { notice.textContent = message; notice.className = `notice show ${kind}`; };
+  const setMode = (next) => {
+    mode = next;
+    const registering = mode === 'register';
+    document.getElementById('loginTab').classList.toggle('active', !registering);
+    document.getElementById('registerTab').classList.toggle('active', registering);
+    document.getElementById('loginTab').setAttribute('aria-selected', String(!registering));
+    document.getElementById('registerTab').setAttribute('aria-selected', String(registering));
+    document.getElementById('nameField').hidden = !registering;
+    document.getElementById('phoneField').hidden = !registering;
+    document.getElementById('fullName').required = registering;
+    document.getElementById('title').textContent = registering ? 'Create your account' : 'Welcome back';
+    document.getElementById('subtitle').textContent = registering ? 'Create an account to start using Online Sphere.' : 'Sign in to continue to your dashboard.';
+    button.textContent = registering ? 'Create account' : 'Sign in';
+    password.autocomplete = registering ? 'new-password' : 'current-password';
+    document.getElementById('switchText').innerHTML = registering ? 'Already a member? <button id="switchButton" type="button">Sign in</button>' : 'New to Online Sphere? <button id="switchButton" type="button">Create an account</button>';
+    document.getElementById('switchButton').addEventListener('click', () => setMode(registering ? 'login' : 'register'));
+    notice.className = 'notice';
+  };
+  document.getElementById('loginTab').addEventListener('click', () => setMode('login'));
+  document.getElementById('registerTab').addEventListener('click', () => setMode('register'));
+  document.getElementById('switchButton').addEventListener('click', () => setMode(mode === 'login' ? 'register' : 'login'));
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    button.disabled = true;
+    button.textContent = mode === 'register' ? 'Creating account…' : 'Signing in…';
+    const body = { email: document.getElementById('email').value.trim(), password: password.value };
+    if (mode === 'register') {
+      body.fullName = document.getElementById('fullName').value.trim();
+      body.phone = document.getElementById('phone').value.trim();
+      const ref = new URLSearchParams(location.search).get('ref');
+      if (ref) body.ref = ref;
     }
-);
-
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/${mode === 'register' ? 'register' : 'login'}`, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, credentials: 'include', body: JSON.stringify(body) });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.message || 'Account access is currently unavailable. Please try again later.');
+      // Retain legacy token compatibility; new backends should use secure HttpOnly cookies.
+      if (result.token) { try { sessionStorage.setItem('onlineSphereSession', result.token); } catch (_) {} }
+      window.location.replace('dashboard.html');
+    } catch (error) {
+      setNotice(error.message, 'error');
+      button.disabled = false;
+      button.textContent = mode === 'register' ? 'Create account' : 'Sign in';
+    }
+  });
+  setMode(mode);
+})();
 </script>
-
 </body>
 </html>
