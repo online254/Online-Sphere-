@@ -1,77 +1,827 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#07111b">
-  <meta name="description" content="Your Online Sphere member dashboard. Explore services and manage your membership.">
-  <title>Dashboard | Online Sphere</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#071524" />
+  <title>Eagle Web Commerce Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
-    :root{color-scheme:dark;--bg:#07111b;--panel:#10202b;--panel2:#172a36;--line:#29404c;--text:#f2f6f7;--muted:#91a5b0;--gold:#ffc36a;--teal:#69ddc9;--sidebar:230px}
-    *{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-bottom:100px}body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font:13px/1.5 "DM Sans",sans-serif}button,input,select{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--teal);outline-offset:3px}.app{min-height:100vh}.sidebar{position:fixed;inset:0 auto 0 0;width:var(--sidebar);padding:24px 16px;background:#0b1720;border-right:1px solid var(--line);display:flex;flex-direction:column;z-index:20}.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 26px}.brand-logo{width:39px;height:39px;border-radius:12px;display:grid;place-items:center;color:#07111b;background:linear-gradient(145deg,#ffe09d,#d99438);font:800 21px Manrope,sans-serif}.brand strong{display:block;font:800 12px Manrope,sans-serif;letter-spacing:1px}.brand small{display:block;color:var(--muted);font-size:9px;letter-spacing:1px;margin-top:3px}.nav-label{padding:10px 11px 6px;color:#718792;font-size:9px;font-weight:800;letter-spacing:1.6px}.nav-btn{width:100%;display:flex;align-items:center;gap:11px;padding:11px;border:1px solid transparent;border-radius:10px;background:none;color:#b1c0c6;text-align:left;font-size:12px;margin:2px 0}.nav-btn:hover,.nav-btn.active{background:#18313a;color:var(--teal);border-color:#31545b}.nav-icon{width:20px;text-align:center;font-size:16px}.help{margin-top:auto;padding:14px;border:1px solid var(--line);border-radius:13px;background:var(--panel)}.help strong{font-size:11px}.help p{font-size:10px;color:var(--muted);line-height:1.6}.help a{color:var(--gold);font-size:10px;font-weight:700}.main{margin-left:var(--sidebar);min-width:0}.topbar{height:65px;padding:0 28px;background:#09151eeF;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between}.top-left,.top-right{display:flex;align-items:center;gap:10px}.top-brand{font:800 12px Manrope,sans-serif;letter-spacing:1.2px}.top-title{color:var(--muted);font-size:10px;margin-top:2px}.icon-btn,.avatar{height:35px;min-width:35px;border:1px solid var(--line);border-radius:11px;color:var(--text);background:var(--panel);display:grid;place-items:center}.avatar{border-radius:50%;border-color:#997640;color:var(--gold);background:#352d20;font-weight:800}.menu-btn{display:none}.content{max-width:1120px;padding:22px 28px 112px;margin:0 auto}.page{display:none;animation:enter .2s ease}.page.active{display:block}@keyframes enter{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}h1,h2,h3,p{margin-top:0}h1,h2,h3{font-family:Manrope,sans-serif}h1{font-size:22px;margin-bottom:4px}h2{font-size:13px;letter-spacing:.5px;margin-bottom:0}h3{font-size:13px;margin:0}.subtle{font-size:10px;color:var(--muted)}.hero{position:relative;min-height:215px;padding:23px;border:1px solid #334d5b;border-radius:17px;overflow:hidden;background:linear-gradient(90deg,rgba(5,19,29,.94),rgba(7,20,30,.63) 55%,rgba(5,16,24,.23)),url('https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1400&q=85') center 48%/cover;margin-bottom:14px}.hero:after{content:"";position:absolute;inset:auto 0 0;height:60px;background:linear-gradient(transparent,var(--bg));pointer-events:none}.hero-content{position:relative;z-index:1;max-width:370px}.hero .eyebrow{font-size:8px;letter-spacing:1.7px;color:var(--teal);font-weight:800}.hero h1{font-size:24px;line-height:1.2;margin:14px 0 8px}.hero p{font-size:10px;color:#c3d1d5;max-width:310px;line-height:1.7}.hero-actions{display:flex;gap:8px;margin-top:13px}.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:34px;padding:8px 12px;border:1px solid transparent;border-radius:9px;font-size:10px;font-weight:800}.btn-gold{background:var(--gold);color:#17170f}.btn-teal{background:#193b3c;color:var(--teal);border-color:#326161}.btn-outline{background:#ffffff08;color:#dce7e9;border-color:var(--line)}.btn:hover{filter:brightness(1.08)}.mini-info{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 0 13px}.info-chip{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#101e29}.chip-icon{width:29px;height:29px;display:grid;place-items:center;border-radius:9px;color:var(--gold);background:#9e773126}.chip-label{display:block;color:var(--muted);font-size:8px;text-transform:uppercase;letter-spacing:.5px}.chip-value{display:block;font-size:10px;font-weight:700;margin-top:2px}.card{padding:14px;border:1px solid var(--line);border-radius:15px;background:linear-gradient(145deg,#11222d,#0f1d27);margin:0 0 11px}.card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--line);margin-bottom:10px}.card-head h2{font-size:11px;letter-spacing:1px}.badge{padding:4px 8px;border:1px solid #927442;border-radius:30px;color:var(--gold);background:#a47b2521;font-size:8px;font-weight:800;letter-spacing:.6px}.service-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.service{min-height:37px;padding:7px;border-radius:10px;border:1px solid #31545b;color:var(--teal);background:#1b3c40;text-align:center;font-size:9px;font-weight:700}.service:hover{border-color:var(--teal);filter:brightness(1.1)}.service.locked{background:#1b2b34;border-color:#2b3c45;color:#9eb0b6}.service.upgrade{background:var(--gold);color:#17170f;border-color:#f5ca7a}.service-note{margin:9px 2px 0;color:var(--muted);font-size:9px;display:flex;justify-content:space-between;gap:8px}.service-note a{color:var(--gold);font-weight:700;white-space:nowrap}.shortcut-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 7px}.shortcut{border:0;background:none;color:#dce7e8;text-align:center;padding:2px;font-size:8px;font-weight:700}.shortcut-icon{width:34px;height:34px;display:grid;place-items:center;margin:0 auto 5px;border:1px solid #346364;border-radius:11px;color:var(--teal);background:#1a3b3d;font-size:16px}.shortcut:hover .shortcut-icon{filter:brightness(1.25)}.metric-list{display:grid;gap:7px}.metric-row{display:flex;align-items:center;gap:9px;padding:8px 9px;border:1px solid #2a414d;border-radius:11px;background:#1a2b36}.metric-icon{width:31px;height:31px;display:grid;place-items:center;flex:none;border:1px solid #887242;border-radius:9px;color:var(--gold);background:#9f772825}.metric-icon.teal{border-color:#346364;color:var(--teal);background:#1e55503c}.metric-copy{min-width:0;flex:1}.metric-copy strong{display:block;font-size:10px}.metric-copy small{display:block;color:var(--muted);font-size:8px;margin-top:2px}.metric-amount{text-align:right;font-size:11px;font-weight:800}.metric-amount small{display:block;color:var(--muted);font-size:8px;font-weight:500}.stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.stat-box{padding:10px;border:1px solid #2b424e;border-radius:13px;background:#1a2b36;min-width:0}.stat-box .metric-icon{margin-bottom:6px}.stat-number{font:800 16px Manrope,sans-serif;overflow-wrap:anywhere}.stat-label{color:#afc0c6;font-size:9px;margin-top:2px}.affiliate{display:flex;gap:6px}.affiliate input{min-width:0;flex:1;background:#0b1720;border:1px solid var(--line);border-radius:9px;padding:9px;color:var(--muted);font-size:9px}.affiliate button{border:0;border-radius:9px;background:var(--gold);color:#19170f;padding:0 12px;font-size:9px;font-weight:800}.empty-note{padding:10px;border-radius:10px;background:#ffffff06;color:var(--muted);font-size:9px;line-height:1.6}.disclaimer{font-size:9px;color:var(--muted);line-height:1.6;margin:8px 2px}.bottom-nav{position:fixed;z-index:12;left:calc(var(--sidebar) + (100% - var(--sidebar) - min(520px,100% - var(--sidebar)))/2);bottom:14px;transform:translateX(-50%);width:min(520px,calc(100% - var(--sidebar) - 30px));min-height:57px;padding:7px 10px;border:1px solid #304851;border-radius:20px;background:#10232df2;backdrop-filter:blur(16px);display:flex;justify-content:space-around;align-items:center;box-shadow:0 10px 32px #0007}.bottom-link{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:48px;border:0;background:none;color:#98aab1;font-size:8px;font-weight:700}.bottom-link span:first-child{font-size:16px}.bottom-link.active{color:var(--gold)}.bottom-link.chat{width:46px;height:46px;min-width:46px;margin-top:-22px;border-radius:50%;border:2px solid #f4d18c;color:#182028;background:var(--gold);box-shadow:0 0 0 5px #ffc36a20;font-size:8px}.bottom-link.chat span:first-child{font-size:18px}.section-title{font-size:10px;letter-spacing:1px}.plan-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.plan{padding:13px;border:1px solid var(--line);border-radius:13px;background:var(--panel)}.plan strong{font-size:11px}.plan .price{font:800 16px Manrope,sans-serif;margin:8px 0}.plan p{min-height:25px;color:var(--muted);font-size:9px}.plan .btn{width:100%}.field{display:grid;gap:6px;margin:12px 0}.field label{font-size:10px;font-weight:700}.field input,.field select{width:100%;padding:10px;border:1px solid var(--line);border-radius:9px;background:#0a1720;color:white}.message{display:none;padding:10px;border-radius:9px;font-size:10px;line-height:1.6;margin-top:10px}.message.show{display:block}.message.info{background:#648ef31a;color:#c6d9ff}.message.success{background:#63d6a516;color:#a8f0ce}.message.error{background:#ef76761a;color:#ffc1c1}.page-intro{margin:5px 0 14px}.page-intro p{color:var(--muted);font-size:10px}.overlay{display:none}
-    @media(min-width:1000px){.content{max-width:880px}.hero{min-height:260px;padding:30px}.service-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.dashboard-lower{display:grid;grid-template-columns:1fr 1fr;gap:0 11px}.dashboard-lower .card{min-width:0}}
-    @media(max-width:720px){.sidebar{width:270px;transform:translateX(-100%);transition:transform .22s;box-shadow:none}.sidebar.open{transform:translateX(0);box-shadow:20px 0 50px #0009}.overlay.show{display:block;position:fixed;inset:0;background:#0009;z-index:15}.main{margin-left:0}.topbar{height:58px;padding:0 14px}.menu-btn{display:grid}.content{width:min(100%,560px);padding:12px 12px 102px}.bottom-nav{left:50%;width:min(520px,calc(100% - 24px));bottom:10px}.hero{min-height:190px;padding:18px}.hero h1{font-size:21px}.hero-content{max-width:300px}}
-    @media(max-width:360px){.content{padding-left:9px;padding-right:9px}.card{padding:11px}.service{font-size:8px;padding:6px 3px}.bottom-nav{padding-left:5px;padding-right:5px}.bottom-link{min-width:42px}}
-    @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+    :root {
+      --bg: #071423;
+      --bg2: #0d1a2a;
+      --panel: rgba(14, 29, 40, 0.95);
+      --panel-2: rgba(17, 36, 48, 0.95);
+      --panel-3: rgba(22, 37, 48, 0.9);
+      --line: rgba(160, 188, 207, 0.14);
+      --line-strong: rgba(168, 202, 230, 0.22);
+      --text: #ecf6ff;
+      --muted: #9bb0bf;
+      --muted-2: #7d93a5;
+      --gold: #f2c36d;
+      --gold-2: #efad49;
+      --teal: #6bead9;
+      --teal-2: #4ec7c2;
+      --cyan: #9fdafc;
+      --green: #5ae2ac;
+      --shadow: rgba(2, 4, 10, 0.6);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(56, 124, 255, 0.18), transparent 30%),
+        radial-gradient(circle at 80% 30%, rgba(92, 152, 255, 0.12), transparent 32%),
+        linear-gradient(180deg, #040c19 0%, #071524 20%, #060d17 100%);
+      color: var(--text);
+      font-family: "DM Sans", sans-serif;
+      display: grid;
+      place-items: center;
+      padding: 26px 12px 70px;
+    }
+
+    .phone {
+      width: min(100%, 430px);
+      background: linear-gradient(180deg, rgba(14, 25, 36, 0.96), rgba(6, 13, 19, 0.98));
+      border: 1px solid rgba(170, 203, 233, 0.12);
+      border-radius: 26px;
+      overflow: hidden;
+      box-shadow: 0 40px 90px rgba(0, 0, 0, 0.55);
+      position: relative;
+    }
+
+    .statusbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      background: rgba(6, 13, 19, 0.9);
+    }
+
+    .status-left, .status-right {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .status-right { font-size: 10px; }
+
+    .signal, .wifi, .battery {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      color: #dfefff;
+    }
+
+    .dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: currentColor;
+      display: inline-block;
+    }
+
+    .battery {
+      position: relative;
+      width: 22px;
+      height: 11px;
+      border: 1px solid rgba(255,255,255,.7);
+      border-radius: 3px;
+      padding: 1px;
+      box-sizing: border-box;
+    }
+    .battery::before {
+      content: "";
+      position: absolute;
+      right: -4px;
+      top: 3px;
+      width: 2px;
+      height: 5px;
+      background: rgba(255,255,255,.7);
+      border-radius: 1px;
+    }
+    .battery::after {
+      content: "";
+      position: absolute;
+      inset: 2px 2px 2px 2px;
+      background: linear-gradient(90deg, #edf8ff 0%, #edf8ff 75%, rgba(255,255,255,.8) 75%);
+      border-radius: 2px;
+    }
+
+    .browser {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 12px 12px;
+      background: rgba(6, 13, 19, 0.9);
+    }
+
+    .browser-home {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: #dfefff;
+      font-size: 17px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .browser-addr {
+      flex: 1;
+      min-width: 0;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 15px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 12px;
+      color: #dfe9f1;
+      letter-spacing: 0.1px;
+    }
+
+    .browser-addr strong {
+      color: #eff7ff;
+      font-weight: 700;
+    }
+
+    .browser-menu {
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      color: #dfe9f1;
+    }
+
+    .viewport {
+      padding: 0 13px 90px;
+      background:
+        radial-gradient(circle at 55% 0%, rgba(95, 122, 255, 0.15), transparent 30%),
+        linear-gradient(180deg, #091522 0%, #071422 100%);
+    }
+
+    .panel {
+      background: rgba(18, 33, 44, 0.96);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.02);
+    }
+
+    .account-card {
+      padding: 12px 12px 10px;
+      margin-top: 10px;
+      background: linear-gradient(145deg, rgba(17, 33, 44, 0.96), rgba(10, 19, 29, 0.9));
+      border: 1px solid rgba(170, 204, 230, 0.16);
+      border-radius: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .account-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(52, 110, 194, 0.18), transparent 52%);
+      pointer-events: none;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      position: relative;
+      z-index: 1;
+      margin-bottom: 10px;
+    }
+
+    .brand-mark {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: "Manrope", sans-serif;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      font-size: 12px;
+    }
+
+    .brand-mark .logo {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #f4c66f, #d98d27);
+      color: #0d1d2b;
+      font-weight: 900;
+      font-size: 13px;
+      box-shadow: inset 0 1px #fff3d1;
+    }
+
+    .brand-pill {
+      background: linear-gradient(135deg, rgba(204, 170, 84, 0.22), rgba(142, 108, 26, 0.12));
+      border: 1px solid rgba(242, 195, 109, 0.42);
+      color: var(--gold);
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 8px;
+      letter-spacing: 0.7px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .greeting {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .greeting strong {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+      color: #9fb5bf;
+      margin-bottom: 4px;
+    }
+
+    .greeting h2 {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.4;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    .greeting h2 .gold {
+      color: var(--gold);
+    }
+
+    .greeting .status {
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      color: var(--gold);
+      background: rgba(242, 195, 109, 0.12);
+      border: 1px solid rgba(242, 195, 109, 0.3);
+      border-radius: 999px;
+      padding: 4px 7px;
+      white-space: nowrap;
+    }
+
+    .info-list {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .info-pill {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(160, 188, 207, 0.12);
+      border-radius: 12px;
+      padding: 7px 6px 8px;
+      text-align: center;
+      min-height: 52px;
+    }
+
+    .info-pill .kicker {
+      display: block;
+      font-size: 7px;
+      color: var(--muted-2);
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .info-pill .value {
+      display: block;
+      color: var(--text);
+      font-size: 10px;
+      font-weight: 800;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .section {
+      margin-top: 12px;
+      padding: 12px 12px 10px;
+      background: rgba(16, 31, 41, 0.95);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .section-head h3 {
+      margin: 0;
+      font-size: 10px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #dfeefb;
+      font-weight: 800;
+    }
+
+    .history-link {
+      color: var(--gold);
+      font-size: 9px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .service,
+    .quick-action {
+      border: 1px solid rgba(120, 147, 164, 0.18);
+      border-radius: 10px;
+      background: rgba(31, 50, 60, 0.8);
+      color: var(--text);
+      font-size: 9px;
+      font-weight: 700;
+      text-align: center;
+      padding: 8px 6px;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .service:hover,
+    .quick-action:hover {
+      transform: translateY(-1px);
+      border-color: rgba(107, 234, 217, 0.5);
+    }
+
+    .service.primary {
+      color: #091a1d;
+      background: linear-gradient(180deg, #f4cf83, #d99a2d);
+      border-color: rgba(242, 195, 109, 0.7);
+    }
+
+    .service.locked {
+      background: rgba(22, 32, 41, 0.9);
+      color: var(--muted);
+      border-color: rgba(137, 160, 174, 0.18);
+    }
+
+    .service .emoji {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .service-note {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 8px;
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+
+    .service-note a {
+      color: var(--gold);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px 8px;
+    }
+
+    .quick-action {
+      padding: 9px 6px 7px;
+      background: rgba(29, 42, 50, 0.9);
+    }
+
+    .quick-action .icon {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      margin: 0 auto 5px;
+      border-radius: 9px;
+      background: rgba(107, 234, 217, 0.13);
+      border: 1px solid rgba(107, 234, 217, 0.18);
+      color: var(--teal);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .metric-list {
+      display: grid;
+      gap: 7px;
+    }
+
+    .metric-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 9px;
+      background: rgba(23, 38, 47, 0.85);
+      border: 1px solid rgba(160, 188, 207, 0.12);
+      border-radius: 11px;
+    }
+
+    .metric-icon {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      background: rgba(242, 195, 109, 0.12);
+      color: var(--gold);
+      border: 1px solid rgba(242, 195, 109, 0.18);
+      font-weight: 700;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .metric-icon.teal {
+      background: rgba(107, 234, 217, 0.11);
+      border-color: rgba(107, 234, 217, 0.2);
+      color: var(--teal);
+    }
+
+    .metric-copy {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .metric-copy strong {
+      display: block;
+      font-size: 10px;
+      letter-spacing: -0.1px;
+      margin-bottom: 2px;
+    }
+
+    .metric-copy small {
+      color: var(--muted);
+      font-size: 7px;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-amount {
+      text-align: right;
+      font-size: 11px;
+      font-weight: 800;
+      color: #edf8ff;
+      white-space: nowrap;
+    }
+
+    .metric-amount small {
+      display: block;
+      color: var(--muted);
+      font-size: 7px;
+      margin-top: 2px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 8px;
+    }
+
+    .stat-box {
+      background: rgba(25, 39, 49, 0.85);
+      border: 1px solid rgba(160, 188, 207, 0.12);
+      border-radius: 12px;
+      padding: 10px 8px 9px;
+      min-width: 0;
+    }
+
+    .stat-box .metric-icon {
+      width: 28px;
+      height: 28px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+
+    .stat-box .value {
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.2;
+      font-family: "Manrope", sans-serif;
+    }
+
+    .stat-box .label {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 8px;
+      letter-spacing: 0.4px;
+    }
+
+    .referral-box {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .referral-box input {
+      flex: 1;
+      min-width: 0;
+      width: 100%;
+      background: rgba(12, 21, 29, 0.8);
+      border: 1px solid rgba(160, 188, 207, 0.12);
+      border-radius: 9px;
+      padding: 9px 10px;
+      color: var(--muted);
+      font-size: 9px;
+      outline: none;
+    }
+
+    .referral-box button {
+      background: linear-gradient(180deg, #f7d586, #d59d37);
+      color: #19170d;
+      border: 0;
+      border-radius: 9px;
+      padding: 0 12px;
+      height: 34px;
+      font-size: 9px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 50%;
+      bottom: 12px;
+      transform: translateX(-50%);
+      width: min(94vw, 430px);
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 8px 14px 7px;
+      background: rgba(14, 27, 38, 0.95);
+      border: 1px solid rgba(170, 204, 230, 0.12);
+      border-radius: 18px;
+      box-shadow: 0 20px 28px rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(10px);
+      z-index: 50;
+    }
+
+    .nav-btn-item {
+      border: none;
+      background: transparent;
+      color: #9fafbb;
+      font-size: 8px;
+      font-weight: 700;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 0;
+      min-width: 46px;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+
+    .nav-btn-item .icon {
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .nav-btn-item.active {
+      color: var(--gold);
+    }
+
+    .nav-btn-item.chat {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #f7d586, #d99f3a);
+      color: #0d1d29;
+      margin-top: -22px;
+      border: 2px solid rgba(242, 195, 109, 0.35);
+      box-shadow: 0 0 0 4px rgba(242, 195, 109, 0.12);
+      padding-top: 5px;
+    }
+
+    .hidden { display: none !important; }
+    .tiny { font-size: 8px; }
+
+    @media (max-width: 420px) {
+      .phone { border-radius: 0; width: 100vw; min-height: 100vh; }
+      body { padding: 0; }
+      .statusbar { padding-left: 16px; padding-right: 16px; }
+      .browser { padding-left:15px; padding-right:15px; }
+      .viewport { padding-left: 12px; padding-right: 12px; }
+    }
   </style>
 </head>
 <body>
-<div class="app">
-  <aside class="sidebar" id="sidebar" aria-label="Dashboard navigation">
-    <a class="brand" href="index.html"><span class="brand-logo">◎</span><span><strong>ONLINE SPHERE</strong><small>DISCOVER · LEARN · WORK</small></span></a>
-    <div class="nav-label">MEMBER AREA</div>
-    <button class="nav-btn active" data-page="overview"><span class="nav-icon">▦</span>Dashboard</button>
-    <button class="nav-btn" data-page="team"><span class="nav-icon">♧</span>Team &amp; referrals</button>
-    <button class="nav-btn" data-page="wallet"><span class="nav-icon">▣</span>Wallet</button>
-    <button class="nav-btn" data-page="membership"><span class="nav-icon">✦</span>Membership</button>
-    <button class="nav-btn" data-page="settings"><span class="nav-icon">⚙</span>Settings</button>
-    <div class="help"><strong>Need help?</strong><p>Questions about membership or your account? Contact support.</p><a href="mailto:support@onlinesphere.com">Contact support ↗</a></div>
-  </aside>
-  <div class="overlay" id="overlay"></div>
-  <main class="main">
-    <header class="topbar"><div class="top-left"><button class="icon-btn menu-btn" id="menuToggle" aria-label="Open navigation" aria-expanded="false">☰</button><div><div class="top-brand">◎ ONLINE SPHERE</div><div class="top-title" id="topTitle">Member dashboard</div></div></div><div class="top-right"><button class="icon-btn" data-goto="notifications" aria-label="Notifications">♧</button><button class="avatar" data-goto="settings" id="topAvatar" aria-label="Open account settings">M</button></div></header>
-    <div class="content">
-      <section class="page active" id="page-overview">
-        <section class="hero"><div class="hero-content"><span class="eyebrow">YOUR DIGITAL WORKSPACE</span><h1>Good evening,<br><span style="color:var(--gold)" id="welcomeName">Member</span></h1><p>Your desk is ready. Explore services, check membership information, and manage your account in one place.</p><div class="hero-actions"><button class="btn btn-gold" data-goto="membership">✦ Membership</button><button class="btn btn-outline" data-goto="services">Explore services ↗</button></div></div></section>
-        <div class="mini-info"><div class="info-chip"><span class="chip-icon">♧</span><span><span class="chip-label">UPLINE</span><span class="chip-value">Not connected</span></span></div><div class="info-chip"><span class="chip-icon">◷</span><span><span class="chip-label">MEMBER SINCE</span><span class="chip-value">—</span></span></div></div>
-        <section class="card" id="serviceCard"><div class="card-head"><h2>SERVICES</h2><span class="badge" id="membershipBadge">UNVERIFIED</span></div><div class="service-grid"><button class="service upgrade" data-goto="membership">♛ &nbsp;Upgrade membership</button><button class="service" data-goto="services">Transcription</button><button class="service" data-goto="services">Translation</button><button class="service locked" data-goto="services">♙ &nbsp;Writing</button><button class="service locked" data-goto="services">♙ &nbsp;Data entry</button></div><div class="service-note"><span>ⓘ Service access depends on verified membership.</span><a href="opportunities.html">Learn more⌄</a></div></section>
-        <section class="card"><div class="shortcut-grid"><button class="shortcut" data-goto="transactions"><span class="shortcut-icon">☷</span>Transactions</button><button class="shortcut" data-goto="deposit"><span class="shortcut-icon">⇩</span>Deposit</button><button class="shortcut" data-goto="deposit"><span class="shortcut-icon">▣</span>Deposit log</button><button class="shortcut" data-goto="team"><span class="shortcut-icon">⇄</span>Transfer</button><button class="shortcut" data-goto="withdraw"><span class="shortcut-icon">➤</span>Withdraw</button><button class="shortcut" data-goto="team"><span class="shortcut-icon">♔</span>Affiliates</button></div></section>
-        <section class="card"><div class="card-head"><h2>WALLETS</h2><button class="text-btn" data-goto="transactions" style="border:0;background:none;color:var(--gold);font-size:9px;font-weight:700">History</button></div><div class="metric-list"><div class="metric-row"><span class="metric-icon">$</span><div class="metric-copy"><strong>Wallet balance</strong><small>Account ledger not connected</small></div><div class="metric-amount">—<small>Unavailable</small></div></div><div class="metric-row"><span class="metric-icon">▣</span><div class="metric-copy"><strong>Total deposited</strong><small>Verified transactions only</small></div><div class="metric-amount">—<small>Unavailable</small></div></div></div></section>
-        <section class="card"><div class="card-head"><h2>ALL STATISTICS</h2></div><div class="stat-grid"><div class="stat-box"><span class="metric-icon teal">⇄</span><div class="stat-number">—</div><div class="stat-label">Transactions</div></div><div class="stat-box"><span class="metric-icon">⇩</span><div class="stat-number">—</div><div class="stat-label">Total deposit</div></div><div class="stat-box"><span class="metric-icon">➤</span><div class="stat-number">—</div><div class="stat-label">Withdrawals</div></div><div class="stat-box"><span class="metric-icon teal">↗</span><div class="stat-number">—</div><div class="stat-label">Today's earnings</div></div></div></section>
-        <section class="card"><div class="card-head"><h2>AFFILIATE URL</h2></div><div class="affiliate"><input id="affiliateUrl" value="Referral link not available" readonly aria-label="Affiliate link unavailable"><button id="copyAffiliate" type="button" disabled title="Referral links are not connected">COPY</button></div><p class="disclaimer">Referral link and verified referral totals will appear when connected to your account.</p></section>
-        <p class="disclaimer">Membership fees do not guarantee work, income or earnings. Wallet, transaction, referral and membership information is shown only when confirmed by the service.</p>
-      </section>
-      <section class="page" id="page-services"><div class="page-intro"><h1>Services</h1><p>Explore service categories. Availability and access are not guaranteed.</p></div><section class="card"><div class="service-grid"><button class="service">Transcription</button><button class="service">Translation</button><button class="service locked">♙ Writing</button><button class="service locked">♙ Data entry</button><button class="service">Graphic design</button><button class="service">Virtual assistance</button></div><div class="service-note"><span>Live task availability is not connected.</span><a href="opportunities.html">Browse categories ↗</a></div></section></section>
-      <section class="page" id="page-wallet"><div class="page-intro"><h1>Wallet</h1><p>Balances and financial activity require verified account data.</p></div><section class="card"><div class="empty-note">No wallet ledger is connected yet. We do not display estimated or sample balances.</div><button class="btn btn-gold" style="margin-top:12px" data-goto="membership">Membership payment options</button></section></section>
-      <section class="page" id="page-transactions"><div class="page-intro"><h1>Transactions</h1><p>Only confirmed transactions should appear here.</p></div><section class="card"><div class="empty-note">No verified transaction history is available.</div></section></section>
-      <section class="page" id="page-deposit"><div class="page-intro"><h1>Deposit</h1><p>Membership payments can be requested through M-Pesa.</p></div><section class="card"><button class="btn btn-gold" data-goto="membership">View membership payment options</button><div class="empty-note" style="margin-top:12px">This dashboard does not show deposits as complete until confirmed by the payment service.</div></section></section>
-      <section class="page" id="page-withdraw"><div class="page-intro"><h1>Withdraw</h1><p>Withdrawal services and eligibility are not connected to this dashboard.</p></div><section class="card"><div class="empty-note">No withdrawal options are currently connected. Contact support for verified information.</div></section></section>
-      <section class="page" id="page-team"><div class="page-intro"><h1>Team &amp; affiliates</h1><p>Referral links and team activity need verified account data.</p></div><section class="card"><div class="empty-note">No referral or affiliate records are connected. We do not show estimated member counts or rewards.</div></section></section>
-      <section class="page" id="page-notifications"><div class="page-intro"><h1>Notifications</h1><p>Important account and service updates.</p></div><section class="card"><div class="empty-note">No notifications available.</div></section></section>
-      <section class="page" id="page-membership"><div class="page-intro"><h1>Membership</h1><p>Review package prices and request payment via M-Pesa if you choose.</p></div><div class="plan-grid"><article class="plan"><strong>Bronze</strong><div class="price">KSh 1,000</div><p>Membership request, subject to verification.</p><button class="btn btn-outline" data-package="Bronze">Choose Bronze</button></article><article class="plan"><strong>Silver</strong><div class="price">KSh 1,750</div><p>Membership request, subject to verification.</p><button class="btn btn-gold" data-package="Silver">Choose Silver</button></article><article class="plan"><strong>Gold</strong><div class="price">KSh 2,500</div><p>Membership request, subject to verification.</p><button class="btn btn-outline" data-package="Gold">Choose Gold</button></article></div><section class="card" style="margin-top:11px"><div class="card-head"><h2>M-PESA PAYMENT REQUEST</h2></div><form id="paymentForm"><div class="field"><label for="packageName">Membership package</label><select id="packageName" required><option value="Bronze">Bronze — KSh 1,000</option><option value="Silver">Silver — KSh 1,750</option><option value="Gold">Gold — KSh 2,500</option></select></div><div class="field"><label for="phone">M-Pesa phone number</label><input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="0712345678 or 254712345678" required></div><button class="btn btn-gold" id="payButton" type="submit">Request STK push →</button><div id="paymentMessage" class="message" role="status" aria-live="polite"></div></form><p class="disclaimer">Never share your M-Pesa PIN on this website. A payment prompt is not confirmation of payment; wait for confirmation from the payment service.</p></section></section>
-      <section class="page" id="page-settings"><div class="page-intro"><h1>Settings</h1><p>Update your display name for this browser session.</p></div><section class="card"><form id="profileForm"><div class="field"><label for="fullName">Display name</label><input id="fullName" type="text" placeholder="Your name" required></div><button class="btn btn-gold" type="submit">Save display name</button><div id="profileMessage" class="message info" role="status" aria-live="polite"></div></form><p class="disclaimer">Your display name is not saved to an account database.</p></section></section>
+  <div class="phone">
+    <div class="statusbar">
+      <div class="status-left"><span>7:16 PM</span></div>
+      <div class="status-right">
+        <span>8.15</span>
+        <span class="signal">◔</span>
+        <span class="wifi">◍</span>
+        <span class="battery"></span>
+      </div>
     </div>
-  </main>
-  <nav class="bottom-nav" aria-label="Quick navigation"><button class="bottom-link active" data-page="overview"><span>▦</span>DASHBOARD</button><button class="bottom-link" data-page="team"><span>♧</span>TEAM</button><button class="bottom-link chat" onclick="window.location.href='mailto:support@onlinesphere.com'"><span>☏</span>CHAT</button><button class="bottom-link" data-page="wallet"><span>▣</span>WALLET</button><button class="bottom-link" data-page="settings"><span>⚙</span>SETTINGS</button></nav>
-</div>
-<script>
-  "use strict";
-  const TITLES={overview:"Member dashboard",services:"Services",wallet:"Wallet",transactions:"Transactions",deposit:"Deposit",withdraw:"Withdraw",team:"Team & referrals",notifications:"Notifications",membership:"Membership",settings:"Settings"};
-  const PRICES={Bronze:1000,Silver:1750,Gold:2500};
-  const sidebar=document.getElementById("sidebar"),overlay=document.getElementById("overlay");
-  function showPage(name){if(!Object.prototype.hasOwnProperty.call(TITLES,name))return;document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id==="page-"+name));document.querySelectorAll("[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===name));document.getElementById("topTitle").textContent=TITLES[name];sidebar.classList.remove("open");overlay.classList.remove("show");document.getElementById("menuToggle").setAttribute("aria-expanded","false");window.scrollTo({top:0,behavior:"smooth"})}
-  document.querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
-  document.querySelectorAll("[data-goto]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.goto)));
-  document.getElementById("menuToggle").addEventListener("click",function(){const open=sidebar.classList.toggle("open");overlay.classList.toggle("show",open);this.setAttribute("aria-expanded",String(open))});
-  overlay.addEventListener("click",()=>{sidebar.classList.remove("open");overlay.classList.remove("show");document.getElementById("menuToggle").setAttribute("aria-expanded","false")});
-  document.querySelectorAll("[data-package]").forEach(b=>b.addEventListener("click",()=>{document.getElementById("packageName").value=b.dataset.package;document.getElementById("phone").scrollIntoView({behavior:"smooth",block:"center"});document.getElementById("phone").focus()}));
-  function normalizePhone(value){let phone=String(value||"").trim().replace(/[\s()-]/g,"");if(/^0[17]\d{8}$/.test(phone))phone="254"+phone.slice(1);else if(/^\+254[17]\d{8}$/.test(phone))phone=phone.slice(1);if(!/^254[17]\d{8}$/.test(phone))throw new Error("Enter a valid Kenyan mobile number, e.g. 0712345678 or 254712345678.");return phone}
-  function showPaymentMessage(text,type){const el=document.getElementById("paymentMessage");el.className="message show "+type;el.textContent=text}
-  document.getElementById("paymentForm").addEventListener("submit",async function(event){event.preventDefault();const packageName=document.getElementById("packageName").value;if(!Object.prototype.hasOwnProperty.call(PRICES,packageName)){showPaymentMessage("Choose a valid membership package.","error");return}let phone;try{phone=normalizePhone(document.getElementById("phone").value)}catch(error){showPaymentMessage(error.message,"error");return}if(!window.confirm("Request an M-Pesa prompt for "+packageName+" (KSh "+PRICES[packageName].toLocaleString("en-KE")+") to "+phone+"? This does not confirm payment."))return;const button=document.getElementById("payButton");button.disabled=true;button.textContent="Sending request…";showPaymentMessage("Contacting the payment service. Please wait.","info");const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),45000);try{const response=await fetch("https://online-sphere-backend.onrender.com/api/mpesa/stkpush",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({phone,packageName}),signal:controller.signal});const raw=await response.text();let data={};if(raw){try{data=JSON.parse(raw)}catch{throw new Error("The payment service returned an unexpected response. Check its status before retrying.")}}if(!response.ok)throw new Error((data.message||data.error||"Payment request failed")+" (HTTP "+response.status+").");showPaymentMessage("The server accepted the request. Check your phone if an M-Pesa prompt was initiated. This is not confirmation of completed payment; verify the transaction with the payment service.","success")}catch(error){showPaymentMessage(error.name==="AbortError"?"The request timed out. Check payment status before retrying to avoid duplicate prompts.":error instanceof TypeError?"Could not reach the payment service. Check your internet connection and service availability.":error.message,"error")}finally{clearTimeout(timeout);button.disabled=false;button.textContent="Request STK push →"}});
-  document.getElementById("profileForm").addEventListener("submit",function(event){event.preventDefault();const name=document.getElementById("fullName").value.trim();if(!name)return;const first=name.split(/\s+/)[0];document.getElementById("welcomeName").textContent=first;document.getElementById("topAvatar").textContent=first.charAt(0).toUpperCase();const message=document.getElementById("profileMessage");message.textContent="Display name updated for this browser session only; it has not been saved to an account.";message.className="message show info"});
-</script>
+
+    <div class="browser">
+      <div class="browser-home">⌂</div>
+      <div class="browser-addr"><strong>eaglewebcommerce.com/user/</strong>da</div>
+      <div class="browser-menu">⋮</div>
+    </div>
+
+    <div class="viewport">
+      <div class="account-card">
+        <div class="brand-row">
+          <div class="brand-mark"><span class="logo">E</span><span>EAGLE</span></div>
+          <span class="brand-pill">Get App</span>
+        </div>
+
+        <div class="greeting">
+          <div>
+            <strong>Good evening</strong>
+            <h2>Benson, <span class="gold">your desk is ready</span></h2>
+          </div>
+          <span class="status">WITHDRAW</span>
+        </div>
+
+        <div class="info-list">
+          <div class="info-pill"><span class="kicker">UpLine</span><span class="value">Kibaki</span></div>
+          <div class="info-pill"><span class="kicker">Member</span><span class="value">Gold</span></div>
+          <div class="info-pill"><span class="kicker">Joined</span><span class="value">Feb 15</span></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <h3>Services</h3>
+          <span class="brand-pill" style="padding:3px 7px; font-size:7px;">Upgrade</span>
+        </div>
+
+        <div class="service-grid">
+          <button class="service primary" type="button"><span class="emoji">✔</span>Upgrade</button>
+          <button class="service" type="button"><span class="emoji">✎</span>Transcription</button>
+          <button class="service" type="button"><span class="emoji">✍</span>Writing</button>
+          <button class="service" type="button"><span class="emoji">⌨</span>Data Entry</button>
+          <button class="service" type="button"><span class="emoji">⇄</span>Translation</button>
+          <button class="service locked" type="button"><span class="emoji">◌</span>More</button>
+        </div>
+
+        <div class="service-note">
+          <span>Upgrade your membership to unlock more services.</span>
+          <a href="#">Load more</a>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <h3>Shortcuts</h3>
+        </div>
+
+        <div class="quick-grid">
+          <button class="quick-action" type="button"><span class="icon">▣</span>Transactions</button>
+          <button class="quick-action" type="button"><span class="icon">⇩</span>Deposit</button>
+          <button class="quick-action" type="button"><span class="icon">▤</span>Deposit log</button>
+          <button class="quick-action" type="button"><span class="icon">⇄</span>Transfer</button>
+          <button class="quick-action" type="button"><span class="icon">➜</span>Withdraw</button>
+          <button class="quick-action" type="button"><span class="icon">♔</span>Affiliates</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <h3>Wallets</h3>
+          <a class="history-link" href="#">History</a>
+        </div>
+
+        <div class="metric-list">
+          <div class="metric-row">
+            <span class="metric-icon">$</span>
+            <div class="metric-copy">
+              <strong>Wallet Balance</strong>
+              <small>USD available</small>
+            </div>
+            <div class="metric-amount">$0.47<small>$0.00</small></div>
+          </div>
+
+          <div class="metric-row">
+            <span class="metric-icon teal">⇩</span>
+            <div class="metric-copy">
+              <strong>Total Deposited</strong>
+              <small>USD lifetime</small>
+            </div>
+            <div class="metric-amount">$35.66<small>lifetime</small></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <h3>All Statistic</h3>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="metric-icon teal">⇄</span>
+            <div class="value">6</div>
+            <div class="label">All Transactions</div>
+          </div>
+
+          <div class="stat-box">
+            <span class="metric-icon">⇩</span>
+            <div class="value">$35.66</div>
+            <div class="label">Total Deposit</div>
+          </div>
+
+          <div class="stat-box">
+            <span class="metric-icon">➜</span>
+            <div class="value">$7.75</div>
+            <div class="label">Total Withdrawal</div>
+          </div>
+
+          <div class="stat-box">
+            <span class="metric-icon teal">↗</span>
+            <div class="value">$0.00</div>
+            <div class="label">Today's Earnings</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <h3>Affiliate URL</h3>
+        </div>
+
+        <div class="referral-box">
+          <input id="affiliateUrl" type="text" value="https://eaglewebcommerce.com/register/Ben-03" readonly />
+          <button id="copyAffiliate" type="button">COPY</button>
+        </div>
+        <div class="service-note" style="margin-top:8px;">
+          <span>21 people are joined by using this URL</span>
+        </div>
+      </div>
+    </div>
+
+    <nav class="bottom-nav" aria-label="Bottom navigation">
+      <button class="nav-btn-item active" type="button"><span class="icon">▦</span>Dashboard</button>
+      <button class="nav-btn-item" type="button"><span class="icon">♧</span>Team</button>
+      <button class="nav-btn-item chat" type="button"><span class="icon">☏</span>Chat</button>
+      <button class="nav-btn-item" type="button"><span class="icon">▣</span>Wallet</button>
+      <button class="nav-btn-item" type="button"><span class="icon">⚙</span>Settings</button>
+    </nav>
+  </div>
+
+  <script>
+    const copyBtn = document.getElementById('copyAffiliate');
+    copyBtn.addEventListener('click', async () => {
+      const input = document.getElementById('affiliateUrl');
+      try {
+        await navigator.clipboard.writeText(input.value);
+        copyBtn.textContent = 'COPIED';
+        setTimeout(() => copyBtn.textContent = 'COPY', 1200);
+      } catch (error) {
+        input.select();
+        document.execCommand('copy');
+        copyBtn.textContent = 'COPIED';
+        setTimeout(() => copyBtn.textContent = 'COPY', 1200);
+      }
+    });
+  </script>
 </body>
 </html>
