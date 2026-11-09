@@ -1,402 +1,227 @@
--- =========================================================
--- ONLINE SPHERE DATABASE
--- EARNING OPPORTUNITIES + MEMBERSHIP + WALLET
--- =========================================================
-
-PRAGMA foreign_keys = ON;
-
--- =========================================================
--- USERS
--- =========================================================
-
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS roles (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-    full_name TEXT NOT NULL,
-
-    email TEXT UNIQUE NOT NULL,
-
-    phone TEXT UNIQUE,
-
-    password_hash TEXT NOT NULL,
-
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
-
--- =========================================================
--- USER ACCOUNTS
--- =========================================================
-
-CREATE TABLE IF NOT EXISTS accounts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-    user_id INTEGER NOT NULL UNIQUE,
-
-    account_number TEXT UNIQUE NOT NULL,
-
-    package TEXT DEFAULT NULL,
-
-    activation_fee INTEGER DEFAULT 0,
-
-    status TEXT DEFAULT 'inactive',
-
-    balance INTEGER DEFAULT 0,
-
-    total_earned INTEGER DEFAULT 0,
-
-    total_withdrawn INTEGER DEFAULT 0,
-
-    pending_withdrawal INTEGER DEFAULT 0,
-
-    currency TEXT DEFAULT 'KES',
-
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (user_id)
-        REFERENCES users(id)
-        ON DELETE CASCADE
-);
-
-
--- =========================================================
--- MEMBERSHIP PACKAGES
--- =========================================================
-
-CREATE TABLE IF NOT EXISTS packages (
-
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-    name TEXT UNIQUE NOT NULL,
-
-    activation_fee INTEGER NOT NULL,
-
-    description TEXT,
-
-    status TEXT DEFAULT 'active',
-
+    name TEXT NOT NULL UNIQUE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-
--- =========================================================
--- TRANSACTIONS
--- =========================================================
-
-CREATE TABLE IF NOT EXISTS transactions (
-
+CREATE TABLE IF NOT EXISTS permissions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-    user_id INTEGER NOT NULL,
-
-    account_id INTEGER NOT NULL,
-
-    type TEXT NOT NULL,
-
-    amount INTEGER NOT NULL,
-
-    status TEXT DEFAULT 'pending',
-
-    reference TEXT UNIQUE,
-
-    description TEXT,
-
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (user_id)
-        REFERENCES users(id)
-        ON DELETE CASCADE,
-
-    FOREIGN KEY (account_id)
-        REFERENCES accounts(id)
-        ON DELETE CASCADE
+    name TEXT NOT NULL UNIQUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-
--- =========================================================
--- EARNING OPPORTUNITIES
--- =========================================================
-
-CREATE TABLE IF NOT EXISTS opportunities (
-
+CREATE TABLE IF NOT EXISTS role_permissions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-    title TEXT NOT NULL,
-
-    category TEXT NOT NULL,
-
-    description TEXT NOT NULL,
-
-    difficulty TEXT DEFAULT 'Beginner',
-
-    earning_model TEXT,
-
-    requirements TEXT,
-
-    platform_name TEXT,
-
-    external_url TEXT,
-
-    risk_level TEXT DEFAULT 'Low',
-
-    featured INTEGER DEFAULT 0,
-
-    status TEXT DEFAULT 'active',
-
+    role_id INTEGER NOT NULL,
+    permission TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(role_id, permission),
+    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
+);
 
+CREATE TABLE IF NOT EXISTS user_roles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    role_id INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, role_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS login_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    ip_address TEXT,
+    user_agent TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    admin_user_id INTEGER,
+    action TEXT NOT NULL,
+    affected_table TEXT,
+    affected_record_id TEXT,
+    previous_value TEXT,
+    updated_value TEXT,
+    ip_address TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (admin_user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS profiles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL UNIQUE,
+    avatar_url TEXT,
+    bio TEXT,
+    country TEXT,
+    city TEXT,
+    language_preference TEXT DEFAULT 'en',
+    is_verified INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    type TEXT DEFAULT 'info',
+    read_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS support_tickets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    subject TEXT NOT NULL,
+    message TEXT NOT NULL,
+    status TEXT DEFAULT 'open',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS announcements (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    is_published INTEGER DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-
--- =========================================================
--- SAVED OPPORTUNITIES
--- =========================================================
-
-CREATE TABLE IF NOT EXISTS saved_opportunities (
-
+CREATE TABLE IF NOT EXISTS courses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-    user_id INTEGER NOT NULL,
-
-    opportunity_id INTEGER NOT NULL,
-
+    title TEXT NOT NULL,
+    slug TEXT UNIQUE,
+    description TEXT,
+    category TEXT,
+    status TEXT DEFAULT 'draft',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-
-    UNIQUE(user_id, opportunity_id),
-
-    FOREIGN KEY (user_id)
-        REFERENCES users(id)
-        ON DELETE CASCADE,
-
-    FOREIGN KEY (opportunity_id)
-        REFERENCES opportunities(id)
-        ON DELETE CASCADE
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-
--- =========================================================
--- WITHDRAWAL REQUESTS
--- =========================================================
-
-CREATE TABLE IF NOT EXISTS withdrawals (
-
+CREATE TABLE IF NOT EXISTS lessons (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    course_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    content TEXT,
+    video_url TEXT,
+    duration_minutes INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+);
 
+CREATE TABLE IF NOT EXISTS user_course_progress (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
+    course_id INTEGER NOT NULL,
+    completed INTEGER DEFAULT 0,
+    progress_percent INTEGER DEFAULT 0,
+    last_seen_at DATETIME,
+    UNIQUE(user_id, course_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+);
 
-    account_id INTEGER NOT NULL,
-
-    amount INTEGER NOT NULL,
-
-    method TEXT NOT NULL,
-
-    phone TEXT,
-
-    reference TEXT UNIQUE,
-
+CREATE TABLE IF NOT EXISTS referrals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    referrer_user_id INTEGER NOT NULL,
+    referred_user_id INTEGER NOT NULL,
+    referral_code TEXT,
     status TEXT DEFAULT 'pending',
-
-    notes TEXT,
-
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-
-    processed_at DATETIME,
-
-    FOREIGN KEY (user_id)
-        REFERENCES users(id)
-        ON DELETE CASCADE,
-
-    FOREIGN KEY (account_id)
-        REFERENCES accounts(id)
-        ON DELETE CASCADE
+    UNIQUE(referred_user_id),
+    FOREIGN KEY (referrer_user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (referred_user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-
--- =========================================================
--- SESSIONS
--- =========================================================
-
-CREATE TABLE IF NOT EXISTS sessions (
-
+CREATE TABLE IF NOT EXISTS commissions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-    user_id INTEGER NOT NULL,
-
-    token_hash TEXT NOT NULL,
-
-    expires_at DATETIME NOT NULL,
-
+    referrer_user_id INTEGER NOT NULL,
+    referred_user_id INTEGER NOT NULL,
+    amount INTEGER NOT NULL,
+    rate_percent INTEGER DEFAULT 10,
+    status TEXT DEFAULT 'pending',
+    source TEXT DEFAULT 'membership_activation',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (user_id)
-        REFERENCES users(id)
-        ON DELETE CASCADE
+    FOREIGN KEY (referrer_user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (referred_user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-
--- =========================================================
--- DEFAULT PACKAGES
--- =========================================================
-
-INSERT OR IGNORE INTO packages
-(name, activation_fee, description)
-VALUES
-(
-    'Bronze',
-    1000,
-    'Basic access to Online Sphere opportunities and learning resources.'
+CREATE TABLE IF NOT EXISTS tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    category TEXT,
+    description TEXT,
+    status TEXT DEFAULT 'draft',
+    budget INTEGER,
+    currency TEXT DEFAULT 'KES',
+    deadline TEXT,
+    created_by INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
-INSERT OR IGNORE INTO packages
-(name, activation_fee, description)
-VALUES
-(
-    'Silver',
-    1750,
-    'Expanded access to opportunities and advanced learning resources.'
+CREATE TABLE IF NOT EXISTS task_assignments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    task_id INTEGER NOT NULL,
+    assignee_user_id INTEGER NOT NULL,
+    status TEXT DEFAULT 'assigned',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+    FOREIGN KEY (assignee_user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-INSERT OR IGNORE INTO packages
-(name, activation_fee, description)
-VALUES
-(
-    'Gold',
-    2500,
-    'Full access to the Online Sphere opportunity and learning library.'
+CREATE TABLE IF NOT EXISTS task_submissions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    task_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    note TEXT,
+    file_url TEXT,
+    status TEXT DEFAULT 'submitted',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    reviewed_at DATETIME,
+    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-
--- =========================================================
--- DEFAULT OPPORTUNITIES
--- =========================================================
-
-INSERT OR IGNORE INTO opportunities
-(title, category, description, difficulty, earning_model, requirements, risk_level, featured)
-VALUES
-(
-    'Online Transcription',
-    'Transcription',
-    'Convert audio or video recordings into written text.',
-    'Beginner',
-    'Paid per task or audio minute',
-    'Good listening skills, typing and attention to detail.',
-    'Low',
-    1
+CREATE TABLE IF NOT EXISTS platform_settings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    key_name TEXT NOT NULL UNIQUE,
+    value_text TEXT,
+    value_json TEXT,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT OR IGNORE INTO opportunities
-(title, category, description, difficulty, earning_model, requirements, risk_level, featured)
-VALUES
-(
-    'Data Entry',
-    'Data Entry',
-    'Enter, organize and verify information using online tools.',
-    'Beginner',
-    'Paid per task or project',
-    'Basic computer skills and accuracy.',
-    'Low',
-    1
-);
+INSERT OR IGNORE INTO roles (name) VALUES ('member');
+INSERT OR IGNORE INTO roles (name) VALUES ('super_admin');
 
-INSERT OR IGNORE INTO opportunities
-(title, category, description, difficulty, earning_model, requirements, risk_level, featured)
-VALUES
-(
-    'Freelancing',
-    'Freelancing',
-    'Offer professional skills to clients locally or internationally.',
-    'Beginner-Advanced',
-    'Paid per project or contract',
-    'A marketable skill and a professional profile.',
-    'Low',
-    1
-);
+INSERT OR IGNORE INTO permissions (name) VALUES ('member:dashboard');
+INSERT OR IGNORE INTO permissions (name) VALUES ('member:wallet');
+INSERT OR IGNORE INTO permissions (name) VALUES ('admin:overview');
+INSERT OR IGNORE INTO permissions (name) VALUES ('admin:members');
+INSERT OR IGNORE INTO permissions (name) VALUES ('admin:financials');
+INSERT OR IGNORE INTO permissions (name) VALUES ('admin:tasks');
+INSERT OR IGNORE INTO permissions (name) VALUES ('admin:referrals');
 
-INSERT OR IGNORE INTO opportunities
-(title, category, description, difficulty, earning_model, requirements, risk_level, featured)
-VALUES
-(
-    'Academic Writing',
-    'Academic Writing',
-    'Provide legitimate research and writing assistance while following academic integrity rules.',
-    'Intermediate',
-    'Paid per project',
-    'Strong writing, research and citation skills.',
-    'Medium',
-    0
-);
+INSERT OR IGNORE INTO role_permissions (role_id, permission)
+SELECT r.id, p.name FROM roles r JOIN permissions p ON p.name = 'member:dashboard' WHERE r.name = 'member';
 
-INSERT OR IGNORE INTO opportunities
-(title, category, description, difficulty, earning_model, requirements, risk_level, featured)
-VALUES
-(
-    'Online Gaming',
-    'Gaming',
-    'Explore legitimate gaming-related opportunities such as game testing, streaming and content creation.',
-    'Beginner',
-    'Task, contract, content or platform based',
-    'Gaming skills or content creation ability.',
-    'Medium',
-    0
-);
+INSERT OR IGNORE INTO role_permissions (role_id, permission)
+SELECT r.id, p.name FROM roles r JOIN permissions p ON p.name IN ('member:dashboard','member:wallet','admin:overview','admin:members','admin:financials','admin:tasks','admin:referrals') WHERE r.name = 'super_admin';
 
-INSERT OR IGNORE INTO opportunities
-(title, category, description, difficulty, earning_model, requirements, risk_level, featured)
-VALUES
-(
-    'Content Creation',
-    'Content',
-    'Create useful digital content for websites and social platforms.',
-    'Beginner-Advanced',
-    'Paid per project, contract or platform',
-    'Writing, video, design or communication skills.',
-    'Low',
-    1
-);
-
-INSERT OR IGNORE INTO opportunities
-(title, category, description, difficulty, earning_model, requirements, risk_level, featured)
-VALUES
-(
-    'Graphic Design',
-    'Design',
-    'Create logos, social media graphics, posters and other digital designs.',
-    'Intermediate',
-    'Paid per project',
-    'Design skills and suitable software.',
-    'Low',
-    0
-);
-
-INSERT OR IGNORE INTO opportunities
-(title, category, description, difficulty, earning_model, requirements, risk_level, featured)
-VALUES
-(
-    'AI-Assisted Work',
-    'AI',
-    'Explore legitimate work involving AI-assisted research, content, data and digital services.',
-    'Beginner-Advanced',
-    'Paid per task or project',
-    'Ability to use AI tools responsibly and verify results.',
-    'Medium',
-    1
-);
-
-INSERT OR IGNORE INTO opportunities
-(title, category, description, difficulty, earning_model, requirements, risk_level, featured)
-VALUES
-(
-    'Remote Jobs',
-    'Remote Jobs',
-    'Find legitimate remote employment and contract opportunities.',
-    'Intermediate',
-    'Salary, contract or project payment',
-    'Skills and qualifications depend on the job.',
-    'Low',
-    1
-);
+CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON user_roles(user_id);
+CREATE INDEX IF NOT EXISTS idx_login_history_user_id ON login_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+CREATE INDEX IF NOT EXISTS idx_commissions_status ON commissions(status);
+CREATE INDEX IF NOT EXISTS idx_referrals_status ON referrals(status);
