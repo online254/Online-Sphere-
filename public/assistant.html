@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#050816">
+  <meta name="description" content="Ask the Online Sphere AI assistant about digital skills, opportunities, membership and online safety.">
+  <title>AI Assistant | Online Sphere</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{color-scheme:dark;--bg:#050816;--panel:#0b1124;--panel2:#101a33;--blue:#3984ff;--cyan:#4ce6f5;--purple:#a36bff;--white:#f5f7ff;--muted:#a5b0cc;--line:rgba(156,181,255,.16)}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 15% 0%,rgba(53,102,255,.17),transparent 40%),radial-gradient(ellipse at 95% 35%,rgba(139,57,255,.12),transparent 35%),var(--bg);color:var(--white);font:16px "DM Sans",sans-serif}a{color:inherit}button,input{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}.wrap{width:min(900px,92%);margin:auto}header{border-bottom:1px solid var(--line);background:rgba(5,8,22,.86);backdrop-filter:blur(16px)}.nav{min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:15px}.brand{text-decoration:none;font:700 18px "Space Grotesk",sans-serif}.brand span{color:var(--cyan)}.nav a:last-child{color:#9bc8ff;font-size:14px;text-decoration:none}.main{padding:42px 0 56px}.intro{text-align:center;margin:0 auto 25px;max-width:680px}.eyebrow{display:inline-block;border:1px solid var(--line);border-radius:30px;padding:8px 12px;color:#c8d8ff;background:#0c1934;font-size:11px;letter-spacing:.7px}.intro h1{font:700 clamp(32px,6vw,48px) "Space Grotesk",sans-serif;letter-spacing:-1.6px;margin:17px 0 8px}.intro p{color:var(--muted);line-height:1.65;margin:0}.chat{max-width:760px;margin:auto;border:1px solid var(--line);border-radius:22px;background:rgba(11,17,36,.94);box-shadow:0 24px 80px #0005;overflow:hidden}.chat-head{display:flex;align-items:center;gap:12px;padding:16px 19px;border-bottom:1px solid var(--line)}.avatar{width:40px;height:40px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--purple));font-size:20px}.chat-head strong{display:block;font-family:"Space Grotesk",sans-serif}.chat-head small{color:#82d8c6;font-size:12px}.chat-head small:before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#51e9cf;margin-right:7px}.messages{height:min(52vh,470px);min-height:270px;overflow:auto;padding:20px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth}.message{max-width:min(86%,600px);padding:12px 15px;border:1px solid var(--line);border-radius:16px;background:var(--panel2);line-height:1.6;overflow-wrap:anywhere;white-space:pre-wrap}.message.assistant{align-self:flex-start;border-top-left-radius:5px}.message.user{align-self:flex-end;background:linear-gradient(130deg,#174796,#492c86);border-color:#718dff55;border-top-right-radius:5px}.message.error{border-color:#b84b65;color:#ffdce3}.suggestions{display:flex;flex-wrap:wrap;gap:8px;padding:0 19px 16px}.suggestions button{border:1px solid var(--line);border-radius:30px;background:#0c1934;color:#cbd8f2;padding:8px 11px;font-size:12px}.suggestions button:hover{border-color:var(--cyan);color:white}.composer{display:flex;gap:10px;padding:14px;border-top:1px solid var(--line);background:#080e20}.composer input{flex:1;min-width:0;border:1px solid #293957;border-radius:13px;background:#0b1329;color:white;padding:13px 14px}.composer input::placeholder{color:#8491b0}.composer button{border:0;border-radius:12px;padding:0 19px;background:linear-gradient(110deg,var(--blue),#8954f6);color:white;font-weight:700}.composer button:disabled{opacity:.55;cursor:wait}.footnote{max-width:760px;margin:13px auto 0;color:#8491b0;font-size:11px;line-height:1.6;text-align:center}.typing{color:#a5b0cc;font-size:13px;padding:0 20px 14px}.hidden{display:none!important}@media(max-width:560px){.main{padding-top:28px}.messages{height:52vh;padding:14px}.message{max-width:92%}.composer{padding:11px}.composer button{padding:0 14px}.nav{min-height:62px}}
+  </style>
+</head>
+<body>
+  <header><div class="wrap nav"><a class="brand" href="./index.html">ONLINE <span>SPHERE</span></a><a href="./index.html">← Back to Online Sphere</a></div></header>
+  <main class="wrap main">
+    <section class="intro" aria-labelledby="pageTitle"><span class="eyebrow">YOUR DIGITAL GUIDE</span><h1 id="pageTitle">Ask Online Sphere AI.</h1><p>Get guidance on digital skills, opportunity categories, membership information and staying safe online.</p></section>
+    <section class="chat" aria-label="Chat with Online Sphere AI">
+      <div class="chat-head"><div class="avatar" aria-hidden="true">✦</div><div><strong>Online Sphere AI</strong><small>Ready to help</small></div></div>
+      <div class="messages" id="messages" role="log" aria-live="polite" aria-relevant="additions">
+        <div class="message assistant">Hi! I can help you explore Online Sphere, build digital skills and understand online safety. What would you like to know?</div>
+      </div>
+      <div class="typing hidden" id="typing" role="status">Thinking…</div>
+      <div class="suggestions" aria-label="Suggested questions">
+        <button type="button">How do I get started?</button><button type="button">What skills should I learn?</button><button type="button">How can I spot online scams?</button>
+      </div>
+      <form class="composer" id="chatForm"><label class="hidden" for="messageInput">Your message</label><input id="messageInput" name="message" maxlength="2000" autocomplete="off" placeholder="Ask a question…" required><button id="sendButton" type="submit">Send</button></form>
+    </section>
+    <p class="footnote">AI responses can be inaccurate. Verify opportunity availability and all membership terms on the website. Online Sphere does not guarantee tasks, employment or earnings. Never share passwords, verification codes or your M-Pesa PIN.</p>
+  </main>
+  <script>
+    "use strict";
+    const CHAT_ENDPOINT = "https://online-sphere-backend.onrender.com/api/ai/chat";
+    const form = document.getElementById("chatForm");
+    const input = document.getElementById("messageInput");
+    const messages = document.getElementById("messages");
+    const typing = document.getElementById("typing");
+    const sendButton = document.getElementById("sendButton");
+    let pending = false;
+
+    function addMessage(text, role, isError) {
+      const bubble = document.createElement("div");
+      bubble.className = "message " + role + (isError ? " error" : "");
+      bubble.textContent = text;
+      messages.appendChild(bubble);
+      messages.scrollTop = messages.scrollHeight;
+      return bubble;
+    }
+
+    async function sendMessage(text) {
+      const clean = text.trim();
+      if (!clean || pending) return;
+      addMessage(clean, "user", false);
+      input.value = "";
+      pending = true;
+      input.disabled = true;
+      sendButton.disabled = true;
+      typing.classList.remove("hidden");
+      messages.scrollTop = messages.scrollHeight;
+
+      try {
+        const response = await fetch(CHAT_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify({ message: clean })
+        });
+        let data;
+        try { data = await response.json(); }
+        catch { throw new Error("The assistant service returned an unexpected response. Please try again."); }
+        if (!response.ok || data.success !== true || typeof data.reply !== "string") {
+          throw new Error(data.message || "Online Sphere AI is temporarily unavailable. Please try again.");
+        }
+        addMessage(data.reply, "assistant", false);
+      } catch (error) {
+        const message = error instanceof TypeError
+          ? "Could not reach the assistant. Check your connection and try again."
+          : (error.message || "Online Sphere AI is temporarily unavailable. Please try again.");
+        addMessage(message, "assistant", true);
+      } finally {
+        pending = false;
+        input.disabled = false;
+        sendButton.disabled = false;
+        typing.classList.add("hidden");
+        input.focus();
+      }
+    }
+
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      sendMessage(input.value);
+    });
+    document.querySelectorAll(".suggestions button").forEach(button => {
+      button.addEventListener("click", () => sendMessage(button.textContent));
+    });
+  </script>
+</body>
+</html>
