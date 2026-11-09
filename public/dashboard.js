@@ -38,19 +38,20 @@
   }
 
   function showOwnerLink(user) {
-    // This only controls whether the link is shown. Admin API authorization must be enforced server-side.
-    if (String(user.email || '').trim().toLowerCase() !== OWNER_EMAIL) return;
+    // Visibility only: owner admin API authorization must always be checked server-side.
+    const email = String(user?.email || '').trim().toLowerCase();
     const menu = $('#profileMenu');
-    if (!menu || menu.querySelector('[data-owner-admin-link]')) return;
+    if (email !== OWNER_EMAIL || !menu || menu.querySelector('[data-owner-admin-link]')) return;
     const link = document.createElement('a');
     link.href = 'admin.html';
     link.textContent = 'Owner Control Centre';
     link.dataset.ownerAdminLink = 'true';
-    menu.insertBefore(link, menu.querySelector('button') || null);
+    const signOut = $('#signOutButton');
+    menu.insertBefore(link, signOut || null);
   }
 
-  function showDashboard(data) {
-    const user = data.user || {};
+  function showDashboard(data, authenticatedUser = {}) {
+    const user = { ...(data.user || {}), ...authenticatedUser };
     const membership = data.membership || {};
     const wallet = data.wallet || {};
     const statistics = data.statistics || {};
@@ -105,20 +106,25 @@
       return;
     }
     try {
-      const response = await fetch(`${API_BASE}/api/me/dashboard`, {
-        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
-        credentials: 'include',
-        cache: 'no-store'
-      });
-      const result = await response.json().catch(() => ({}));
-      if (response.status === 401 || response.status === 403) {
+      const headers = { Authorization: `Bearer ${token}`, Accept: 'application/json' };
+      // /api/auth/me provides the authenticated email; the dashboard endpoint intentionally returns only dashboard data.
+      const [dashboardResponse, identityResponse] = await Promise.all([
+        fetch(`${API_BASE}/api/me/dashboard`, { headers, credentials: 'include', cache: 'no-store' }),
+        fetch(`${API_BASE}/api/auth/me`, { headers, credentials: 'include', cache: 'no-store' })
+      ]);
+      const [dashboardResult, identityResult] = await Promise.all([
+        dashboardResponse.json().catch(() => ({})),
+        identityResponse.json().catch(() => ({}))
+      ]);
+      if ([dashboardResponse.status, identityResponse.status].includes(401) || [dashboardResponse.status, identityResponse.status].includes(403)) {
         try { sessionStorage.removeItem('onlineSphereSession'); localStorage.removeItem('onlineSphereToken'); } catch (_) {}
         setStatus('Your session expired. Redirecting to sign in…');
         setTimeout(() => window.location.replace('auth.html'), 700);
         return;
       }
-      if (!response.ok) throw new Error(result.message || 'The dashboard service is temporarily unavailable.');
-      showDashboard(result.dashboard || result);
+      if (!dashboardResponse.ok) throw new Error(dashboardResult.message || 'The dashboard service is temporarily unavailable.');
+      if (!identityResponse.ok) throw new Error(identityResult.message || 'Could not verify the signed-in account.');
+      showDashboard(dashboardResult.dashboard || dashboardResult, identityResult.user || {});
     } catch (error) {
       setStatus(`${error.message} No sample financial data is being shown.`);
     }
@@ -142,9 +148,7 @@
   $('#profileButton')?.addEventListener('click', () => { const menu = $('#profileMenu'); menu.hidden = !menu.hidden; });
   document.addEventListener('click', (event) => { if (!event.target.closest('.top-actions') && $('#profileMenu')) $('#profileMenu').hidden = true; });
   $('#signOutButton')?.addEventListener('click', async () => {
-    try {
-      await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, credentials: 'include' });
-    } catch (_) {}
+    try { await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, credentials: 'include' }); } catch (_) {}
     try { sessionStorage.removeItem('onlineSphereSession'); localStorage.removeItem('onlineSphereToken'); } catch (_) {}
     window.location.replace('auth.html');
   });
