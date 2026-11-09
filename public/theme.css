@@ -125,15 +125,128 @@ select:focus, textarea:focus {
 }
 button:disabled { filter: grayscale(.2); }
 
+/* Homepage premium visual tuning */
+body:not(.auth-page) .hero {
+  padding-top: 74px;
+  padding-bottom: 60px;
+}
+body:not(.auth-page) .hero-grid {
+  gap: 54px;
+  align-items: center;
+}
+body:not(.auth-page) .hero h1 {
+  margin-top: 18px;
+  margin-bottom: 16px;
+  letter-spacing: -2.8px;
+  text-shadow: 0 18px 38px rgba(72, 112, 255, .14);
+}
+body:not(.auth-page) .hero-copy,
+body:not(.auth-page) .hero p,
+body:not(.auth-page) .feature-copy p,
+body:not(.auth-page) .section-head p,
+body:not(.auth-page) .step-card p,
+body:not(.auth-page) .package-card p,
+body:not(.auth-page) .card-body p,
+body:not(.auth-page) .footer-brand p,
+body:not(.auth-page) .footer-col a {
+  color: var(--os-muted);
+}
+body:not(.auth-page) .hero-art {
+  min-height: 490px;
+}
+body:not(.auth-page) .hero-image {
+  inset: 10px 0 10px 18px;
+  border: 1px solid rgba(137, 167, 255, .35);
+  box-shadow: 0 28px 68px rgba(33, 71, 183, .2);
+}
+body:not(.auth-page) .hero-image:after,
+body:not(.auth-page) .feature-art:after,
+body:not(.auth-page) .gallery-item:after,
+body:not(.auth-page) .card-image:after {
+  background: linear-gradient(180deg, rgba(5, 8, 22, .17), rgba(5, 8, 22, .72));
+}
+body:not(.auth-page) .floating-card {
+  background: rgba(10, 17, 33, .82);
+  border: 1px solid rgba(147, 173, 255, .18);
+  box-shadow: 0 18px 50px rgba(4, 8, 18, .3);
+}
+body:not(.auth-page) .metrics {
+  border-top: 1px solid var(--os-border);
+  border-bottom: 1px solid var(--os-border);
+  background: rgba(9, 16, 32, .72);
+}
+body:not(.auth-page) .metric strong {
+  color: #8fe9ff;
+}
+body:not(.auth-page) .category-grid,
+body:not(.auth-page) .steps-grid,
+body:not(.auth-page) .gallery-grid,
+body:not(.auth-page) .package-grid,
+body:not(.auth-page) .footer-grid {
+  gap: 20px;
+}
+body:not(.auth-page) .category-card,
+body:not(.auth-page) .step-card,
+body:not(.auth-page) .package-card,
+body:not(.auth-page) .feature-section,
+body:not(.auth-page) .cta-banner,
+body:not(.auth-page) .search-panel,
+body:not(.auth-page) .feature-art,
+body:not(.auth-page) .gallery-item {
+  border: 1px solid var(--os-border);
+}
+body:not(.auth-page) .category-card {
+  background: linear-gradient(155deg, rgba(17, 28, 57, .94), rgba(8, 14, 31, .98));
+  overflow: hidden;
+  transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+body:not(.auth-page) .category-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 22px 44px rgba(31, 70, 137, .18);
+}
+body:not(.auth-page) .card-image {
+  border-bottom: 1px solid rgba(153, 170, 222, .12);
+}
+body:not(.auth-page) .card-icon,
+body:not(.auth-page) .mini-icon,
+body:not(.auth-page) .feature-check,
+body:not(.auth-page) .package-icon,
+body:not(.auth-page) .step-symbol,
+body:not(.auth-page) .brand-symbol {
+  background: linear-gradient(135deg, rgba(67, 133, 244, .95), rgba(139, 92, 246, .95));
+  box-shadow: 0 10px 24px rgba(82, 107, 255, .18);
+}
+body:not(.auth-page) .package-card.featured {
+  border-color: rgba(161, 126, 255, .5) !important;
+  background: linear-gradient(155deg, rgba(24, 31, 61, .96), rgba(10, 16, 28, .98));
+}
+body:not(.auth-page) .cta-banner {
+  background: radial-gradient(ellipse at 80% 0%, rgba(137, 70, 255, .28), transparent 32%),
+    linear-gradient(130deg, rgba(20, 36, 67, .97), rgba(8, 12, 24, .98));
+}
+body:not(.auth-page) .footer-grid {
+  padding-top: 12px;
+}
+body:not(.auth-page) .footer-col strong {
+  color: #f3f6ff;
+}
+body:not(.auth-page) .footer-bottom {
+  background: rgba(10, 15, 29, .52);
+  border-color: var(--os-border);
+}
+
 /* Small-screen spacing and motion/accessibility refinements. */
 @media (max-width: 760px) {
   html { scroll-padding-top: 76px; }
   body:not(:has(.sidebar)) header:not(.topbar) .nav { min-height: 66px; }
   section:not(.page) { scroll-margin-top: 76px; }
+  body:not(.auth-page) .hero { padding-top: 48px; }
+  body:not(.auth-page) .hero h1 { letter-spacing: -1.8px; }
 }
 @media (max-width: 520px) {
   .container, .wrap { width: min(100% - 28px, 1160px); }
   .btn, .btn-primary, .btn-outline, .btn-secondary { min-height: 44px; }
+  body:not(.auth-page) .hero-art { min-height: 320px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
