@@ -1,35 +1,57 @@
-# Online Sphere Upgrade Plan
-
-## Phase 1 — Dashboard preservation
-- Keep `public/dashboard.html`, `public/dashboard.css`, and `public/dashboard.js` visually unchanged.
-- Ensure the approved dark navy, gold, teal, and bottom navigation remain exactly as approved.
-
-## Phase 2 — Secure backend foundation
-- Harden API endpoints with rate limiting and security headers.
-- Protect admin APIs through role verification and owner-only access.
-- Add logs for sensitive actions and member login history.
-
-## Phase 3 — Member platform modules
-- Add wallet, package activation, opportunities, task submissions, and learning endpoints.
-- Keep all important financial state and balances sourced from server-side records only.
-
-## Phase 4 — Payments and referrals
-- Verify M-Pesa Daraja callbacks before wallet or membership activation updates.
-- Track referral registrations and incentivize only verified membership activations.
-- Maintain the commission policy at 10% of qualifying verified membership activation fees, subject to policy and internal approval.
-
-## Phase 5 — Owner admin control centre
-- Restrict all admin functionality to the authorized owner account.
-- Log sensitive actions and expose a dedicated admin dashboard.
-- Do not allow ordinary members to reach administrator routes or pages.
-
-## Phase 6 — Deployment preparation
-- Keep secrets in the environment and never in frontend code.
-- Prepare production variables for the backend and payment callbacks.
-- Use secure hosting and backend configuration for deployment.
-
-## Phase 7 — Final verification
-- Validate registration, login, dashboard loading, payment verification, and admin access restrictions.
-- Ensure no dashboard redesign or visual policy deviations occur.
-
-This project is intentionally staged to preserve the working dashboard while expanding the secure platform functionality around it.
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07111f">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Owner Control Centre | Online Sphere</title>
+  <style>
+    :root{color-scheme:dark;--bg:#07111f;--panel:#101e2b;--line:rgba(160,190,210,.16);--text:#f4f8fc;--muted:#91a5b5;--gold:#ffbd59;--teal:#55d9c8;--blue:#2563eb}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,sans-serif;display:grid;place-items:center;padding:20px}
+    main{width:min(760px,100%);background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:clamp(22px,5vw,40px)}
+    h1{font-size:clamp(1.5rem,5vw,2.1rem);margin:0 0 8px}p{color:var(--muted)}.badge{color:var(--gold);font-size:.76rem;letter-spacing:.12em;text-transform:uppercase}
+    #status{border-top:1px solid var(--line);padding-top:18px;margin-top:22px}.back{color:var(--teal);display:inline-block;margin-top:18px}.error{color:#ff9797}
+    .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:20px}.metric{border:1px solid var(--line);border-radius:12px;padding:16px}.metric small{display:block;color:var(--muted)}.metric strong{font-size:1.35rem}
+  </style>
+</head>
+<body>
+  <main>
+    <span class="badge">Private · Owner access</span>
+    <h1>Online Sphere Control Centre</h1>
+    <p>This page requires an authenticated owner session. Merely knowing or entering the owner email does not grant administrator privileges.</p>
+    <div id="status" role="status" aria-live="polite">Verifying your authorized session…</div>
+    <div class="metrics" id="metrics" hidden></div>
+    <a class="back" href="dashboard.html">← Return to member dashboard</a>
+  </main>
+  <script>
+    (() => {
+      'use strict';
+      const api = String(window.ONLINE_SPHERE_API_URL || 'https://online-sphere-backend.onrender.com').replace(/\/$/, '');
+      const status = document.getElementById('status');
+      const metrics = document.getElementById('metrics');
+      let token = '';
+      try { token = sessionStorage.getItem('onlineSphereSession') || localStorage.getItem('onlineSphereToken') || ''; } catch (_) {}
+      if (!token) {
+        status.className = 'error';
+        status.textContent = 'Please sign in with the authorized owner account. Access cannot be granted by email alone.';
+        return;
+      }
+      fetch(`${api}/api/admin/overview`, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }, cache: 'no-store' })
+        .then(async (response) => {
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(payload.message || (response.status === 403 ? 'This account does not have owner administrator permissions.' : 'The owner control API is unavailable.'));
+          const data = payload.data || {};
+          const entries = [
+            ['Members', data.members], ['Active members', data.activeMembers], ['Verified deposits', data.verifiedDeposits],
+            ['Pending deposits', data.pendingDeposits], ['Withdrawal requests', data.withdrawalRequests], ['Tasks', data.taskCount]
+          ];
+          metrics.innerHTML = entries.map(([label, value]) => `<div class="metric"><small>${label}</small><strong>${Number(value || 0).toLocaleString()}</strong></div>`).join('');
+          metrics.hidden = false;
+          status.textContent = 'Owner access verified by the backend.';
+        })
+        .catch((error) => { status.className = 'error'; status.textContent = error.message; });
+    })();
+  </script>
+</body>
+</html>
