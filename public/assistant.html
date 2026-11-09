@@ -10,27 +10,411 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root{color-scheme:dark;--bg:#050816;--panel:#0b1124;--panel2:#101a33;--blue:#3984ff;--cyan:#4ce6f5;--purple:#a36bff;--white:#f5f7ff;--muted:#a5b0cc;--line:rgba(156,181,255,.16)}
-    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 15% 0%,rgba(53,102,255,.17),transparent 40%),radial-gradient(ellipse at 95% 35%,rgba(139,57,255,.12),transparent 35%),var(--bg);color:var(--white);font:16px "DM Sans",sans-serif}a{color:inherit}button,input{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}.wrap{width:min(900px,92%);margin:auto}header{border-bottom:1px solid var(--line);background:rgba(5,8,22,.86);backdrop-filter:blur(16px)}.nav{min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:15px}.brand{text-decoration:none;font:700 18px "Space Grotesk",sans-serif}.brand span{color:var(--cyan)}.nav a:last-child{color:#9bc8ff;font-size:14px;text-decoration:none}.main{padding:42px 0 56px}.intro{text-align:center;margin:0 auto 25px;max-width:680px}.eyebrow{display:inline-block;border:1px solid var(--line);border-radius:30px;padding:8px 12px;color:#c8d8ff;background:#0c1934;font-size:11px;letter-spacing:.7px}.intro h1{font:700 clamp(32px,6vw,48px) "Space Grotesk",sans-serif;letter-spacing:-1.6px;margin:17px 0 8px}.intro p{color:var(--muted);line-height:1.65;margin:0}.chat{max-width:760px;margin:auto;border:1px solid var(--line);border-radius:22px;background:rgba(11,17,36,.94);box-shadow:0 24px 80px #0005;overflow:hidden}.chat-head{display:flex;align-items:center;gap:12px;padding:16px 19px;border-bottom:1px solid var(--line)}.avatar{width:40px;height:40px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--purple));font-size:20px}.chat-head strong{display:block;font-family:"Space Grotesk",sans-serif}.chat-head small{color:#82d8c6;font-size:12px}.chat-head small:before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#51e9cf;margin-right:7px}.messages{height:min(52vh,470px);min-height:270px;overflow:auto;padding:20px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth}.message{max-width:min(86%,600px);padding:12px 15px;border:1px solid var(--line);border-radius:16px;background:var(--panel2);line-height:1.6;overflow-wrap:anywhere;white-space:pre-wrap}.message.assistant{align-self:flex-start;border-top-left-radius:5px}.message.user{align-self:flex-end;background:linear-gradient(130deg,#174796,#492c86);border-color:#718dff55;border-top-right-radius:5px}.message.error{border-color:#b84b65;color:#ffdce3}.suggestions{display:flex;flex-wrap:wrap;gap:8px;padding:0 19px 16px}.suggestions button{border:1px solid var(--line);border-radius:30px;background:#0c1934;color:#cbd8f2;padding:8px 11px;font-size:12px}.suggestions button:hover{border-color:var(--cyan);color:white}.composer{display:flex;gap:10px;padding:14px;border-top:1px solid var(--line);background:#080e20}.composer input{flex:1;min-width:0;border:1px solid #293957;border-radius:13px;background:#0b1329;color:white;padding:13px 14px}.composer input::placeholder{color:#8491b0}.composer button{border:0;border-radius:12px;padding:0 19px;background:linear-gradient(110deg,var(--blue),#8954f6);color:white;font-weight:700}.composer button:disabled{opacity:.55;cursor:wait}.footnote{max-width:760px;margin:13px auto 0;color:#8491b0;font-size:11px;line-height:1.6;text-align:center}.typing{color:#a5b0cc;font-size:13px;padding:0 20px 14px}.hidden{display:none!important}@media(max-width:560px){.main{padding-top:28px}.messages{height:52vh;padding:14px}.message{max-width:92%}.composer{padding:11px}.composer button{padding:0 14px}.nav{min-height:62px}}
+    :root {
+      --bg: #050816;
+      --bg-2: #0b1124;
+      --panel: rgba(12, 19, 38, 0.9);
+      --panel-strong: rgba(16, 26, 51, 0.98);
+      --panel-soft: rgba(24, 36, 62, 0.92);
+      --line: rgba(156, 181, 255, 0.16);
+      --line-strong: rgba(120, 152, 255, 0.35);
+      --blue: #4a8dff;
+      --blue-2: #2e67f6;
+      --cyan: #69e7ff;
+      --purple: #9d71ff;
+      --pink: #ff8ad1;
+      --white: #f5f7ff;
+      --muted: #a8b7d4;
+      --success: #5ee2b4;
+      --danger: #ff7d9c;
+      --shadow: rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: "DM Sans", sans-serif;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(74, 141, 255, 0.18), transparent 24%),
+        radial-gradient(circle at 80% 25%, rgba(157, 113, 255, 0.13), transparent 22%),
+        radial-gradient(circle at 50% 85%, rgba(105, 231, 255, 0.08), transparent 28%),
+        var(--bg);
+      color: var(--white);
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    a { color: inherit; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, a:focus-visible, input:focus-visible {
+      outline: 2px solid var(--cyan);
+      outline-offset: 3px;
+    }
+
+    .wrap {
+      width: min(1120px, 92%);
+      margin: 0 auto;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(5, 8, 22, 0.78);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .nav {
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .brand {
+      text-decoration: none;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      color: var(--white);
+    }
+
+    .brand span {
+      color: var(--cyan);
+    }
+
+    .nav-link {
+      color: #dfe9ff;
+      text-decoration: none;
+      font-size: 0.96rem;
+      font-weight: 600;
+      opacity: 0.9;
+      transition: opacity 0.2s ease;
+    }
+
+    .nav-link:hover {
+      opacity: 1;
+    }
+
+    .main {
+      flex: 1;
+      padding: 42px 0 56px;
+    }
+
+    .intro {
+      max-width: 760px;
+      margin: 0 auto 28px;
+      text-align: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 14px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: rgba(12, 25, 52, 0.8);
+      font-size: 0.72rem;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+      color: #d7e7ff;
+      font-weight: 700;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--blue));
+      box-shadow: 0 0 16px rgba(105, 231, 255, 0.9);
+    }
+
+    .intro h1 {
+      margin: 18px 0 8px;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(2.4rem, 5vw, 4rem);
+      line-height: 1.05;
+      letter-spacing: -0.06em;
+    }
+
+    .intro p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 1.02rem;
+    }
+
+    .chat-shell {
+      max-width: 900px;
+      margin: 0 auto;
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(13, 20, 38, 0.96), rgba(9, 14, 26, 0.98));
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
+    }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(10, 15, 30, 0.9);
+    }
+
+    .chat-avatar {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      box-shadow: 0 10px 28px rgba(74, 141, 255, 0.35);
+      font-size: 1.35rem;
+      font-weight: 700;
+    }
+
+    .chat-title {
+      font-family: "Space Grotesk", sans-serif;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      margin: 0;
+      font-size: 1.12rem;
+    }
+
+    .chat-state {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: #86f0d0;
+      font-size: 0.76rem;
+      margin-top: 3px;
+    }
+
+    .chat-state::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 12px rgba(94, 226, 180, 0.9);
+    }
+
+    .messages {
+      height: min(54vh, 480px);
+      min-height: 260px;
+      overflow-y: auto;
+      padding: 22px 18px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      scroll-behavior: smooth;
+    }
+
+    .messages::-webkit-scrollbar { width: 9px; }
+    .messages::-webkit-scrollbar-thumb {
+      background: rgba(143, 168, 255, 0.18);
+      border-radius: 999px;
+    }
+
+    .message {
+      max-width: min(82%, 620px);
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      line-height: 1.7;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+
+    .message.assistant {
+      align-self: flex-start;
+      background: rgba(17, 27, 49, 0.9);
+      border-bottom-left-radius: 6px;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, rgba(34, 87, 202, 0.9), rgba(86, 57, 162, 0.92));
+      border-color: rgba(111, 154, 255, 0.42);
+      border-bottom-right-radius: 6px;
+    }
+
+    .message.error {
+      border-color: rgba(255, 125, 156, 0.4);
+      background: rgba(58, 20, 31, 0.9);
+      color: #ffd7df;
+    }
+
+    .typing {
+      color: var(--muted);
+      font-size: 0.8rem;
+      padding: 0 20px 12px;
+    }
+
+    .typing.hidden, .hidden {
+      display: none !important;
+    }
+
+    .suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      padding: 0 18px 16px;
+    }
+
+    .suggestion {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.92);
+      color: #dfeaff;
+      padding: 9px 12px;
+      font-size: 0.78rem;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .suggestion:hover {
+      transform: translateY(-1px);
+      border-color: rgba(105, 231, 255, 0.5);
+      background: rgba(18, 31, 54, 0.95);
+    }
+
+    .composer {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px 18px;
+      border-top: 1px solid var(--line);
+      background: rgba(8, 12, 24, 0.94);
+    }
+
+    .composer input {
+      flex: 1;
+      min-width: 0;
+      border: 1px solid rgba(116, 147, 220, 0.35);
+      border-radius: 14px;
+      background: rgba(12, 19, 38, 0.95);
+      color: var(--white);
+      padding: 14px 15px;
+      font-size: 0.98rem;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .composer input::placeholder {
+      color: #8b9abe;
+    }
+
+    .composer input:focus {
+      border-color: rgba(105, 231, 255, 0.7);
+      box-shadow: 0 0 0 4px rgba(105, 231, 255, 0.12);
+      outline: none;
+    }
+
+    .composer button {
+      border: 0;
+      min-width: 110px;
+      border-radius: 14px;
+      padding: 13px 18px;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      color: var(--white);
+      font-weight: 700;
+      box-shadow: 0 12px 30px rgba(74, 141, 255, 0.3);
+      transition: transform 0.2s ease, filter 0.2s ease;
+    }
+
+    .composer button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.08);
+    }
+
+    .composer button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+      transform: none;
+    }
+
+    .footnote {
+      max-width: 760px;
+      margin: 16px auto 0;
+      color: #8b9bbe;
+      font-size: 0.76rem;
+      line-height: 1.7;
+      text-align: center;
+    }
+
+    @media (max-width: 640px) {
+      .main { padding-top: 26px; }
+      .intro h1 { margin-bottom: 10px; }
+      .messages { height: 48vh; }
+      .message { max-width: 90%; }
+      .composer { align-items: stretch; }
+      .composer button { min-width: 92px; }
+      .nav { min-height: 64px; }
+      .nav-link { font-size: 0.86rem; }
+    }
   </style>
 </head>
 <body>
-  <header><div class="wrap nav"><a class="brand" href="./index.html">ONLINE <span>SPHERE</span></a><a href="./index.html">← Back to Online Sphere</a></div></header>
+  <header>
+    <div class="wrap nav">
+      <a class="brand" href="./index.html">ONLINE <span>SPHERE</span></a>
+      <a class="nav-link" href="./index.html">← Back to Online Sphere</a>
+    </div>
+  </header>
+
   <main class="wrap main">
-    <section class="intro" aria-labelledby="pageTitle"><span class="eyebrow">YOUR DIGITAL GUIDE</span><h1 id="pageTitle">Ask Online Sphere AI.</h1><p>Get guidance on digital skills, opportunity categories, membership information and staying safe online.</p></section>
-    <section class="chat" aria-label="Chat with Online Sphere AI">
-      <div class="chat-head"><div class="avatar" aria-hidden="true">✦</div><div><strong>Online Sphere AI</strong><small>Ready to help</small></div></div>
+    <section class="intro" aria-labelledby="pageTitle">
+      <span class="eyebrow">Your digital guide</span>
+      <h1 id="pageTitle">Ask Online Sphere AI.</h1>
+      <p>Get guidance on digital skills, opportunity categories, membership information and online safety.</p>
+    </section>
+
+    <section class="chat-shell" aria-label="Chat with Online Sphere AI">
+      <div class="chat-header">
+        <div class="chat-avatar" aria-hidden="true">✦</div>
+        <div>
+          <p class="chat-title">Online Sphere AI</p>
+          <div class="chat-state">Ready to help</div>
+        </div>
+      </div>
+
       <div class="messages" id="messages" role="log" aria-live="polite" aria-relevant="additions">
         <div class="message assistant">Hi! I can help you explore Online Sphere, build digital skills and understand online safety. What would you like to know?</div>
       </div>
+
       <div class="typing hidden" id="typing" role="status">Thinking…</div>
+
       <div class="suggestions" aria-label="Suggested questions">
-        <button type="button">How do I get started?</button><button type="button">What skills should I learn?</button><button type="button">How can I spot online scams?</button>
+        <button class="suggestion" type="button">How do I get started?</button>
+        <button class="suggestion" type="button">What skills should I learn?</button>
+        <button class="suggestion" type="button">How can I spot online scams?</button>
       </div>
-      <form class="composer" id="chatForm"><label class="hidden" for="messageInput">Your message</label><input id="messageInput" name="message" maxlength="2000" autocomplete="off" placeholder="Ask a question…" required><button id="sendButton" type="submit">Send</button></form>
+
+      <form class="composer" id="chatForm">
+        <label class="hidden" for="messageInput">Your message</label>
+        <input id="messageInput" name="message" maxlength="2000" autocomplete="off" placeholder="Ask a question…" required>
+        <button id="sendButton" type="submit">Send</button>
+      </form>
     </section>
+
     <p class="footnote">AI responses can be inaccurate. Verify opportunity availability and all membership terms on the website. Online Sphere does not guarantee tasks, employment or earnings. Never share passwords, verification codes or your M-Pesa PIN.</p>
   </main>
+
   <script>
     "use strict";
     const CHAT_ENDPOINT = "https://online-sphere-backend.onrender.com/api/ai/chat";
@@ -39,21 +423,22 @@
     const messages = document.getElementById("messages");
     const typing = document.getElementById("typing");
     const sendButton = document.getElementById("sendButton");
+
     let pending = false;
 
-    function addMessage(text, role, isError) {
+    function addMessage(text, role, isError = false) {
       const bubble = document.createElement("div");
       bubble.className = "message " + role + (isError ? " error" : "");
       bubble.textContent = text;
       messages.appendChild(bubble);
       messages.scrollTop = messages.scrollHeight;
-      return bubble;
     }
 
     async function sendMessage(text) {
       const clean = text.trim();
       if (!clean || pending) return;
-      addMessage(clean, "user", false);
+
+      addMessage(clean, "user");
       input.value = "";
       pending = true;
       input.disabled = true;
@@ -64,20 +449,30 @@
       try {
         const response = await fetch(CHAT_ENDPOINT, {
           method: "POST",
-          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
           body: JSON.stringify({ message: clean })
         });
+
         let data;
-        try { data = await response.json(); }
-        catch { throw new Error("The assistant service returned an unexpected response. Please try again."); }
+        try {
+          data = await response.json();
+        } catch {
+          throw new Error("The assistant service returned an unexpected response. Please try again.");
+        }
+
         if (!response.ok || data.success !== true || typeof data.reply !== "string") {
           throw new Error(data.message || "Online Sphere AI is temporarily unavailable. Please try again.");
         }
-        addMessage(data.reply, "assistant", false);
+
+        addMessage(data.reply, "assistant");
       } catch (error) {
         const message = error instanceof TypeError
           ? "Could not reach the assistant. Check your connection and try again."
           : (error.message || "Online Sphere AI is temporarily unavailable. Please try again.");
+
         addMessage(message, "assistant", true);
       } finally {
         pending = false;
@@ -88,11 +483,12 @@
       }
     }
 
-    form.addEventListener("submit", event => {
+    form.addEventListener("submit", (event) => {
       event.preventDefault();
       sendMessage(input.value);
     });
-    document.querySelectorAll(".suggestions button").forEach(button => {
+
+    document.querySelectorAll(".suggestion").forEach((button) => {
       button.addEventListener("click", () => sendMessage(button.textContent));
     });
   </script>
