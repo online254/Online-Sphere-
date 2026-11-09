@@ -201,6 +201,23 @@ CREATE TABLE IF NOT EXISTS platform_settings (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS payment_attempts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    request_id TEXT NOT NULL UNIQUE,
+    phone TEXT NOT NULL,
+    package_name TEXT NOT NULL,
+    amount INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    merchant_request_id TEXT,
+    checkout_request_id TEXT UNIQUE,
+    mpesa_receipt TEXT UNIQUE,
+    result_code INTEGER,
+    result_description TEXT,
+    transaction_date TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 INSERT OR IGNORE INTO roles (name) VALUES ('member');
 INSERT OR IGNORE INTO roles (name) VALUES ('super_admin');
 
@@ -218,6 +235,45 @@ SELECT r.id, p.name FROM roles r JOIN permissions p ON p.name = 'member:dashboar
 INSERT OR IGNORE INTO role_permissions (role_id, permission)
 SELECT r.id, p.name FROM roles r JOIN permissions p ON p.name IN ('member:dashboard','member:wallet','admin:overview','admin:members','admin:financials','admin:tasks','admin:referrals') WHERE r.name = 'super_admin';
 
+INSERT OR IGNORE INTO packages (name, activation_fee, description)
+VALUES ('Bronze', 1000, 'Basic access to opportunities and learning resources.');
+
+INSERT OR IGNORE INTO packages (name, activation_fee, description)
+VALUES ('Silver', 1750, 'Expanded access to the member workspace and higher-priority opportunities.');
+
+INSERT OR IGNORE INTO packages (name, activation_fee, description)
+VALUES ('Gold', 2500, 'Full access to the platform, advanced tasks, and premium learning features.');
+
+INSERT OR IGNORE INTO opportunities (title, category, description, difficulty, earning_model, requirements, risk_level, featured, status)
+VALUES ('Online Transcription', 'Transcription', 'Convert audio or video recordings into written text.', 'Beginner', 'Paid per task or audio minute', 'Good listening skills and attention to detail.', 'Low', 1, 'open');
+
+INSERT OR IGNORE INTO opportunities (title, category, description, difficulty, earning_model, requirements, risk_level, featured, status)
+VALUES ('Data Entry Support', 'Data Entry', 'Enter, organize and verify information using online tools.', 'Beginner', 'Paid per task or project', 'Basic computer skills and accuracy.', 'Low', 1, 'open');
+
+INSERT OR IGNORE INTO opportunities (title, category, description, difficulty, earning_model, requirements, risk_level, featured, status)
+VALUES ('Research Assistant', 'Research', 'Gather facts, compare sources and summarize findings.', 'Intermediate', 'Paid per task or project', 'Strong research and writing discipline.', 'Low', 0, 'draft');
+
+INSERT OR IGNORE INTO opportunities (title, category, description, difficulty, earning_model, requirements, risk_level, featured, status)
+VALUES ('Content Writing', 'Writing', 'Create useful, readable content for clients, businesses, or digital channels.', 'Intermediate', 'Paid per project', 'Writing, grammar, and fact checking ability.', 'Low', 1, 'open');
+
+INSERT OR IGNORE INTO opportunities (title, category, description, difficulty, earning_model, requirements, risk_level, featured, status)
+VALUES ('Graphic Design', 'Graphic Design', 'Create digital graphics, social posts and branded creative assets.', 'Intermediate', 'Paid per project', 'Familiarity with design software and visual consistency.', 'Low', 0, 'open');
+
+INSERT OR IGNORE INTO courses (title, slug, description, category, status)
+VALUES ('Introduction to Online Freelancing', 'online-freelancing', 'Learn how to build a digital profile, find opportunities, and work safely online.', 'Online freelancing', 'published');
+
+INSERT OR IGNORE INTO courses (title, slug, description, category, status)
+VALUES ('Transcription Fundamentals', 'transcription-fundamentals', 'Understand transcription formats, quality control, and client expectations.', 'Transcription', 'published');
+
+INSERT OR IGNORE INTO courses (title, slug, description, category, status)
+VALUES ('Data Entry Skills', 'data-entry-skills', 'Build the accuracy and systems thinking needed for online data work.', 'Data entry', 'published');
+
+INSERT OR IGNORE INTO courses (title, slug, description, category, status)
+VALUES ('Digital Marketing Essentials', 'digital-marketing-essentials', 'Start with audience research, content strategy, and online growth basics.', 'Digital marketing', 'published');
+
+INSERT OR IGNORE INTO announcements (title, body, is_published)
+VALUES ('Platform Update', 'The Online Sphere platform is now using verified member data and secure backend checks for critical transactions.', 1);
+
 CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON user_roles(user_id);
 CREATE INDEX IF NOT EXISTS idx_login_history_user_id ON login_history(user_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
@@ -225,3 +281,5 @@ CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
 CREATE INDEX IF NOT EXISTS idx_commissions_status ON commissions(status);
 CREATE INDEX IF NOT EXISTS idx_referrals_status ON referrals(status);
+CREATE INDEX IF NOT EXISTS idx_payment_attempts_phone ON payment_attempts(phone);
+CREATE INDEX IF NOT EXISTS idx_payment_attempts_status ON payment_attempts(status);

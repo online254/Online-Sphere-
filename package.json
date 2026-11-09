@@ -1,12 +1,12 @@
 {
   "name": "online-sphere-backend",
   "version": "1.0.0",
-  "description": "Online Sphere backend with secure member access, M-PESA Daraja integration and admin controls",
+  "description": "Online Sphere secure member platform backend with M-Pesa integration, admin controls, referrals, learning, and tasks",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "audit": "node -e \"const db=require('./database/database.db.js'); console.log(db.prepare('SELECT COUNT(*) AS count FROM audit_logs').get());\""
+    "check": "node --check server.js"
   },
   "engines": {
     "node": ">=20"
