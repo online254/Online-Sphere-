@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07111f">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Owner Control Centre | Online Sphere</title>
+  <style>
+    :root{color-scheme:dark;--bg:#07111f;--panel:#101e2b;--line:rgba(160,190,210,.16);--text:#f4f8fc;--muted:#91a5b5;--gold:#ffbd59;--teal:#55d9c8}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,sans-serif;display:grid;place-items:center;padding:20px}
+    main{width:min(800px,100%);background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:clamp(22px,5vw,40px)}
+    h1{font-size:clamp(1.5rem,5vw,2.1rem);margin:0 0 8px}.badge{color:var(--gold);font-size:.76rem;letter-spacing:.12em;text-transform:uppercase}p,small{color:var(--muted)}
+    #status{border-top:1px solid var(--line);padding-top:18px;margin-top:22px}.error{color:#ff9797}.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:18px}.metric{border:1px solid var(--line);border-radius:12px;padding:16px}.metric small{display:block}.metric strong{font-size:1.35rem}.back{color:var(--teal);display:inline-block;margin-top:20px}
+  </style>
+</head>
+<body>
+  <main>
+    <span class="badge">Private · Owner access</span>
+    <h1>Online Sphere Control Centre</h1>
+    <p>Access requires a valid owner session. An email address alone does not grant administrator permissions.</p>
+    <div id="status" role="status" aria-live="polite">Verifying your owner session…</div>
+    <div class="metrics" id="metrics" hidden></div>
+    <a class="back" href="dashboard.html">← Return to dashboard</a>
+  </main>
+  <script>
+    (() => {
+      const api = String(window.ONLINE_SPHERE_API_URL || 'https://online-sphere-backend.onrender.com').replace(/\/$/, '');
+      const status = document.getElementById('status');
+      const metrics = document.getElementById('metrics');
+      let token = '';
+      try { token = sessionStorage.getItem('onlineSphereSession') || localStorage.getItem('onlineSphereToken') || ''; } catch (_) {}
+      if (!token) { status.className = 'error'; status.textContent = 'Sign in using the configured owner account.'; return; }
+      fetch(`${api}/api/admin/overview`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
+        .then(async (response) => {
+          const body = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(body.message || 'Owner access denied.');
+          const values = body.data || {};
+          const cards = [['Members', values.members], ['Active members', values.activeMembers], ['Verified deposits', values.verifiedDeposits], ['Pending deposits', values.pendingDeposits], ['Withdrawal requests', values.withdrawalRequests], ['Tasks', values.taskCount]];
+          metrics.innerHTML = cards.map(([label, count]) => `<div class="metric"><small>${label}</small><strong>${Number(count || 0).toLocaleString()}</strong></div>`).join('');
+          metrics.hidden = false;
+          status.textContent = 'Owner access verified by the backend.';
+        })
+        .catch((error) => { status.className = 'error'; status.textContent = error.message; });
+    })();
+  </script>
+</body>
+</html>

@@ -1,22 +1,23 @@
 {
-"name": "online-sphere-backend",
-"version": "1.0.0",
-"description": "Online Sphere backend with M-PESA Daraja integration and AI assistant",
-"main": "server.js",
-"scripts": {
-"start": "node server.js",
-"dev": "node server.js"
-},
-"engines": {
-"node": ">=20"
-},
-"dependencies": {
-"axios": "^1.7.9",
-"better-sqlite3": "^12.2.0",
-"cors": "^2.8.5",
-"dotenv": "^16.4.7",
-"express": "^4.21.2",
-"openai": "^7.17.0",
-  "pg": "^8.16.3"
-}
+  "name": "online-sphere-backend",
+  "version": "1.1.0",
+  "description": "Online Sphere secure API backend",
+  "main": "secure-server.js",
+  "scripts": {
+    "start": "node secure-server.js",
+    "dev": "node secure-server.js",
+    "check": "node --check secure-server.js"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "better-sqlite3": "^12.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.3",
+    "helmet": "^8.1.0",
+    "openai": "^7.17.0",
+    "pg": "^8.16.3"
+  }
 }
