@@ -1,827 +1,137 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#071524" />
-  <title>Eagle Web Commerce Dashboard</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --bg: #071423;
-      --bg2: #0d1a2a;
-      --panel: rgba(14, 29, 40, 0.95);
-      --panel-2: rgba(17, 36, 48, 0.95);
-      --panel-3: rgba(22, 37, 48, 0.9);
-      --line: rgba(160, 188, 207, 0.14);
-      --line-strong: rgba(168, 202, 230, 0.22);
-      --text: #ecf6ff;
-      --muted: #9bb0bf;
-      --muted-2: #7d93a5;
-      --gold: #f2c36d;
-      --gold-2: #efad49;
-      --teal: #6bead9;
-      --teal-2: #4ec7c2;
-      --cyan: #9fdafc;
-      --green: #5ae2ac;
-      --shadow: rgba(2, 4, 10, 0.6);
-      --radius: 18px;
-    }
-
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background:
-        radial-gradient(circle at 20% 10%, rgba(56, 124, 255, 0.18), transparent 30%),
-        radial-gradient(circle at 80% 30%, rgba(92, 152, 255, 0.12), transparent 32%),
-        linear-gradient(180deg, #040c19 0%, #071524 20%, #060d17 100%);
-      color: var(--text);
-      font-family: "DM Sans", sans-serif;
-      display: grid;
-      place-items: center;
-      padding: 26px 12px 70px;
-    }
-
-    .phone {
-      width: min(100%, 430px);
-      background: linear-gradient(180deg, rgba(14, 25, 36, 0.96), rgba(6, 13, 19, 0.98));
-      border: 1px solid rgba(170, 203, 233, 0.12);
-      border-radius: 26px;
-      overflow: hidden;
-      box-shadow: 0 40px 90px rgba(0, 0, 0, 0.55);
-      position: relative;
-    }
-
-    .statusbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 14px 8px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      background: rgba(6, 13, 19, 0.9);
-    }
-
-    .status-left, .status-right {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
-
-    .status-right { font-size: 10px; }
-
-    .signal, .wifi, .battery {
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-      color: #dfefff;
-    }
-
-    .dot {
-      width: 4px;
-      height: 4px;
-      border-radius: 50%;
-      background: currentColor;
-      display: inline-block;
-    }
-
-    .battery {
-      position: relative;
-      width: 22px;
-      height: 11px;
-      border: 1px solid rgba(255,255,255,.7);
-      border-radius: 3px;
-      padding: 1px;
-      box-sizing: border-box;
-    }
-    .battery::before {
-      content: "";
-      position: absolute;
-      right: -4px;
-      top: 3px;
-      width: 2px;
-      height: 5px;
-      background: rgba(255,255,255,.7);
-      border-radius: 1px;
-    }
-    .battery::after {
-      content: "";
-      position: absolute;
-      inset: 2px 2px 2px 2px;
-      background: linear-gradient(90deg, #edf8ff 0%, #edf8ff 75%, rgba(255,255,255,.8) 75%);
-      border-radius: 2px;
-    }
-
-    .browser {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 0 12px 12px;
-      background: rgba(6, 13, 19, 0.9);
-    }
-
-    .browser-home {
-      width: 26px;
-      height: 26px;
-      border-radius: 8px;
-      display: grid;
-      place-items: center;
-      color: #dfefff;
-      font-size: 17px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.06);
-    }
-
-    .browser-addr {
-      flex: 1;
-      min-width: 0;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 15px;
-      padding: 10px 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-size: 12px;
-      color: #dfe9f1;
-      letter-spacing: 0.1px;
-    }
-
-    .browser-addr strong {
-      color: #eff7ff;
-      font-weight: 700;
-    }
-
-    .browser-menu {
-      width: 24px;
-      height: 24px;
-      display: grid;
-      place-items: center;
-      font-size: 18px;
-      color: #dfe9f1;
-    }
-
-    .viewport {
-      padding: 0 13px 90px;
-      background:
-        radial-gradient(circle at 55% 0%, rgba(95, 122, 255, 0.15), transparent 30%),
-        linear-gradient(180deg, #091522 0%, #071422 100%);
-    }
-
-    .panel {
-      background: rgba(18, 33, 44, 0.96);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.02);
-    }
-
-    .account-card {
-      padding: 12px 12px 10px;
-      margin-top: 10px;
-      background: linear-gradient(145deg, rgba(17, 33, 44, 0.96), rgba(10, 19, 29, 0.9));
-      border: 1px solid rgba(170, 204, 230, 0.16);
-      border-radius: 18px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .account-card::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(52, 110, 194, 0.18), transparent 52%);
-      pointer-events: none;
-    }
-
-    .brand-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      position: relative;
-      z-index: 1;
-      margin-bottom: 10px;
-    }
-
-    .brand-mark {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-family: "Manrope", sans-serif;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      font-size: 12px;
-    }
-
-    .brand-mark .logo {
-      width: 26px;
-      height: 26px;
-      border-radius: 8px;
-      display: grid;
-      place-items: center;
-      background: linear-gradient(135deg, #f4c66f, #d98d27);
-      color: #0d1d2b;
-      font-weight: 900;
-      font-size: 13px;
-      box-shadow: inset 0 1px #fff3d1;
-    }
-
-    .brand-pill {
-      background: linear-gradient(135deg, rgba(204, 170, 84, 0.22), rgba(142, 108, 26, 0.12));
-      border: 1px solid rgba(242, 195, 109, 0.42);
-      color: var(--gold);
-      padding: 4px 8px;
-      border-radius: 999px;
-      font-size: 8px;
-      letter-spacing: 0.7px;
-      font-weight: 800;
-      text-transform: uppercase;
-    }
-
-    .greeting {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-
-    .greeting strong {
-      display: block;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.9px;
-      text-transform: uppercase;
-      color: #9fb5bf;
-      margin-bottom: 4px;
-    }
-
-    .greeting h2 {
-      margin: 0;
-      font-size: 14px;
-      line-height: 1.4;
-      font-weight: 700;
-      letter-spacing: -0.2px;
-    }
-
-    .greeting h2 .gold {
-      color: var(--gold);
-    }
-
-    .greeting .status {
-      font-size: 8px;
-      font-weight: 800;
-      letter-spacing: 0.8px;
-      color: var(--gold);
-      background: rgba(242, 195, 109, 0.12);
-      border: 1px solid rgba(242, 195, 109, 0.3);
-      border-radius: 999px;
-      padding: 4px 7px;
-      white-space: nowrap;
-    }
-
-    .info-list {
-      position: relative;
-      z-index: 1;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 6px;
-      margin-top: 8px;
-    }
-
-    .info-pill {
-      background: rgba(255,255,255,0.02);
-      border: 1px solid rgba(160, 188, 207, 0.12);
-      border-radius: 12px;
-      padding: 7px 6px 8px;
-      text-align: center;
-      min-height: 52px;
-    }
-
-    .info-pill .kicker {
-      display: block;
-      font-size: 7px;
-      color: var(--muted-2);
-      letter-spacing: 0.9px;
-      text-transform: uppercase;
-      margin-bottom: 4px;
-    }
-
-    .info-pill .value {
-      display: block;
-      color: var(--text);
-      font-size: 10px;
-      font-weight: 800;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .section {
-      margin-top: 12px;
-      padding: 12px 12px 10px;
-      background: rgba(16, 31, 41, 0.95);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-    }
-
-    .section-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-
-    .section-head h3 {
-      margin: 0;
-      font-size: 10px;
-      letter-spacing: 1.2px;
-      text-transform: uppercase;
-      color: #dfeefb;
-      font-weight: 800;
-    }
-
-    .history-link {
-      color: var(--gold);
-      font-size: 9px;
-      font-weight: 700;
-      text-decoration: none;
-    }
-
-    .service-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
-    }
-
-    .service,
-    .quick-action {
-      border: 1px solid rgba(120, 147, 164, 0.18);
-      border-radius: 10px;
-      background: rgba(31, 50, 60, 0.8);
-      color: var(--text);
-      font-size: 9px;
-      font-weight: 700;
-      text-align: center;
-      padding: 8px 6px;
-      cursor: pointer;
-      transition: transform 0.15s ease, border-color 0.15s ease;
-    }
-
-    .service:hover,
-    .quick-action:hover {
-      transform: translateY(-1px);
-      border-color: rgba(107, 234, 217, 0.5);
-    }
-
-    .service.primary {
-      color: #091a1d;
-      background: linear-gradient(180deg, #f4cf83, #d99a2d);
-      border-color: rgba(242, 195, 109, 0.7);
-    }
-
-    .service.locked {
-      background: rgba(22, 32, 41, 0.9);
-      color: var(--muted);
-      border-color: rgba(137, 160, 174, 0.18);
-    }
-
-    .service .emoji {
-      display: block;
-      font-size: 14px;
-      margin-bottom: 4px;
-    }
-
-    .service-note {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      color: var(--muted);
-      font-size: 8px;
-      margin-top: 8px;
-      line-height: 1.4;
-    }
-
-    .service-note a {
-      color: var(--gold);
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    .quick-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px 8px;
-    }
-
-    .quick-action {
-      padding: 9px 6px 7px;
-      background: rgba(29, 42, 50, 0.9);
-    }
-
-    .quick-action .icon {
-      display: grid;
-      place-items: center;
-      width: 28px;
-      height: 28px;
-      margin: 0 auto 5px;
-      border-radius: 9px;
-      background: rgba(107, 234, 217, 0.13);
-      border: 1px solid rgba(107, 234, 217, 0.18);
-      color: var(--teal);
-      font-size: 13px;
-      font-weight: 700;
-    }
-
-    .metric-list {
-      display: grid;
-      gap: 7px;
-    }
-
-    .metric-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 9px;
-      background: rgba(23, 38, 47, 0.85);
-      border: 1px solid rgba(160, 188, 207, 0.12);
-      border-radius: 11px;
-    }
-
-    .metric-icon {
-      width: 30px;
-      height: 30px;
-      display: grid;
-      place-items: center;
-      border-radius: 9px;
-      background: rgba(242, 195, 109, 0.12);
-      color: var(--gold);
-      border: 1px solid rgba(242, 195, 109, 0.18);
-      font-weight: 700;
-      font-size: 13px;
-      flex-shrink: 0;
-    }
-
-    .metric-icon.teal {
-      background: rgba(107, 234, 217, 0.11);
-      border-color: rgba(107, 234, 217, 0.2);
-      color: var(--teal);
-    }
-
-    .metric-copy {
-      min-width: 0;
-      flex: 1;
-    }
-
-    .metric-copy strong {
-      display: block;
-      font-size: 10px;
-      letter-spacing: -0.1px;
-      margin-bottom: 2px;
-    }
-
-    .metric-copy small {
-      color: var(--muted);
-      font-size: 7px;
-      letter-spacing: 0.5px;
-    }
-
-    .metric-amount {
-      text-align: right;
-      font-size: 11px;
-      font-weight: 800;
-      color: #edf8ff;
-      white-space: nowrap;
-    }
-
-    .metric-amount small {
-      display: block;
-      color: var(--muted);
-      font-size: 7px;
-      margin-top: 2px;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0,1fr));
-      gap: 8px;
-    }
-
-    .stat-box {
-      background: rgba(25, 39, 49, 0.85);
-      border: 1px solid rgba(160, 188, 207, 0.12);
-      border-radius: 12px;
-      padding: 10px 8px 9px;
-      min-width: 0;
-    }
-
-    .stat-box .metric-icon {
-      width: 28px;
-      height: 28px;
-      margin-bottom: 8px;
-      font-size: 12px;
-    }
-
-    .stat-box .value {
-      font-size: 15px;
-      font-weight: 800;
-      line-height: 1.2;
-      font-family: "Manrope", sans-serif;
-    }
-
-    .stat-box .label {
-      margin-top: 3px;
-      color: var(--muted);
-      font-size: 8px;
-      letter-spacing: 0.4px;
-    }
-
-    .referral-box {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .referral-box input {
-      flex: 1;
-      min-width: 0;
-      width: 100%;
-      background: rgba(12, 21, 29, 0.8);
-      border: 1px solid rgba(160, 188, 207, 0.12);
-      border-radius: 9px;
-      padding: 9px 10px;
-      color: var(--muted);
-      font-size: 9px;
-      outline: none;
-    }
-
-    .referral-box button {
-      background: linear-gradient(180deg, #f7d586, #d59d37);
-      color: #19170d;
-      border: 0;
-      border-radius: 9px;
-      padding: 0 12px;
-      height: 34px;
-      font-size: 9px;
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    .bottom-nav {
-      position: fixed;
-      left: 50%;
-      bottom: 12px;
-      transform: translateX(-50%);
-      width: min(94vw, 430px);
-      min-height: 56px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 6px;
-      padding: 8px 14px 7px;
-      background: rgba(14, 27, 38, 0.95);
-      border: 1px solid rgba(170, 204, 230, 0.12);
-      border-radius: 18px;
-      box-shadow: 0 20px 28px rgba(0, 0, 0, 0.25);
-      backdrop-filter: blur(10px);
-      z-index: 50;
-    }
-
-    .nav-btn-item {
-      border: none;
-      background: transparent;
-      color: #9fafbb;
-      font-size: 8px;
-      font-weight: 700;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      padding: 0;
-      min-width: 46px;
-      cursor: pointer;
-      text-transform: uppercase;
-    }
-
-    .nav-btn-item .icon {
-      font-size: 16px;
-      line-height: 1;
-    }
-
-    .nav-btn-item.active {
-      color: var(--gold);
-    }
-
-    .nav-btn-item.chat {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: linear-gradient(180deg, #f7d586, #d99f3a);
-      color: #0d1d29;
-      margin-top: -22px;
-      border: 2px solid rgba(242, 195, 109, 0.35);
-      box-shadow: 0 0 0 4px rgba(242, 195, 109, 0.12);
-      padding-top: 5px;
-    }
-
-    .hidden { display: none !important; }
-    .tiny { font-size: 8px; }
-
-    @media (max-width: 420px) {
-      .phone { border-radius: 0; width: 100vw; min-height: 100vh; }
-      body { padding: 0; }
-      .statusbar { padding-left: 16px; padding-right: 16px; }
-      .browser { padding-left:15px; padding-right:15px; }
-      .viewport { padding-left: 12px; padding-right: 12px; }
-    }
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07111f">
+  <meta name="description" content="Your Online Sphere digital workspace. Discover. Learn. Work.">
+  <title>Dashboard | Online Sphere</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
-  <div class="phone">
-    <div class="statusbar">
-      <div class="status-left"><span>7:16 PM</span></div>
-      <div class="status-right">
-        <span>8.15</span>
-        <span class="signal">◔</span>
-        <span class="wifi">◍</span>
-        <span class="battery"></span>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="dashboard.html" aria-label="Online Sphere dashboard">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="11"/><ellipse cx="16" cy="16" rx="5" ry="11"/><path d="M5.5 12h21M5.5 20h21"/></svg></span>
+        <span class="brand-name">ONLINE <b>SPHERE</b><small>DISCOVER. LEARN. WORK.</small></span>
+      </a>
+      <div class="top-actions">
+        <a class="get-app" href="index.html#install">Get App <span aria-hidden="true">↗</span></a>
+        <button class="icon-btn notification" type="button" aria-label="Notifications" title="Notifications">♧<i></i></button>
+        <button class="avatar" id="profileButton" aria-label="Open profile menu" type="button">—</button>
+        <div class="profile-menu" id="profileMenu" hidden><span id="menuName">Member</span><a href="login.html">Account / Sign in</a><button type="button" id="signOutButton">Sign out</button></div>
       </div>
-    </div>
+    </header>
 
-    <div class="browser">
-      <div class="browser-home">⌂</div>
-      <div class="browser-addr"><strong>eaglewebcommerce.com/user/</strong>da</div>
-      <div class="browser-menu">⋮</div>
-    </div>
-
-    <div class="viewport">
-      <div class="account-card">
-        <div class="brand-row">
-          <div class="brand-mark"><span class="logo">E</span><span>EAGLE</span></div>
-          <span class="brand-pill">Get App</span>
-        </div>
-
-        <div class="greeting">
-          <div>
-            <strong>Good evening</strong>
-            <h2>Benson, <span class="gold">your desk is ready</span></h2>
+    <main class="content">
+      <section class="welcome-card" aria-labelledby="welcomeTitle">
+        <div class="welcome-copy">
+          <span class="eyebrow" id="greeting">GOOD DAY</span>
+          <h1 id="welcomeTitle">Welcome back<span class="name-comma" id="memberName"></span></h1>
+          <p>Your digital workspace is ready. Discover new opportunities and keep building your skills.</p>
+          <div class="welcome-meta">
+            <span class="status-pill"><i></i><span id="memberStatus">Membership status unavailable</span></span>
+            <span class="member-level" id="memberLevel">MEMBERSHIP —</span>
           </div>
-          <span class="status">WITHDRAW</span>
         </div>
-
-        <div class="info-list">
-          <div class="info-pill"><span class="kicker">UpLine</span><span class="value">Kibaki</span></div>
-          <div class="info-pill"><span class="kicker">Member</span><span class="value">Gold</span></div>
-          <div class="info-pill"><span class="kicker">Joined</span><span class="value">Feb 15</span></div>
+        <div class="welcome-orbit" aria-hidden="true"><span>OS</span><i></i><b></b></div>
+        <div class="member-details">
+          <div><small>MEMBER SINCE</small><strong id="joinedDate">—</strong></div>
+          <div><small>REFERRED BY</small><strong id="sponsorName">—</strong></div>
+          <div><small>ACCOUNT</small><strong id="accountStatus">—</strong></div>
         </div>
-      </div>
+      </section>
 
-      <div class="section">
-        <div class="section-head">
-          <h3>Services</h3>
-          <span class="brand-pill" style="padding:3px 7px; font-size:7px;">Upgrade</span>
-        </div>
-
-        <div class="service-grid">
-          <button class="service primary" type="button"><span class="emoji">✔</span>Upgrade</button>
-          <button class="service" type="button"><span class="emoji">✎</span>Transcription</button>
-          <button class="service" type="button"><span class="emoji">✍</span>Writing</button>
-          <button class="service" type="button"><span class="emoji">⌨</span>Data Entry</button>
-          <button class="service" type="button"><span class="emoji">⇄</span>Translation</button>
-          <button class="service locked" type="button"><span class="emoji">◌</span>More</button>
-        </div>
-
-        <div class="service-note">
-          <span>Upgrade your membership to unlock more services.</span>
-          <a href="#">Load more</a>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-head">
-          <h3>Shortcuts</h3>
-        </div>
-
-        <div class="quick-grid">
-          <button class="quick-action" type="button"><span class="icon">▣</span>Transactions</button>
-          <button class="quick-action" type="button"><span class="icon">⇩</span>Deposit</button>
-          <button class="quick-action" type="button"><span class="icon">▤</span>Deposit log</button>
-          <button class="quick-action" type="button"><span class="icon">⇄</span>Transfer</button>
-          <button class="quick-action" type="button"><span class="icon">➜</span>Withdraw</button>
-          <button class="quick-action" type="button"><span class="icon">♔</span>Affiliates</button>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-head">
-          <h3>Wallets</h3>
-          <a class="history-link" href="#">History</a>
-        </div>
-
-        <div class="metric-list">
-          <div class="metric-row">
-            <span class="metric-icon">$</span>
-            <div class="metric-copy">
-              <strong>Wallet Balance</strong>
-              <small>USD available</small>
+      <div class="dashboard-grid">
+        <div class="main-column">
+          <section class="panel services-panel" id="services">
+            <div class="panel-heading"><div><span class="section-kicker">YOUR WORKSPACE</span><h2>Explore services</h2></div><span class="level-chip" id="serviceLevel">— MEMBER</span></div>
+            <div class="service-grid" id="serviceGrid">
+              <a class="service-tile upgrade" href="membership.html"><span class="service-icon">♛</span><span>Upgrade membership</span><span class="tile-arrow">↗</span></a>
+              <a class="service-tile" href="opportunities.html?category=Transcription"><span class="service-icon">▤</span><span>Transcription</span><span class="lock-indicator" data-min="Bronze">⌑</span></a>
+              <a class="service-tile" href="opportunities.html?category=Translation"><span class="service-icon">⇄</span><span>Translation</span><span class="lock-indicator" data-min="Silver">⌑</span></a>
+              <a class="service-tile" href="opportunities.html?category=Writing"><span class="service-icon">✎</span><span>Writing</span><span class="lock-indicator" data-min="Bronze">⌑</span></a>
+              <a class="service-tile" href="opportunities.html?category=Data%20Entry"><span class="service-icon">⌨</span><span>Data entry</span><span class="lock-indicator" data-min="Bronze">⌑</span></a>
+              <a class="service-tile extra-service" href="opportunities.html?category=Graphic%20Design"><span class="service-icon">▧</span><span>Graphic design</span><span class="lock-indicator" data-min="Silver">⌑</span></a>
+              <a class="service-tile extra-service" href="opportunities.html?category=Video"><span class="service-icon">▷</span><span>Video editing</span><span class="lock-indicator" data-min="Gold">⌑</span></a>
+              <a class="service-tile extra-service" href="opportunities.html?category=Research"><span class="service-icon">⌕</span><span>Research</span><span class="lock-indicator" data-min="Silver">⌑</span></a>
+              <a class="service-tile extra-service" href="opportunities.html?category=Virtual%20Assistance"><span class="service-icon">✦</span><span>Virtual assistance</span><span class="lock-indicator" data-min="Silver">⌑</span></a>
+              <a class="service-tile extra-service" href="opportunities.html?category=Social%20Media"><span class="service-icon">◎</span><span>Social media</span><span class="lock-indicator" data-min="Silver">⌑</span></a>
+              <a class="service-tile extra-service" href="opportunities.html?category=Freelancing"><span class="service-icon">↗</span><span>Freelancing</span><span class="lock-indicator" data-min="Bronze">⌑</span></a>
+              <a class="service-tile extra-service" href="opportunities.html"><span class="service-icon">⋯</span><span>Other digital tasks</span><span class="lock-indicator" data-min="Gold">⌑</span></a>
             </div>
-            <div class="metric-amount">$0.47<small>$0.00</small></div>
-          </div>
+            <div class="service-footer"><span id="serviceHint">Service access depends on your active membership package.</span><button class="text-action" id="loadMore" type="button">Load more <span>⌄</span></button></div>
+          </section>
 
-          <div class="metric-row">
-            <span class="metric-icon teal">⇩</span>
-            <div class="metric-copy">
-              <strong>Total Deposited</strong>
-              <small>USD lifetime</small>
+          <section class="panel shortcuts-panel" aria-labelledby="shortcutsTitle">
+            <div class="panel-heading"><div><span class="section-kicker">ONE-TAP ACCESS</span><h2 id="shortcutsTitle">Quick actions</h2></div><a class="quiet-link" href="membership.html">Payment options ↗</a></div>
+            <div class="shortcuts-grid">
+              <a class="shortcut" href="#transactions"><span class="shortcut-icon">☷</span><span>Transactions</span></a>
+              <a class="shortcut" href="membership.html"><span class="shortcut-icon">⇩</span><span>Deposit / Pay</span></a>
+              <a class="shortcut" href="#transactions"><span class="shortcut-icon">▤</span><span>Deposit log</span></a>
+              <button class="shortcut" type="button" data-not-ready="Transfers are not enabled for this account yet."><span class="shortcut-icon">⇄</span><span>Transfer</span></button>
+              <button class="shortcut" type="button" data-not-ready="Withdrawal requests are not available in this dashboard yet."><span class="shortcut-icon">➤</span><span>Withdraw</span></button>
+              <a class="shortcut" href="#team"><span class="shortcut-icon">♧</span><span>Affiliates</span></a>
             </div>
-            <div class="metric-amount">$35.66<small>lifetime</small></div>
-          </div>
+          </section>
+
+          <section class="panel wallet-panel" id="transactions">
+            <div class="panel-heading"><div><span class="section-kicker">ACCOUNT OVERVIEW</span><h2>Wallets</h2></div><a class="text-action" href="#transactions">History <span>↗</span></a></div>
+            <div class="wallet-grid">
+              <article class="wallet-card balance-card"><span class="wallet-symbol">KSh</span><div><small>WALLET BALANCE <span class="currency">KES</span></small><strong data-money="walletBalance">—</strong></div><span class="wallet-caption">Verified transactions only</span></article>
+              <article class="wallet-card"><span class="wallet-symbol teal">◉</span><div><small>AVAILABLE BALANCE</small><strong data-money="availableBalance">—</strong></div><span class="wallet-caption">KES</span></article>
+              <article class="wallet-card"><span class="wallet-symbol">◷</span><div><small>PENDING BALANCE</small><strong data-money="pendingBalance">—</strong></div><span class="wallet-caption">KES</span></article>
+              <article class="wallet-card"><span class="wallet-symbol teal">⇩</span><div><small>TOTAL DEPOSITED</small><strong data-money="totalDeposited">—</strong></div><span class="wallet-caption">KES · lifetime</span></article>
+              <article class="wallet-card"><span class="wallet-symbol">↗</span><div><small>TOTAL WITHDRAWN</small><strong data-money="totalWithdrawn">—</strong></div><span class="wallet-caption">KES · lifetime</span></article>
+              <article class="wallet-card"><span class="wallet-symbol teal">✦</span><div><small>TOTAL EARNINGS</small><strong data-money="totalEarnings">—</strong></div><span class="wallet-caption">KES · verified</span></article>
+            </div>
+            <div class="wallet-note"><span class="note-dot"></span>Balances will appear when your authenticated account data is connected.</div>
+          </section>
+
+          <section class="panel stats-panel">
+            <div class="panel-heading"><div><span class="section-kicker">YOUR ACTIVITY</span><h2>All statistics</h2></div><span class="quiet-label">Verified account data</span></div>
+            <div class="stats-grid">
+              <article class="stat-card"><span class="stat-icon teal">☷</span><strong data-stat="transactionCount">—</strong><small>All transactions</small><span class="stat-foot">Completed and pending</span></article>
+              <article class="stat-card"><span class="stat-icon gold">⇩</span><strong data-money="totalDeposited">—</strong><small>Total deposits</small><span class="stat-foot">Verified deposits</span></article>
+              <article class="stat-card"><span class="stat-icon gold">➤</span><strong data-money="totalWithdrawn">—</strong><small>Total withdrawals</small><span class="stat-foot">Verified withdrawals</span></article>
+              <article class="stat-card"><span class="stat-icon teal">↗</span><strong data-money="todayEarnings">—</strong><small>Today's earnings</small><span class="stat-foot">Verified earnings</span></article>
+            </div>
+          </section>
         </div>
+
+        <aside class="side-column">
+          <section class="panel referral-panel" id="team">
+            <div class="panel-heading"><div><span class="section-kicker">GROW YOUR NETWORK</span><h2>Affiliate link</h2></div><span class="referral-glyph">↗</span></div>
+            <p class="panel-description">Share your unique referral link. Referral and commission totals are shown after they are verified.</p>
+            <div class="referral-input"><input id="referralUrl" aria-label="Your referral URL" readonly value="Sign in to load your referral link"><button id="copyReferral" type="button" disabled>Copy</button></div>
+            <div class="referral-stats"><div><strong data-stat="joinedCount">—</strong><span>Joined</span></div><div><strong data-stat="verifiedReferrals">—</strong><span>Verified</span></div><div><strong data-money="pendingCommissions">—</strong><span>Pending · KES</span></div><div><strong data-money="paidCommissions">—</strong><span>Paid · KES</span></div></div>
+            <a class="outline-action" href="membership.html">Membership details <span>→</span></a>
+          </section>
+          <section class="panel opportunities-panel">
+            <div class="panel-heading"><div><span class="section-kicker">KEEP MOVING</span><h2>Find your next step</h2></div></div>
+            <p class="panel-description">Explore listed opportunities, review the requirements, and choose what fits your skills.</p>
+            <a class="primary-action" href="opportunities.html">Browse opportunities <span>↗</span></a>
+            <a class="secondary-action" href="assistant.html">Talk to Online Sphere AI <span>→</span></a>
+          </section>
+          <div class="privacy-note"><span>◈</span><p>Your financial details should come from verified account records. We never estimate balances or promise earnings.</p></div>
+        </aside>
       </div>
+      <div class="load-state" id="loadState" role="status" aria-live="polite"><span class="state-mark">i</span><span id="loadMessage">Checking your secure account connection…</span><a href="login.html">Sign in</a></div>
+      <footer class="footer"><span>ONLINE SPHERE</span><span>Discover. Learn. Work.</span><a href="help.html">Help & safety</a></footer>
+    </main>
 
-      <div class="section">
-        <div class="section-head">
-          <h3>All Statistic</h3>
-        </div>
-
-        <div class="stats-grid">
-          <div class="stat-box">
-            <span class="metric-icon teal">⇄</span>
-            <div class="value">6</div>
-            <div class="label">All Transactions</div>
-          </div>
-
-          <div class="stat-box">
-            <span class="metric-icon">⇩</span>
-            <div class="value">$35.66</div>
-            <div class="label">Total Deposit</div>
-          </div>
-
-          <div class="stat-box">
-            <span class="metric-icon">➜</span>
-            <div class="value">$7.75</div>
-            <div class="label">Total Withdrawal</div>
-          </div>
-
-          <div class="stat-box">
-            <span class="metric-icon teal">↗</span>
-            <div class="value">$0.00</div>
-            <div class="label">Today's Earnings</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-head">
-          <h3>Affiliate URL</h3>
-        </div>
-
-        <div class="referral-box">
-          <input id="affiliateUrl" type="text" value="https://eaglewebcommerce.com/register/Ben-03" readonly />
-          <button id="copyAffiliate" type="button">COPY</button>
-        </div>
-        <div class="service-note" style="margin-top:8px;">
-          <span>21 people are joined by using this URL</span>
-        </div>
-      </div>
-    </div>
-
-    <nav class="bottom-nav" aria-label="Bottom navigation">
-      <button class="nav-btn-item active" type="button"><span class="icon">▦</span>Dashboard</button>
-      <button class="nav-btn-item" type="button"><span class="icon">♧</span>Team</button>
-      <button class="nav-btn-item chat" type="button"><span class="icon">☏</span>Chat</button>
-      <button class="nav-btn-item" type="button"><span class="icon">▣</span>Wallet</button>
-      <button class="nav-btn-item" type="button"><span class="icon">⚙</span>Settings</button>
+    <nav class="bottom-nav" aria-label="Main navigation">
+      <a class="nav-item active" href="dashboard.html" aria-current="page"><span>⌂</span><small>Dashboard</small></a>
+      <a class="nav-item" href="#team"><span>♧</span><small>Team</small></a>
+      <a class="nav-item chat-nav" href="assistant.html" aria-label="Chat with Online Sphere AI"><span>☏</span><small>Chat</small></a>
+      <a class="nav-item" href="#transactions"><span>▣</span><small>Wallet</small></a>
+      <a class="nav-item" href="login.html"><span>⚙</span><small>Settings</small></a>
     </nav>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </div>
-
-  <script>
-    const copyBtn = document.getElementById('copyAffiliate');
-    copyBtn.addEventListener('click', async () => {
-      const input = document.getElementById('affiliateUrl');
-      try {
-        await navigator.clipboard.writeText(input.value);
-        copyBtn.textContent = 'COPIED';
-        setTimeout(() => copyBtn.textContent = 'COPY', 1200);
-      } catch (error) {
-        input.select();
-        document.execCommand('copy');
-        copyBtn.textContent = 'COPIED';
-        setTimeout(() => copyBtn.textContent = 'COPY', 1200);
-      }
-    });
-  </script>
+  <script src="dashboard.js" defer></script>
 </body>
 </html>
