@@ -1,4 +1,4 @@
-const CACHE_NAME = "online-sphere-v1";
+const CACHE_NAME = "online-sphere-v2";
 
 const APP_FILES = [
   "./",
@@ -43,16 +43,42 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith(
     fetch(request)
-      .then((response) => {
+      .then(async (response) => {
         if (response.ok) {
           const copy = response.clone();
-
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(request, copy);
           });
         }
 
-        return response;
+        // Apply the shared design to every same-origin HTML page without
+        // changing page scripts, forms, or the original response stored offline.
+        const contentType = response.headers.get("content-type") || "";
+        if (request.mode !== "navigate" || !contentType.includes("text/html")) {
+          return response;
+        }
+
+        const html = await response.text();
+        if (html.includes("./theme.css") || html.includes("/theme.css")) {
+          return new Response(html, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: response.headers
+          });
+        }
+
+        const themeHref = new URL("./theme.css", self.registration.scope).href;
+        const stylesheet = '<link rel="stylesheet" href="' + themeHref + '">';
+        const themedHtml = html.replace(/<\/head\s*>/i, stylesheet + "</head>");
+        const headers = new Headers(response.headers);
+        headers.delete("content-length");
+        headers.delete("content-encoding");
+
+        return new Response(themedHtml, {
+          status: response.status,
+          statusText: response.statusText,
+          headers
+        });
       })
       .catch(async () => {
         const cached = await caches.match(request);
