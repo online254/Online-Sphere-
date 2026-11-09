@@ -1,0 +1,27 @@
+{
+  "id": "./",
+  "name": "Online Sphere — Discover. Learn. Work.",
+  "short_name": "Online Sphere",
+  "description": "Discover digital opportunities, develop useful skills and explore the global digital economy.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07111f",
+  "theme_color": "#2563EB",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "./public/icons/icon-192-2.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./public/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
