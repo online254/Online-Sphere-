@@ -1,8 +1,7 @@
-/* Member dashboard entry. This script uses backend-verified data only and respects legacy and session token names. */
+/* Member dashboard entry. Uses backend-verified data only and respects legacy and session token names. */
 (() => {
   'use strict';
   const API_BASE = String(window.ONLINE_SPHERE_API_URL || 'https://online-sphere-backend.onrender.com').replace(/\/$/, '');
-  const OWNER_EMAIL = String(window.ONLINE_SPHERE_OWNER_EMAIL || '').trim().toLowerCase();
   const $ = (selector) => document.querySelector(selector);
   const statusBox = $('#loadState');
   const statusMessage = $('#loadMessage');
@@ -35,28 +34,25 @@
   }
 
   function setMoney(key, value, currency = 'KES') {
-    document.querySelectorAll(`[data-money="${key}"]`).forEach((el) => {
-      el.textContent = money(value, currency);
-    });
+    document.querySelectorAll(`[data-money="${key}"]`).forEach((el) => { el.textContent = money(value, currency); });
   }
 
   function setStat(key, value) {
-    document.querySelectorAll(`[data-stat="${key}"]`).forEach((el) => {
-      el.textContent = value === null || value === undefined ? '—' : String(value);
-    });
+    document.querySelectorAll(`[data-stat="${key}"]`).forEach((el) => { el.textContent = value === null || value === undefined ? '—' : String(value); });
   }
 
-  function showOwnerLink(user = {}) {
-    const email = String(user?.email || '').trim().toLowerCase();
-    const menu = $('#profileMenu');
-    if (!OWNER_EMAIL || email !== OWNER_EMAIL || !menu || menu.querySelector('[data-owner-admin-link]')) return;
-
-    const signOut = $('#signOutButton');
-    const link = document.createElement('a');
-    link.href = 'admin.html';
-    link.textContent = 'Owner Control Centre';
-    link.dataset.ownerAdminLink = 'true';
-    menu.insertBefore(link, signOut || null);
+  async function checkAdminAccess() {
+    const tab = $('#adminDashboardTab');
+    if (!tab || !token) return;
+    try {
+      const response = await fetch(`${API_BASE}/api/admin/access`, {
+        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+        credentials: 'include', cache: 'no-store'
+      });
+      if (response.ok) tab.hidden = false;
+    } catch (_) {
+      // Fail closed: hide the administrator tab unless the backend confirms access.
+    }
   }
 
   function showDashboard(data, authenticatedUser = {}) {
@@ -126,7 +122,6 @@
       if (copyReferralButton) copyReferralButton.disabled = false;
     }
 
-    showOwnerLink(user);
     setStatus('Your account data has loaded from the secure service.', true);
   }
 
@@ -144,8 +139,7 @@
         fetch(`${API_BASE}/api/auth/me`, { headers, credentials: 'include', cache: 'no-store' })
       ]);
       const [dashboardResult, identityResult] = await Promise.all([
-        dashboardResponse.json().catch(() => ({})),
-        identityResponse.json().catch(() => ({}))
+        dashboardResponse.json().catch(() => ({})), identityResponse.json().catch(() => ({}))
       ]);
 
       if ([dashboardResponse.status, identityResponse.status].includes(401) || [dashboardResponse.status, identityResponse.status].includes(403)) {
@@ -154,19 +148,17 @@
         setTimeout(() => window.location.replace('auth.html'), 700);
         return;
       }
-
       if (!dashboardResponse.ok) throw new Error(dashboardResult.message || 'The dashboard service is temporarily unavailable.');
       if (!identityResponse.ok) throw new Error(identityResult.message || 'Could not verify the signed-in account.');
       showDashboard(dashboardResult.dashboard || dashboardResult, identityResult.user || {});
+      checkAdminAccess();
     } catch (error) {
       setStatus(`${error.message} No sample financial data is being shown.`);
     }
   }
 
   const greeting = $('#greeting');
-  if (greeting) {
-    greeting.textContent = `GOOD ${new Intl.DateTimeFormat(undefined, { hour: 'numeric' }).format(new Date()).toUpperCase().includes('PM') ? 'EVENING' : 'DAY'}`;
-  }
+  if (greeting) greeting.textContent = `GOOD ${new Intl.DateTimeFormat(undefined, { hour: 'numeric' }).format(new Date()).toUpperCase().includes('PM') ? 'EVENING' : 'DAY'}`;
 
   $('#loadMore')?.addEventListener('click', (event) => {
     const more = [...document.querySelectorAll('.extra-service')];
@@ -183,20 +175,17 @@
   });
 
   document.querySelectorAll('[data-not-ready]').forEach((button) => button.addEventListener('click', () => showToast(button.dataset.notReady)));
-
   $('#profileButton')?.addEventListener('click', (event) => {
     event.stopPropagation();
     const menu = $('#profileMenu');
     if (menu) menu.hidden = !menu.hidden;
   });
-
   document.addEventListener('click', (event) => {
     if (!event.target.closest('.top-actions')) {
       const menu = $('#profileMenu');
       if (menu) menu.hidden = true;
     }
   });
-
   $('#signOutButton')?.addEventListener('click', async () => {
     try { await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, credentials: 'include' }); } catch (_) {}
     try { sessionStorage.removeItem('onlineSphereSession'); localStorage.removeItem('onlineSphereToken'); } catch (_) {}
