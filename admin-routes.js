@@ -1,66 +1,123 @@
-/* Secure, additive administrator routes. Loaded by admin-bootstrap.js before the backend's 404 handler. */
 'use strict';
 
-const crypto = require('crypto');
+require('dotenv').config();
+const db = require('./database/database.db.js');
 
-module.exports = function registerAdminRoutes(app, db) {
-  const allowedEmails = new Set(
-    String(process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || '')
-      .split(',')
-      .map((email) => email.trim().toLowerCase())
-      .filter(Boolean)
-  );
-  const tokenHash = (token) => crypto.createHash('sha256').update(token).digest('hex');
-
-  function currentUser(req) {
-    const authorization = String(req.get('authorization') || '');
-    const token = /^Bearer\s+(.+)$/i.exec(authorization)?.[1] || req.get('x-online-sphere-session');
-    if (!token || token.length > 512) return null;
-    return db.prepare(`SELECT u.id, u.email, u.role, u.is_admin
-      FROM sessions s JOIN users u ON u.id=s.user_id
-      WHERE s.token_hash=? AND datetime(s.expires_at)>datetime('now') LIMIT 1`).get(tokenHash(token)) || null;
+function ensureColumn(table, column, definition) {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all();
+  if (!columns.some((item) => item.name === column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
   }
+}
 
-  function isAdmin(user) {
-    if (!user) return false;
-    const role = String(user.role || '').trim().toLowerCase();
-    return ['admin', 'owner'].includes(role) || Number(user.is_admin) === 1 || allowedEmails.has(String(user.email || '').trim().toLowerCase());
-  }
+function ensureTable(name, sql) {
+  db.exec(`CREATE TABLE IF NOT EXISTS ${name} (${sql});`);
+}
 
-  function requireAdmin(req, res, next) {
-    try {
-      const user = currentUser(req);
-      if (!user) return res.status(401).json({ success: false, message: 'Please sign in to continue.' });
-      if (!isAdmin(user)) return res.status(403).json({ success: false, message: 'Administrator access is restricted to authorized staff only.' });
-      req.adminUser = user;
-      return next();
-    } catch (error) {
-      return next(error);
+ensureColumn('users', 'role', "TEXT DEFAULT 'member'");
+ensureColumn('users', 'is_admin', 'INTEGER NOT NULL DEFAULT 0');
+ensureColumn('users', 'status', "TEXT DEFAULT 'active'");
+ensureColumn('users', 'last_login_at', 'DATETIME');
+ensureColumn('users', 'verification_status', "TEXT DEFAULT 'pending_verification'");
+ensureColumn('users', 'deleted_at', 'DATETIME');
+ensureColumn('users', 'deleted_by', 'INTEGER');
+ensureColumn('users', 'delete_reason', 'TEXT');
+ensureColumn('users', 'profile_info', 'TEXT');
+ensureColumn('users', 'member_notes', 'TEXT');
+ensureColumn('users', 'phone_verified', 'INTEGER NOT NULL DEFAULT 0');
+ensureColumn('accounts', 'status', "TEXT DEFAULT 'active'");
+ensureColumn('accounts', 'balance', 'INTEGER NOT NULL DEFAULT 0');
+ensureColumn('accounts', 'currency', "TEXT DEFAULT 'KES'");
+ensureColumn('accounts', 'last_wallet_adjustment_at', 'DATETIME');
+
+ensureTable('admin_audit_logs', `
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  actor_user_id INTEGER,
+  actor_email TEXT,
+  action TEXT NOT NULL,
+  entity_type TEXT,
+  entity_id INTEGER,
+  old_value TEXT,
+  new_value TEXT,
+  reason TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+`);
+
+ensureTable('wallet_ledger', `
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  account_id INTEGER NOT NULL,
+  type TEXT NOT NULL,
+  amount INTEGER NOT NULL,
+  currency TEXT DEFAULT 'KES',
+  reason TEXT NOT NULL,
+  reference TEXT NOT NULL,
+  admin_user_id INTEGER NOT NULL,
+  admin_email TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+`);
+
+ensureTable('member_status_history', `
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  previous_status TEXT,
+  new_status TEXT NOT NULL,
+  reason TEXT,
+  admin_user_id INTEGER,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+`);
+
+ensureTable('member_login_history', `
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  action TEXT NOT NULL,
+  ip_address TEXT,
+  user_agent TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+`);
+
+ensureTable('member_activity_log', `
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  action TEXT NOT NULL,
+  details TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+`);
+
+ensureTable('membership_history', `
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  previous_plan TEXT,
+  new_plan TEXT NOT NULL,
+  reason TEXT,
+  admin_user_id INTEGER,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+`);
+
+ensureTable('member_admin_notes', `
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  author_email TEXT NOT NULL,
+  note TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+`);
+
+const expressPath = require.resolve('express');
+const express = require(expressPath);
+let routesRegistered = false;
+const patchedExpress = (...args) => {
+  const app = express(...args);
+  const originalUse = app.use.bind(app);
+  app.use = (...middleware) => {
+    const handler = middleware.length === 1 ? middleware[0] : null;
+    if (!routesRegistered && typeof handler === 'function' && handler.length === 2) {
+      require('./admin-routes.js')(app, db);
+      routesRegistered = true;
     }
-  }
-
-  app.get('/api/admin/access', requireAdmin, (req, res) => {
-    res.set('Cache-Control', 'no-store');
-    res.json({ success: true, isAdmin: true, role: String(req.adminUser.role || (allowedEmails.has(String(req.adminUser.email || '').toLowerCase()) ? 'owner' : 'admin')) });
-  });
-
-  app.get('/api/admin/overview', requireAdmin, (_req, res, next) => {
-    try {
-      const members = db.prepare('SELECT COUNT(*) AS count FROM users').get().count;
-      const activeMembers = db.prepare("SELECT COUNT(*) AS count FROM accounts WHERE lower(COALESCE(status,''))='active'").get().count;
-      const verifiedRevenue = db.prepare("SELECT COALESCE(SUM(amount),0) AS total FROM transactions WHERE lower(status) IN ('completed','verified','paid','approved') AND lower(type) IN ('deposit','membership_payment')").get().total;
-      const pendingTransactions = db.prepare("SELECT COUNT(*) AS count FROM transactions WHERE lower(status)='pending'").get().count;
-      const pendingWithdrawals = db.prepare("SELECT COUNT(*) AS count FROM withdrawals WHERE lower(status)='pending'").get().count;
-      const recentMembers = db.prepare('SELECT id, full_name AS fullName, email, created_at AS createdAt FROM users ORDER BY created_at DESC LIMIT 5').all();
-      const recentTransactions = db.prepare(`SELECT t.id, u.full_name AS memberName, t.type, t.amount, t.status, t.created_at AS createdAt
-        FROM transactions t JOIN users u ON u.id=t.user_id ORDER BY t.created_at DESC LIMIT 6`).all();
-      res.set('Cache-Control', 'no-store');
-      res.json({ success: true, overview: {
-        members: Number(members), activeMembers: Number(activeMembers), verifiedRevenue: Number(verifiedRevenue || 0),
-        pendingTransactions: Number(pendingTransactions), pendingWithdrawals: Number(pendingWithdrawals), recentMembers, recentTransactions
-      } });
-    } catch (error) {
-      next(error);
-    }
-  });
+    return originalUse(...middleware);
+  };
+  return app;
 };
+Object.assign(patchedExpress, express);
+require.cache[expressPath].exports = patchedExpress;
+require('./server.js');
