@@ -186,12 +186,45 @@
           <p><strong>Status:</strong> ${renderStatusBadge(member.status || member.account_status || 'active')}</p>
         </div>
 
+        <form class="member-form" id="memberProfileForm">
+          <div class="field-row">
+            <label>Full name<input name="full_name" value="${(member.full_name || '').replace(/"/g, '&quot;')}" /></label>
+            <label>Email<input name="email" value="${(member.email || '').replace(/"/g, '&quot;')}" /></label>
+          </div>
+          <div class="field-row">
+            <label>Phone<input name="phone" value="${(member.phone || '').replace(/"/g, '&quot;')}" /></label>
+            <label>Plan<select name="plan"><option value="Bronze" ${member.package === 'Bronze' ? 'selected' : ''}>Bronze</option><option value="Silver" ${member.package === 'Silver' ? 'selected' : ''}>Silver</option><option value="Gold" ${member.package === 'Gold' ? 'selected' : ''}>Gold</option></select></label>
+          </div>
+          <div class="field-row">
+            <label>Status<select name="status"><option value="active" ${String(member.status || member.account_status || 'active') === 'active' ? 'selected' : ''}>Active</option><option value="pending_verification" ${String(member.status || member.account_status || 'active') === 'pending_verification' ? 'selected' : ''}>Pending Verification</option><option value="suspended" ${String(member.status || member.account_status || 'active') === 'suspended' ? 'selected' : ''}>Suspended</option><option value="restricted" ${String(member.status || member.account_status || 'active') === 'restricted' ? 'selected' : ''}>Restricted</option><option value="banned" ${String(member.status || member.account_status || 'active') === 'banned' ? 'selected' : ''}>Banned</option><option value="deactivated" ${String(member.status || member.account_status || 'active') === 'deactivated' ? 'selected' : ''}>Deactivated</option><option value="deleted" ${String(member.status || member.account_status || 'active') === 'deleted' ? 'selected' : ''}>Deleted</option></select></label>
+            <label>Profile info<textarea name="profile_info" rows="3">${(member.profile_info || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea></label>
+          </div>
+          <button type="submit" class="primary">Save changes</button>
+        </form>
+
         <div class="member-actions-inline">
           <button type="button" class="primary" data-member-action="activate" data-id="${member.id}">Activate</button>
           <button type="button" class="secondary" data-member-action="restrict" data-id="${member.id}">Restrict</button>
           <button type="button" class="secondary" data-member-action="reset-password" data-id="${member.id}">Reset password</button>
           <button type="button" class="danger" data-member-action="delete" data-id="${member.id}">Delete</button>
         </div>
+
+        <form class="member-form compact" id="memberNoteForm">
+          <label>Internal admin note<textarea name="note" rows="3" placeholder="Add confidential admin note"></textarea></label>
+          <button type="submit" class="secondary">Add note</button>
+        </form>
+
+        <form class="member-form compact" id="walletAdjustForm">
+          <div class="field-row">
+            <label>Amount<input type="number" name="amount" min="1" step="1" /></label>
+            <label>Direction<select name="direction"><option value="credit">Credit</option><option value="debit">Debit</option></select></label>
+          </div>
+          <div class="field-row">
+            <label>Reason<input name="reason" placeholder="Manual wallet adjustment" /></label>
+            <label>Reference<input name="reference" placeholder="ADMIN-REF-001" /></label>
+          </div>
+          <button type="submit" class="primary">Apply wallet change</button>
+        </form>
 
         <div class="info-section">
           <h4>Recent activity</h4>
@@ -207,20 +240,56 @@
           <h4>Status history</h4>
           ${statusHistory.length ? statusHistory.slice(0, 6).map((item) => `<div class="feed-item"><strong>${item.previous_status || '—'} → ${item.new_status}</strong><small>${item.reason || ''}</small></div>`).join('') : '<p class="muted">No status history.</p>'}
         </div>
-
-        <div class="info-section">
-          <h4>Internal notes</h4>
-          ${notes.length ? notes.map((item) => `<div class="feed-item"><strong>${item.author_email}</strong><small>${item.note}</small></div>`).join('') : '<p class="muted">No admin notes.</p>'}
-        </div>
       `;
+
+      details.querySelector('#memberProfileForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const payload = Object.fromEntries(new FormData(form).entries());
+        await request(`/api/admin/members/${memberId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        await loadAll();
+      });
+
+      details.querySelector('#memberNoteForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const note = new FormData(event.currentTarget).get('note');
+        if (!String(note || '').trim()) return;
+        await request(`/api/admin/members/${memberId}/notes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ note: String(note).trim() }),
+        });
+        await loadAll();
+      });
+
+      details.querySelector('#walletAdjustForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const data = Object.fromEntries(new FormData(form).entries());
+        await request(`/api/admin/members/${memberId}/wallet-adjust`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: Number(data.amount),
+            direction: String(data.direction || 'credit'),
+            reason: String(data.reason || 'Manual wallet adjustment'),
+            reference: String(data.reference || `ADMIN-${Date.now()}`),
+            confirm: 'CONFIRM',
+          }),
+        });
+        form.reset();
+        await loadAll();
+      });
 
       details.querySelectorAll('[data-member-action]').forEach((button) => {
         button.addEventListener('click', async () => {
-          const id = Number(button.dataset.id);
           const action = button.dataset.memberAction;
-
           if (action === 'activate') {
-            await request(`/api/admin/members/${id}/status`, {
+            await request(`/api/admin/members/${memberId}/status`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ status: 'active', reason: 'Activated by administrator' }),
@@ -228,7 +297,7 @@
           }
 
           if (action === 'restrict') {
-            await request(`/api/admin/members/${id}/status`, {
+            await request(`/api/admin/members/${memberId}/status`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ status: 'restricted', reason: 'Restricted for policy review' }),
@@ -236,15 +305,15 @@
           }
 
           if (action === 'reset-password') {
-            await request(`/api/admin/members/${id}/reset-password`, {
+            await request(`/api/admin/members/${memberId}/reset-password`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ password: 'AdminReset@2026', reason: 'Administrator reset' }),
+              body: JSON.stringify({ password: 'AdminReset@2026' }),
             });
           }
 
           if (action === 'delete') {
-            await request(`/api/admin/members/${id}/delete`, {
+            await request(`/api/admin/members/${memberId}/delete`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ reason: 'Deletion requested by admin', confirm: 'CONFIRM_DELETE' }),
