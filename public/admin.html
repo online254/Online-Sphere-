@@ -2,908 +2,606 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Online Sphere — Administrator Dashboard</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Online Sphere | Administrator</title>
 
 <style>
 :root {
-  --gold-50: #fff9e8;
-  --gold-100: #fff0c2;
-  --gold-200: #ffe08a;
-  --gold-300: #ffd05a;
-  --gold-400: #f7bd36;
-  --gold-500: #dfa51b;
-  --gold-600: #b9850d;
-  --gold-700: #8c6208;
-  --gold-800: #604208;
-  --ink: #211704;
-  --muted: #725b2a;
-  --line: #d7ad43;
-  --surface: #fff4cf;
-  --surface2: #ffedb0;
-  --shadow: rgba(98,65,4,.13);
+  --gold:#d4a017;
+  --gold2:#f4d16b;
+  --bg:#fffaf0;
+  --panel:#ffffff;
+  --text:#352709;
+  --muted:#89774e;
+  --line:#eee2c3;
+  --danger:#c0392b;
 }
-
-* {
-  box-sizing: border-box;
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,Arial,sans-serif
 }
-
-html {
-  scroll-behavior: smooth;
+button,input,select{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+#loginScreen{
+  min-height:100vh;display:grid;place-items:center;padding:20px;
+  background:linear-gradient(135deg,#fff7dc,#f4d16b,#fffaf0)
 }
-
-body {
-  margin: 0;
-  background: linear-gradient(145deg,#f7d66c 0%,#edbd3e 45%,#dca51d 100%);
-  color: var(--ink);
-  font-family: Manrope,"DM Sans",Arial,sans-serif;
+.login-card{
+  width:100%;max-width:420px;background:white;padding:35px;
+  border-radius:20px;box-shadow:0 20px 60px #80600022
 }
-
-button,input,select,textarea {
-  font: inherit;
+.logo{
+  width:55px;height:55px;border-radius:15px;
+  background:linear-gradient(135deg,#f4d16b,#b8860b);
+  display:grid;place-items:center;color:white;font-weight:900;
+  font-size:22px;margin-bottom:18px
 }
-
-button {
-  cursor: pointer;
+h1,h2,h3,p{margin-top:0}
+.login-card h1{font-size:25px}
+.login-card p{color:var(--muted)}
+label{display:block;font-size:13px;font-weight:700;margin:16px 0 7px}
+input,select{
+  width:100%;padding:12px;border:1px solid var(--line);
+  border-radius:10px;background:white;color:var(--text)
 }
-
-/* HEADER */
-
-.topbar {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 15px 20px;
-  background: rgba(255,238,181,.96);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid #c89620;
-  box-shadow: 0 5px 20px var(--shadow);
+.btn{
+  border:0;border-radius:10px;padding:12px 16px;
+  background:linear-gradient(135deg,#f4d16b,#c18b08);
+  color:#382600;font-weight:800
 }
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.btn-dark{background:#3c2c08;color:#fff}
+.btn-danger{background:#b83226;color:#fff}
+.btn-outline{background:white;border:1px solid var(--line)}
+.login-card .btn{width:100%;margin-top:22px}
+#loginMessage{color:#b83226;font-size:13px;margin-top:12px}
+.layout{display:flex;min-height:100vh}
+.sidebar{
+  width:250px;background:#fff;border-right:1px solid var(--line);
+  padding:24px 15px;flex-shrink:0
 }
-
-.brand-mark {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(145deg,#fff4c8,#e7ad25);
-  border: 1px solid #c28c12;
-  font-size: 24px;
-  color: #704b04;
+.brand{display:flex;gap:12px;align-items:center;margin-bottom:30px}
+.brand .logo{margin:0;width:42px;height:42px}
+.brand strong{display:block}
+.brand small{color:var(--muted)}
+.nav{
+  display:flex;align-items:center;gap:12px;width:100%;
+  padding:13px;border:0;background:transparent;border-radius:10px;
+  color:#705b2b;text-align:left;margin:4px 0;font-weight:600
 }
-
-.brand strong {
-  font-size: 15px;
-  letter-spacing: .3px;
+.nav.active,.nav:hover{background:#fff1c7;color:#8a6100}
+.sidebar-footer{margin-top:35px;border-top:1px solid var(--line);padding-top:15px}
+.main{flex:1;min-width:0;padding:25px}
+.topbar{
+  display:flex;justify-content:space-between;align-items:center;
+  gap:15px;flex-wrap:wrap;margin-bottom:25px
 }
-
-.brand small {
-  display: block;
-  font-size: 10px;
-  letter-spacing: 2px;
-  color: #84651c;
-  margin-top: 4px;
+.topbar h1{font-size:25px;margin-bottom:5px}
+.muted{color:var(--muted)}
+.admin-badge{
+  display:inline-block;background:#fff1c7;color:#946700;
+  border-radius:20px;padding:7px 12px;font-size:12px;font-weight:800
 }
-
-.admin-chip {
-  padding: 9px 14px;
-  border-radius: 25px;
-  background: #e8b52c;
-  color: #4a3103;
-  border: 1px solid #b9840e;
-  font-weight: 800;
-  font-size: 12px;
+.cards{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:16px;margin-bottom:25px
 }
-
-/* PAGE */
-
-main {
-  max-width: 1200px;
-  margin: auto;
-  padding: 22px;
+.card{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:15px;padding:20px
 }
-
-.overview {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 15px;
-  margin: 4px 0 25px;
+.stat-label{color:var(--muted);font-size:13px}
+.stat-value{font-size:28px;font-weight:900;margin:12px 0}
+.stat-icon{font-size:24px}
+.section{display:none}
+.section.active{display:block}
+.section-title{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+.toolbar input{max-width:320px}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
+table{width:100%;border-collapse:collapse;background:white;min-width:750px}
+th,td{padding:13px;text-align:left;border-bottom:1px solid var(--line);font-size:13px}
+th{background:#fff5d7;color:#775300}
+.status{padding:5px 9px;border-radius:20px;background:#eaf8ed;color:#24733a;font-size:11px;font-weight:800}
+.status.suspended{background:#ffe8e5;color:#b83226}
+.actions{display:flex;gap:7px;flex-wrap:wrap}
+.actions button{padding:7px 9px;border-radius:7px;font-size:11px}
+.notice{padding:14px;background:#fff3ce;border-radius:10px;color:#725200}
+.quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+.quick-grid .card{cursor:pointer}
+.quick-grid .card:hover{border-color:var(--gold)}
+.empty{padding:25px;text-align:center;color:var(--muted)}
+#toast{
+  position:fixed;bottom:20px;right:20px;padding:14px 20px;
+  background:#352709;color:white;border-radius:10px;
+  display:none;z-index:99
 }
-
-.overview-left {
-  display: flex;
-  align-items: center;
-  gap: 15px;
+@media(max-width:850px){
+  .sidebar{width:75px;padding:15px 8px}
+  .brand strong,.brand small,.nav span,.sidebar-footer button span{display:none}
+  .brand{justify-content:center}
+  .nav{justify-content:center;padding:14px 5px}
+  .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .quick-grid{grid-template-columns:1fr}
+  .main{padding:17px}
 }
-
-.menu-mark {
-  width: 62px;
-  height: 62px;
-  border-radius: 20px;
-  display: grid;
-  place-items: center;
-  background: #ffedb0;
-  border: 1px solid #c8951c;
-  font-size: 24px;
-}
-
-.eyebrow {
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 2px;
-  color: #86651a;
-}
-
-h1 {
-  font-size: 28px;
-  margin: 7px 0;
-}
-
-.overview p {
-  margin: 0;
-  color: #765b20;
-  line-height: 1.6;
-}
-
-.refresh {
-  border: 1px solid #b7810c;
-  background: linear-gradient(145deg,#ffdf78,#e9ae22);
-  color: #4b3100;
-  border-radius: 20px;
-  padding: 17px 22px;
-  min-width: 110px;
-  font-weight: 800;
-  box-shadow: 0 5px 14px var(--shadow);
-}
-
-.refresh span {
-  display: block;
-  font-size: 20px;
-  margin-bottom: 5px;
-}
-
-/* PANELS */
-
-.panel {
-  background: rgba(255,248,222,.84);
-  border: 1.5px solid #c9971d;
-  border-radius: 27px;
-  margin-bottom: 22px;
-  overflow: hidden;
-  box-shadow: 0 12px 28px var(--shadow);
-}
-
-.panel-head {
-  padding: 23px 25px;
-  border-bottom: 1px solid #dfbd62;
-}
-
-.panel-head h2 {
-  font-size: 21px;
-  margin: 0;
-}
-
-.panel-body {
-  padding: 22px 25px;
-}
-
-/* QUICK ADMINISTRATION */
-
-.quick-grid {
-  display: grid;
-  grid-template-columns: repeat(2,minmax(0,1fr));
-  gap: 15px;
-}
-
-.quick-card {
-  min-height: 170px;
-  text-align: left;
-  padding: 22px 20px;
-  border: 1.5px solid #d6ad45;
-  border-radius: 23px;
-  background: linear-gradient(145deg,#fff8df,#ffedb0);
-  color: #382504;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 15px;
-  box-shadow: 0 4px 12px rgba(114,77,4,.07);
-  transition: transform .18s,border-color .18s;
-}
-
-.quick-card:hover,
-.quick-card:focus-visible {
-  transform: translateY(-2px);
-  border-color: #a87508;
-  outline: 2px solid #e3b332;
-  outline-offset: 1px;
-}
-
-.card-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(145deg,#ffe79a,#e8b42b);
-  border: 1px solid #c28d17;
-  font-size: 21px;
-  color: #674500;
-}
-
-.quick-card strong {
-  font-size: 18px;
-  line-height: 1.45;
-}
-
-.quick-card small {
-  font-size: 14px;
-  line-height: 1.7;
-  color: #806329;
-}
-
-/* STATISTICS */
-
-.stats {
-  display: grid;
-  grid-template-columns: repeat(2,minmax(0,1fr));
-  gap: 13px;
-}
-
-.stat {
-  background: linear-gradient(145deg,#fff8df,#ffedb0);
-  border: 1px solid #d8b24d;
-  border-radius: 20px;
-  padding: 17px;
-}
-
-.stat label {
-  display: block;
-  color: #86671e;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.stat strong {
-  display: block;
-  font-size: 22px;
-  margin: 9px 0;
-  overflow-wrap: anywhere;
-}
-
-.stat small {
-  color: #806329;
-}
-
-/* ADMIN WORKSPACE */
-
-.workspace {
-  display: none;
-}
-
-.workspace.active {
-  display: block;
-}
-
-.workspace-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.tools {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 17px;
-}
-
-.tools input,
-.tools select {
-  flex: 1;
-  min-width: 140px;
-  padding: 12px 14px;
-  border: 1px solid #d0a43a;
-  border-radius: 12px;
-  background: #fff9e8;
-  color: #332204;
-}
-
-.action {
-  padding: 11px 15px;
-  border: 1px solid #bd8a15;
-  border-radius: 12px;
-  background: #f4c541;
-  color: #4b3100;
-  font-weight: 800;
-}
-
-.action.secondary {
-  background: #fff5d4;
-}
-
-.table-wrap {
-  overflow: auto;
-  border: 1px solid #d4ad4b;
-  border-radius: 16px;
-}
-
-table {
-  width: 100%;
-  min-width: 620px;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-th {
-  padding: 14px;
-  text-align: left;
-  background: #f7df91;
-  color: #6c4c0b;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: .7px;
-}
-
-td {
-  padding: 14px;
-  border-top: 1px solid #ead18a;
-  color: #3e2b08;
-}
-
-.empty {
-  padding: 20px;
-  color: #806329;
-}
-
-.notice {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  padding: 14px 3px;
-  color: #74591c;
-  font-size: 12px;
-}
-
-.notice-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: #9b710d;
-}
-
-footer {
-  text-align: center;
-  padding: 20px;
-  color: #76591a;
-  font-size: 12px;
-}
-
-/* RESPONSIVE */
-
-@media(min-width:850px) {
-  .quick-grid {
-    grid-template-columns: repeat(3,minmax(0,1fr));
-  }
-
-  .stats {
-    grid-template-columns: repeat(3,minmax(0,1fr));
-  }
-}
-
-@media(max-width:420px) {
-  main {
-    padding: 12px;
-  }
-
-  .topbar {
-    padding: 12px;
-  }
-
-  .overview {
-    align-items: flex-start;
-  }
-
-  .overview-left {
-    gap: 10px;
-  }
-
-  .menu-mark {
-    width: 48px;
-    height: 52px;
-  }
-
-  .overview h1 {
-    font-size: 23px;
-  }
-
-  .overview p {
-    font-size: 13px;
-  }
-
-  .refresh {
-    padding: 12px 14px;
-    min-width: 83px;
-  }
-
-  .panel-head {
-    padding: 19px;
-  }
-
-  .panel-body {
-    padding: 15px;
-  }
-
-  .quick-card {
-    min-height: 160px;
-    padding: 17px;
-  }
-
-  .quick-card strong {
-    font-size: 16px;
-  }
-
-  .quick-card small {
-    font-size: 12px;
-  }
-
-  .stat strong {
-    font-size: 19px;
-  }
+@media(max-width:480px){
+  .cards{grid-template-columns:1fr}
 }
 </style>
 </head>
-
 <body>
 
-<header class="topbar">
-  <div class="brand">
-    <div class="brand-mark">◎</div>
-    <div>
-      <strong>ONLINE <span style="color:#9b6b08">SPHERE</span></strong>
-      <small>DISCOVER. LEARN. WORK.</small>
-    </div>
+<!-- ADMIN LOGIN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="logo">OS</div>
+    <h1>Administrator Login</h1>
+    <p>Online Sphere secure administration</p>
+
+    <form id="loginForm">
+      <label for="email">Administrator Email</label>
+      <input id="email" type="email"
+        value="muthinibenson7@gmail.com" required autocomplete="username">
+
+      <label for="password">Administrator Password</label>
+      <input id="password" type="password"
+        required autocomplete="current-password">
+
+      <button class="btn" type="submit" id="loginButton">
+        Sign in securely
+      </button>
+      <div id="loginMessage"></div>
+    </form>
   </div>
-  <span class="admin-chip">ADMINISTRATOR</span>
-</header>
-
-<main>
-
-<section class="overview">
-  <div class="overview-left">
-    <div class="menu-mark">☰</div>
-    <div>
-      <div class="eyebrow">ADMINISTRATION</div>
-      <h1>Administrator Overview</h1>
-      <p>Online Sphere management workspace</p>
-    </div>
-  </div>
-
-  <button class="refresh" onclick="refreshDashboard()">
-    <span>↻</span>Refresh
-  </button>
-</section>
-
-<!-- QUICK ADMINISTRATION -->
-
-<section class="panel">
-  <div class="panel-head">
-    <h2>Quick Administration</h2>
-  </div>
-
-  <div class="panel-body">
-    <div class="quick-grid">
-
-      <button class="quick-card" onclick="openModule('members')">
-        <span class="card-icon">♙</span>
-        <strong>Manage Members</strong>
-        <small>Accounts and profiles</small>
-      </button>
-
-      <button class="quick-card" onclick="openModule('wallets')">
-        <span class="card-icon">KSh</span>
-        <strong>Update Wallet</strong>
-        <small>Balance adjustments</small>
-      </button>
-
-      <button class="quick-card" onclick="openModule('withdrawals')">
-        <span class="card-icon">↗</span>
-        <strong>Withdrawals</strong>
-        <small>Review requests</small>
-      </button>
-
-      <button class="quick-card" onclick="openModule('opportunities')">
-        <span class="card-icon">▤</span>
-        <strong>Opportunities</strong>
-        <small>Publish and manage</small>
-      </button>
-
-      <button class="quick-card" onclick="openModule('payments')">
-        <span class="card-icon">↓</span>
-        <strong>Payments</strong>
-        <small>Transaction records</small>
-      </button>
-
-      <button class="quick-card" onclick="openModule('reports')">
-        <span class="card-icon">▥</span>
-        <strong>Reports</strong>
-        <small>Platform reporting</small>
-      </button>
-
-      <button class="quick-card" onclick="openModule('memberships')">
-        <span class="card-icon">♛</span>
-        <strong>Memberships</strong>
-        <small>Bronze, Silver and Gold</small>
-      </button>
-
-      <button class="quick-card" onclick="openModule('affiliates')">
-        <span class="card-icon">♧</span>
-        <strong>Affiliates</strong>
-        <small>Referral management</small>
-      </button>
-
-      <button class="quick-card" onclick="openModule('submissions')">
-        <span class="card-icon">✓</span>
-        <strong>Submissions</strong>
-        <small>Review completed work</small>
-      </button>
-
-      <button class="quick-card" onclick="openModule('finance')">
-        <span class="card-icon">◈</span>
-        <strong>Finance</strong>
-        <small>Revenue and financial reports</small>
-      </button>
-
-      <button class="quick-card" onclick="openModule('audit')">
-        <span class="card-icon">◷</span>
-        <strong>Audit Logs</strong>
-        <small>Administrator activity</small>
-      </button>
-
-    </div>
-  </div>
-</section>
-
-<!-- PLATFORM STATISTICS -->
-
-<section class="panel">
-  <div class="panel-head">
-    <h2>Platform Statistics</h2>
-  </div>
-
-  <div class="panel-body">
-    <div class="stats">
-
-      <div class="stat">
-        <label>TOTAL MEMBERS</label>
-        <strong id="totalMembers">—</strong>
-        <small>Registered accounts</small>
-      </div>
-
-      <div class="stat">
-        <label>ACTIVE MEMBERS</label>
-        <strong id="activeMembers">—</strong>
-        <small>Active accounts</small>
-      </div>
-
-      <div class="stat">
-        <label>SUSPENDED</label>
-        <strong id="suspendedMembers">—</strong>
-        <small>Restricted accounts</small>
-      </div>
-
-      <div class="stat">
-        <label>TOTAL DEPOSITS</label>
-        <strong id="deposits">KES —</strong>
-        <small>Verified deposits</small>
-      </div>
-
-      <div class="stat">
-        <label>WITHDRAWALS</label>
-        <strong id="withdrawals">KES —</strong>
-        <small>Verified withdrawals</small>
-      </div>
-
-      <div class="stat">
-        <label>PLATFORM REVENUE</label>
-        <strong id="revenue">KES —</strong>
-        <small>Recorded revenue</small>
-      </div>
-
-    </div>
-
-    <div class="notice">
-      <span class="notice-dot"></span>
-      Statistics load only from authenticated administrator APIs.
-    </div>
-  </div>
-</section>
-
-<!-- MANAGEMENT WORKSPACE -->
-
-<section class="panel workspace" id="workspace">
-
-  <div class="panel-head workspace-head">
-    <h2 id="workspaceTitle">Management</h2>
-    <button class="action secondary" onclick="closeModule()">Close ×</button>
-  </div>
-
-  <div class="panel-body">
-
-    <div class="tools">
-      <input id="searchInput"
-             placeholder="Search records..."
-             oninput="filterRows()">
-
-      <button class="action" onclick="loadModule()">↻ Refresh</button>
-    </div>
-
-    <div id="workspaceContent">
-      <p class="empty">Choose a management section.</p>
-    </div>
-
-  </div>
-</section>
-
-<div class="notice">
-  <span class="notice-dot"></span>
-  Administrator access must be verified by the backend for every protected action.
 </div>
 
-</main>
+<!-- ADMIN PANEL -->
+<div id="adminPanel" class="layout hidden">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">OS</div>
+      <div><strong>ONLINE SPHERE</strong><small>Administrator</small></div>
+    </div>
 
-<footer>
-  ONLINE SPHERE · ADMINISTRATION
-</footer>
+    <button class="nav active" data-page="overview">📊 <span>Overview</span></button>
+    <button class="nav" data-page="members">👥 <span>Members</span></button>
+    <button class="nav" data-page="transactions">💳 <span>Transactions</span></button>
+    <button class="nav" data-page="withdrawals">💸 <span>Withdrawals</span></button>
+    <button class="nav" data-page="membership">🏆 <span>Membership</span></button>
+    <button class="nav" data-page="reports">📈 <span>Reports</span></button>
+
+    <div class="sidebar-footer">
+      <button class="nav" id="logoutButton">🚪 <span>Logout</span></button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1 id="pageTitle">Administrator Overview</h1>
+        <div class="muted">Manage Online Sphere platform</div>
+      </div>
+      <div class="admin-badge" id="adminIdentity">ADMINISTRATOR</div>
+    </header>
+
+    <!-- OVERVIEW -->
+    <section class="section active" id="overview">
+      <div class="cards">
+        <div class="card">
+          <div class="stat-label">Total Members</div>
+          <div class="stat-value" id="totalMembers">—</div>
+          <div class="stat-icon">👥</div>
+        </div>
+        <div class="card">
+          <div class="stat-label">Active Members</div>
+          <div class="stat-value" id="activeMembers">—</div>
+          <div class="stat-icon">🟢</div>
+        </div>
+        <div class="card">
+          <div class="stat-label">Suspended Members</div>
+          <div class="stat-value" id="suspendedMembers">—</div>
+          <div class="stat-icon">⛔</div>
+        </div>
+        <div class="card">
+          <div class="stat-label">Transactions</div>
+          <div class="stat-value" id="totalTransactions">—</div>
+          <div class="stat-icon">💳</div>
+        </div>
+        <div class="card">
+          <div class="stat-label">Membership Revenue</div>
+          <div class="stat-value" id="revenue">—</div>
+          <div class="stat-icon">💰</div>
+        </div>
+        <div class="card">
+          <div class="stat-label">Pending Withdrawals</div>
+          <div class="stat-value" id="pendingWithdrawals">—</div>
+          <div class="stat-icon">⏳</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Quick Administration</h3>
+        <div class="quick-grid">
+          <div class="card" onclick="navigate('members')">
+            <h3>👥 Members</h3>
+            <p class="muted">Search, suspend, reactivate and manage accounts.</p>
+          </div>
+          <div class="card" onclick="navigate('transactions')">
+            <h3>💳 Transactions</h3>
+            <p class="muted">Review member financial activity.</p>
+          </div>
+          <div class="card" onclick="navigate('reports')">
+            <h3>📈 Reports</h3>
+            <p class="muted">Review platform statistics.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MEMBERS -->
+    <section class="section" id="members">
+      <div class="section-title">
+        <h2>Member Management</h2>
+        <button class="btn" onclick="loadMembers()">Refresh</button>
+      </div>
+      <div class="toolbar">
+        <input id="memberSearch" placeholder="Search name, email or phone">
+        <button class="btn" onclick="loadMembers()">Search</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th><th>Name</th><th>Email</th><th>Package</th>
+              <th>Status</th><th>Balance</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="membersBody">
+            <tr><td colspan="7" class="empty">Load members to begin.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TRANSACTIONS -->
+    <section class="section" id="transactions">
+      <h2>Transactions</h2>
+      <div class="notice">
+        Member transactions are available from the member details API.
+        Select a member in Member Management to inspect their financial history.
+      </div>
+    </section>
+
+    <!-- WITHDRAWALS -->
+    <section class="section" id="withdrawals">
+      <h2>Withdrawals</h2>
+      <div class="notice">
+        Withdrawal review requires a withdrawal management API.
+        No withdrawal is automatically approved from this page.
+      </div>
+    </section>
+
+    <!-- MEMBERSHIP -->
+    <section class="section" id="membership">
+      <h2>Membership Management</h2>
+      <div class="cards">
+        <div class="card"><h3>Bronze</h3><strong>KSh 1,000</strong></div>
+        <div class="card"><h3>Silver</h3><strong>KSh 1,750</strong></div>
+        <div class="card"><h3>Gold</h3><strong>KSh 2,500</strong></div>
+      </div>
+      <div class="notice">Membership activation must continue to depend on verified M-Pesa callbacks.</div>
+    </section>
+
+    <!-- REPORTS -->
+    <section class="section" id="reports">
+      <h2>Platform Reports</h2>
+      <div class="card">
+        <p>Total members: <strong id="reportMembers">—</strong></p>
+        <p>Active members: <strong id="reportActive">—</strong></p>
+        <p>Membership revenue: <strong id="reportRevenue">—</strong></p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="toast"></div>
 
 <script>
-const ADMIN_EMAIL = "muthinibenson7@gmail.com";
-const API_BASE = "https://online-sphere-backend.onrender.com/api/admin";
+const API = 'https://online-sphere-backend.onrender.com/api/admin';
+const TOKEN_KEY = 'onlineSphereAdminToken';
 
-let activeModule = "";
-let cachedRows = [];
+let adminToken = sessionStorage.getItem(TOKEN_KEY) || '';
 
-/* HTML ESCAPING */
-
-function escapeHTML(value) {
-  return String(value ?? "").replace(/[&<>"']/g, character => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
-  })[character]);
+function authHeaders(){
+  return {
+    'Content-Type':'application/json',
+    'Authorization':'Bearer '+adminToken
+  };
 }
 
-/* CURRENCY */
-
-function money(value) {
-  return "KES " + Number(value || 0).toLocaleString("en-KE", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-}
-
-/* AUTHENTICATED API */
-
-async function apiRequest(path, options = {}) {
-  const response = await fetch(API_BASE + path, {
-    credentials: "include",
+async function api(path, options={}){
+  const response = await fetch(API+path,{
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {})
-    }
+    headers:{...authHeaders(),...(options.headers||{})}
   });
 
-  const data = await response.json().catch(() => ({}));
+  const data = await response.json().catch(()=>({}));
 
-  if (!response.ok) {
-    throw new Error(data.message || ("API error " + response.status));
+  if(response.status===401){
+    logout(false);
+    throw new Error(data.message||'Admin session expired.');
   }
-
+  if(!response.ok) throw new Error(data.message||'Request failed.');
   return data;
 }
 
-/* ADMIN VERIFICATION */
+function money(value){
+  return 'KSh '+Number(value||0).toLocaleString('en-KE');
+}
 
-async function verifyAdmin() {
-  try {
-    const data = await apiRequest("/me");
+function toast(message){
+  const el=document.getElementById('toast');
+  el.textContent=message;
+  el.style.display='block';
+  setTimeout(()=>el.style.display='none',3500);
+}
 
-    if (
-      data.success !== true ||
-      String(data.email || "").toLowerCase() !== ADMIN_EMAIL ||
-      data.isAdmin !== true
-    ) {
-      denyAccess();
-      return false;
-    }
+function showLogin(message=''){
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('adminPanel').classList.add('hidden');
+  document.getElementById('loginMessage').textContent=message;
+}
 
-    return true;
+function showAdmin(){
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('adminPanel').classList.remove('hidden');
+}
 
-  } catch (error) {
-    denyAccess();
-    return false;
+document.getElementById('loginForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+
+  const button=document.getElementById('loginButton');
+  const message=document.getElementById('loginMessage');
+  button.disabled=true;
+  button.textContent='Authenticating...';
+  message.textContent='';
+
+  try{
+    const response=await fetch(API+'/login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        email:document.getElementById('email').value.trim(),
+        password:document.getElementById('password').value
+      })
+    });
+
+    const data=await response.json();
+
+    if(!response.ok||!data.success) throw new Error(data.message||'Login failed.');
+
+    adminToken=data.token;
+    sessionStorage.setItem(TOKEN_KEY,adminToken);
+
+    await verifyAdmin();
+    toast('Administrator authenticated.');
+  }catch(error){
+    adminToken='';
+    sessionStorage.removeItem(TOKEN_KEY);
+    message.textContent=error.message;
+  }finally{
+    button.disabled=false;
+    button.textContent='Sign in securely';
   }
+});
+
+async function verifyAdmin(){
+  const data=await api('/me');
+  if(!data.isAdmin) throw new Error('Administrator access denied.');
+
+  document.getElementById('adminIdentity').textContent=
+    data.admin.email;
+
+  showAdmin();
+  await loadStats();
 }
 
-function denyAccess() {
-  document.body.innerHTML = `
-    <div style="padding:30px;color:#432d03;font-family:Arial">
-      <h2>Administrator access denied.</h2>
-      <p>Please sign in with the authorized administrator account.</p>
-    </div>
-  `;
+async function loadStats(){
+  const data=await api('/stats');
+  const s=data.stats||{};
+
+  document.getElementById('totalMembers').textContent=s.totalMembers??0;
+  document.getElementById('activeMembers').textContent=s.activeMembers??0;
+  document.getElementById('suspendedMembers').textContent=s.suspendedMembers??0;
+  document.getElementById('totalTransactions').textContent=s.totalTransactions??0;
+  document.getElementById('revenue').textContent=money(s.membershipRevenue);
+  document.getElementById('pendingWithdrawals').textContent=money(s.pendingWithdrawals);
+
+  document.getElementById('reportMembers').textContent=s.totalMembers??0;
+  document.getElementById('reportActive').textContent=s.activeMembers??0;
+  document.getElementById('reportRevenue').textContent=money(s.membershipRevenue);
 }
 
-/* DASHBOARD STATISTICS */
+async function loadMembers(){
+  const body=document.getElementById('membersBody');
+  body.innerHTML='<tr><td colspan="7">Loading members...</td></tr>';
 
-async function refreshDashboard() {
-  if (!await verifyAdmin()) return;
+  try{
+    const search=encodeURIComponent(document.getElementById('memberSearch').value.trim());
+    const data=await api('/members?limit=100&search='+search);
 
-  try {
-    const data = await apiRequest("/stats");
-    const stats = data.stats || data;
+    body.innerHTML='';
 
-    document.getElementById("totalMembers").textContent =
-      stats.totalMembers ?? 0;
-
-    document.getElementById("activeMembers").textContent =
-      stats.activeMembers ?? 0;
-
-    document.getElementById("suspendedMembers").textContent =
-      stats.suspendedMembers ?? 0;
-
-    document.getElementById("deposits").textContent =
-      money(stats.totalDeposits);
-
-    document.getElementById("withdrawals").textContent =
-      money(stats.totalWithdrawals);
-
-    document.getElementById("revenue").textContent =
-      money(stats.revenue);
-
-  } catch (error) {
-    console.warn("Statistics unavailable:", error.message);
-  }
-}
-
-/* OPEN ADMIN MODULE */
-
-async function openModule(name) {
-  if (!await verifyAdmin()) return;
-
-  activeModule = name;
-
-  document.getElementById("workspace").classList.add("active");
-
-  document.getElementById("workspaceTitle").textContent =
-    name.charAt(0).toUpperCase() + name.slice(1);
-
-  document.getElementById("searchInput").value = "";
-
-  await loadModule();
-
-  document.getElementById("workspace").scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
-}
-
-/* CLOSE MODULE */
-
-function closeModule() {
-  document.getElementById("workspace").classList.remove("active");
-  activeModule = "";
-}
-
-/* LOAD MODULE RECORDS */
-
-async function loadModule() {
-  if (!activeModule) return;
-
-  const content = document.getElementById("workspaceContent");
-
-  content.innerHTML =
-    "<p class='empty'>Loading secure records...</p>";
-
-  try {
-    const data = await apiRequest("/" + activeModule);
-
-    cachedRows =
-      data[activeModule] ||
-      data.records ||
-      data.data ||
-      data.members ||
-      data.transactions ||
-      data.payments ||
-      [];
-
-    if (!Array.isArray(cachedRows)) {
-      content.innerHTML =
-        "<p class='empty'>No records returned.</p>";
+    if(!data.members?.length){
+      body.innerHTML='<tr><td colspan="7" class="empty">No members found.</td></tr>';
       return;
     }
 
-    renderRows(cachedRows);
+    data.members.forEach(m=>{
+      const tr=document.createElement('tr');
 
-  } catch (error) {
-    content.innerHTML =
-      "<p class='empty'>" +
-      escapeHTML(error.message) +
-      " — backend endpoint may not be configured yet.</p>";
+      const status=String(m.account_status||'inactive').toLowerCase();
+      const suspended=status==='suspended';
+
+      tr.innerHTML=`
+        <td>${m.id}</td>
+        <td>${escapeHTML(m.full_name)}</td>
+        <td>${escapeHTML(m.email)}</td>
+        <td>${escapeHTML(m.package||'—')}</td>
+        <td><span class="status ${suspended?'suspended':''}">
+          ${escapeHTML(status)}</span></td>
+        <td>${money(m.balance)}</td>
+        <td><div class="actions">
+          <button class="btn-outline" data-action="status">
+            ${suspended?'Reactivate':'Suspend'}
+          </button>
+          <button class="btn-outline" data-action="balance">Balance</button>
+          <button class="btn-outline" data-action="details">Details</button>
+          <button class="btn-danger" data-action="delete">Delete</button>
+        </div></td>`;
+
+      tr.querySelector('[data-action=status]').onclick=()=>changeStatus(m.id,suspended?'active':'suspended');
+      tr.querySelector('[data-action=balance]').onclick=()=>adjustBalance(m.id);
+      tr.querySelector('[data-action=details]').onclick=()=>memberDetails(m.id);
+      tr.querySelector('[data-action=delete]').onclick=()=>deleteMember(m.id);
+
+      body.appendChild(tr);
+    });
+  }catch(error){
+    body.innerHTML='<tr><td colspan="7">'+escapeHTML(error.message)+'</td></tr>';
   }
 }
 
-/* TABLE RENDERING */
+function escapeHTML(value){
+  return String(value??'').replace(/[&<>"']/g,c=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
 
-function renderRows(rows) {
-  const content = document.getElementById("workspaceContent");
+async function changeStatus(id,status){
+  if(!confirm('Change member '+id+' status to '+status+'?'))return;
+  try{
+    await api('/members/'+id+'/status',{
+      method:'PATCH',
+      body:JSON.stringify({status})
+    });
+    toast('Member status updated.');
+    await loadMembers();
+    await loadStats();
+  }catch(error){alert(error.message);}
+}
 
-  if (!rows.length) {
-    content.innerHTML =
-      "<p class='empty'>No records available.</p>";
+async function adjustBalance(id){
+  const amount=prompt('Enter adjustment amount. Example: 500 or -200');
+  if(amount===null)return;
+
+  const number=Number(amount);
+  if(!Number.isSafeInteger(number)||number===0){
+    alert('Enter a valid non-zero whole-number amount.');
     return;
   }
 
-  const columns = Object.keys(rows[0]).slice(0, 7);
+  const description=prompt('Reason for this wallet adjustment:');
+  if(!description)return;
 
-  content.innerHTML = `
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            ${columns.map(column =>
-              "<th>" + escapeHTML(column) + "</th>"
-            ).join("")}
-          </tr>
-        </thead>
+  if(!confirm('Record '+money(number)+' adjustment for member '+id+'?'))return;
 
-        <tbody>
-          ${rows.map(row => `
-            <tr>
-              ${columns.map(column =>
-                "<td>" + escapeHTML(row[column]) + "</td>"
-              ).join("")}
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    </div>
-  `;
+  try{
+    await api('/members/'+id+'/balance',{
+      method:'POST',
+      body:JSON.stringify({amount:number,description})
+    });
+    toast('Wallet adjustment recorded.');
+    await loadMembers();
+    await loadStats();
+  }catch(error){alert(error.message);}
 }
 
-/* SEARCH */
-
-function filterRows() {
-  const query =
-    document.getElementById("searchInput").value.toLowerCase();
-
-  const filtered = cachedRows.filter(record =>
-    JSON.stringify(record).toLowerCase().includes(query)
-  );
-
-  renderRows(filtered);
+async function memberDetails(id){
+  try{
+    const data=await api('/members/'+id);
+    const m=data.member;
+    alert(
+      'MEMBER DETAILS\\n\\n'+
+      'Name: '+m.full_name+'\\n'+
+      'Email: '+m.email+'\\n'+
+      'Phone: '+(m.phone||'—')+'\\n'+
+      'Package: '+(m.package||'—')+'\\n'+
+      'Status: '+m.account_status+'\\n'+
+      'Balance: '+money(m.balance)+'\\n'+
+      'Transactions: '+(data.transactions?.length||0)
+    );
+  }catch(error){alert(error.message);}
 }
 
-/* INITIALIZATION */
+async function deleteMember(id){
+  if(!confirm('PERMANENTLY delete member '+id+'?'))return;
+  if(!confirm('Final confirmation: this cannot be undone.'))return;
 
-refreshDashboard();
+  try{
+    await api('/members/'+id,{method:'DELETE'});
+    toast('Member deleted.');
+    await loadMembers();
+    await loadStats();
+  }catch(error){alert(error.message);}
+}
+
+function navigate(page){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav[data-page]').forEach(n=>n.classList.remove('active'));
+
+  document.getElementById(page)?.classList.add('active');
+  document.querySelector('.nav[data-page="'+page+'"]')?.classList.add('active');
+
+  const titles={
+    overview:'Administrator Overview',
+    members:'Member Management',
+    transactions:'Transactions',
+    withdrawals:'Withdrawals',
+    membership:'Membership Management',
+    reports:'Platform Reports'
+  };
+
+  document.getElementById('pageTitle').textContent=titles[page]||'Administrator';
+
+  if(page==='members')loadMembers();
+  if(page==='overview')loadStats();
+}
+
+document.querySelectorAll('.nav[data-page]').forEach(n=>{
+  n.addEventListener('click',()=>navigate(n.dataset.page));
+});
+
+async function logout(callServer=true){
+  const token=adminToken;
+  adminToken='';
+  sessionStorage.removeItem(TOKEN_KEY);
+  showLogin('You have been logged out.');
+
+  if(callServer&&token){
+    fetch(API+'/logout',{
+      method:'POST',
+      headers:{Authorization:'Bearer '+token}
+    }).catch(()=>{});
+  }
+}
+
+document.getElementById('logoutButton').onclick=()=>logout();
+
+(async()=>{
+  if(!adminToken){
+    showLogin();
+    return;
+  }
+  try{
+    await verifyAdmin();
+  }catch(error){
+    logout(false);
+    showLogin(error.message);
+  }
+})();
 </script>
-
 </body>
 </html>
