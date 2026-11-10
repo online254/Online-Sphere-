@@ -1,1 +1,304 @@
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#07111f;color:#f4f7ff;font-family:"DM Sans",sans-serif;line-height:1.55}.admin-shell{width:min(1120px,92%);margin:0 auto;padding:24px 0 48px}.admin-header{display:flex;align-items:center;justify-content:space-between;gap:18px;border-bottom:1px solid #ffffff1a;padding:8px 0 20px}.brand{display:flex;align-items:center;gap:11px;color:#f4f7ff;text-decoration:none;font:700 15px "Space Grotesk",sans-serif;letter-spacing:.5px}.brand b{color:#91aaff}.brand small{display:block;color:#a7b5ca;font:600 10px "DM Sans",sans-serif;letter-spacing:1.2px;margin-top:3px}.brand-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:13px;background:linear-gradient(135deg,#2563eb,#7c3aed);font-size:23px}.header-actions{display:flex;align-items:center;gap:16px}.header-actions a,.back-link{color:#b9c9e2;text-decoration:none;font-size:13px}.header-actions button{border:1px solid #ffffff26;border-radius:10px;padding:9px 13px;background:#101e31;color:#f4f7ff;font:600 13px inherit;cursor:pointer}.intro{padding:42px 0 20px}.eyebrow{color:#9db6ff;font-size:11px;font-weight:700;letter-spacing:1.2px}.intro h1{font:700 clamp(30px,5vw,42px)/1.15 "Space Grotesk",sans-serif;margin:12px 0}.intro p,.status{color:#a7b5ca}.status{border:1px solid #ffffff1a;background:#101e31;border-radius:12px;padding:13px 15px;font-size:14px}.status.error{color:#ffc1c1;border-color:#ef444455}.overview{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:13px;margin:20px 0}.metric,.panel{background:#101e31;border:1px solid #ffffff16;border-radius:16px;padding:17px}.metric span{display:block;color:#a7b5ca;font-size:12px}.metric strong{display:block;margin-top:9px;font:700 25px "Space Grotesk",sans-serif;overflow-wrap:anywhere}.records{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:18px 0 28px}.panel h2{font:600 17px "Space Grotesk",sans-serif;margin:0 0 12px}.panel p{border-top:1px solid #ffffff12;padding:10px 0 0;margin:9px 0;color:#d5deed;font-size:13px;overflow-wrap:anywhere}.back-link{display:inline-block;margin-top:12px}@media(max-width:760px){.overview{grid-template-columns:repeat(2,minmax(0,1fr))}.records{grid-template-columns:1fr}}@media(max-width:480px){.admin-shell{width:calc(100% - 28px)}.admin-header{align-items:flex-start}.header-actions{gap:9px;flex-direction:column;align-items:flex-end}.overview{gap:9px}.metric,.panel{padding:14px}.metric strong{font-size:21px}}[hidden]{display:none!important}
+(() => {
+  'use strict';
+
+  const API_BASE = String(window.ONLINE_SPHERE_API_URL || 'https://online-sphere-backend.onrender.com').replace(/\/$/, '');
+  const token = (() => {
+    try { return sessionStorage.getItem('onlineSphereSession') || localStorage.getItem('onlineSphereToken') || ''; }
+    catch (_) { return ''; }
+  })();
+
+  const state = { members: [], selectedMemberId: null };
+  const status = document.getElementById('status');
+  const number = (value) => new Intl.NumberFormat('en-KE').format(Number(value || 0));
+  const money = (value) => new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', maximumFractionDigits: 0 }).format(Number(value || 0));
+
+  function toast(message) {
+    status.textContent = message;
+    status.classList.remove('error');
+  }
+
+  function fail(message) {
+    status.textContent = message;
+    status.classList.add('error');
+  }
+
+  async function request(path, options = {}) {
+    const headers = Object.assign({ Accept: 'application/json' }, options.headers || {});
+    if (token) headers.Authorization = `Bearer ${token}`;
+    const response = await fetch(`${API_BASE}${path}`, Object.assign({ credentials: 'include', cache: 'no-store', headers }, options));
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.message || 'Request failed.');
+    return result;
+  }
+
+  function renderStatusBadge(statusText) {
+    const text = String(statusText || 'active').replace(/_/g, ' ');
+    const value = text.toLowerCase();
+    const className = {
+      active: 'status-badge success',
+      'pending verification': 'status-badge warning',
+      suspended: 'status-badge warning',
+      restricted: 'status-badge info',
+      banned: 'status-badge danger',
+      deactivated: 'status-badge neutral',
+      deleted: 'status-badge danger',
+    }[value] || 'status-badge neutral';
+    return `<span class="${className}">${text}</span>`;
+  }
+
+  function renderOverview(data) {
+    document.getElementById('members').textContent = number(data.members);
+    document.getElementById('activeMembers').textContent = number(data.activeMembers);
+    document.getElementById('pendingVerification').textContent = number(data.pendingVerification);
+    document.getElementById('walletTotal').textContent = money(data.totalWalletBalances);
+    document.getElementById('revenue').textContent = money(data.revenue);
+    document.getElementById('pendingWithdrawals').textContent = number(data.pendingWithdrawals);
+    document.getElementById('overview').hidden = false;
+  }
+
+  function renderAudit(items) {
+    const container = document.getElementById('auditFeed');
+    if (!items.length) {
+      container.innerHTML = '<p class="muted">No audit entries yet.</p>';
+      return;
+    }
+    container.innerHTML = items.map((entry) => `
+      <div class="feed-item">
+        <strong>${entry.action || 'Admin action'}</strong>
+        <span>${entry.actor_email || 'System'}</span>
+        <small>${new Date(entry.createdAt).toLocaleString()}</small>
+      </div>
+    `).join('');
+  }
+
+  function renderWallet(rows) {
+    const container = document.getElementById('walletLedger');
+    if (!rows.length) {
+      container.innerHTML = '<p class="muted">No wallet activity recorded.</p>';
+      return;
+    }
+    container.innerHTML = rows.slice(0, 8).map((row) => `
+      <div class="feed-item">
+        <strong>${row.type || 'transaction'} · ${row.reference || 'ref'}</strong>
+        <span>${row.memberName || 'Member'} · ${money(row.amount)}</span>
+        <small>${new Date(row.created_at || row.createdAt).toLocaleString()}</small>
+      </div>
+    `).join('');
+  }
+
+  function renderMembers() {
+    const tbody = document.getElementById('memberTableBody');
+    if (!state.members.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="muted">No members match the selected filters.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = state.members.map((member) => `
+      <tr data-id="${member.id}" class="member-row ${member.id === state.selectedMemberId ? 'selected' : ''}">
+        <td><strong>${member.fullName || 'Member'}</strong></td>
+        <td>${member.email || '—'}</td>
+        <td>${member.plan || 'Bronze'}</td>
+        <td>${renderStatusBadge(member.accountStatus || member.status || 'active')}</td>
+        <td>${money(member.walletBalance || 0)}</td>
+        <td>${new Date(member.createdAt).toLocaleDateString()}</td>
+        <td>
+          <div class="action-menu">
+            <button type="button" data-action="view" data-id="${member.id}">View</button>
+            <button type="button" data-action="suspend" data-id="${member.id}">Suspend</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+
+    tbody.querySelectorAll('button[data-action]').forEach((button) => {
+      button.addEventListener('click', async (event) => {
+        event.stopPropagation();
+        const id = Number(button.dataset.id);
+        const action = button.dataset.action;
+        if (action === 'view') {
+          state.selectedMemberId = id;
+          await loadMemberDetails(id);
+          renderMembers();
+          return;
+        }
+
+        if (action === 'suspend') {
+          await request(`/api/admin/members/${id}/status`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'suspended', reason: 'Priority account review by admin' }),
+          });
+          await loadAll();
+        }
+      });
+    });
+
+    tbody.querySelectorAll('.member-row').forEach((row) => {
+      row.addEventListener('click', async () => {
+        const memberId = Number(row.dataset.id);
+        state.selectedMemberId = memberId;
+        await loadMemberDetails(memberId);
+        renderMembers();
+      });
+    });
+  }
+
+  async function loadMembers() {
+    const search = document.getElementById('memberSearch').value.trim();
+    const statusFilter = document.getElementById('memberStatusFilter').value.trim();
+    const planFilter = document.getElementById('planFilter').value.trim();
+    const fromDate = document.getElementById('fromDate').value;
+    const toDate = document.getElementById('toDate').value;
+
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (statusFilter) params.set('status', statusFilter);
+    if (planFilter) params.set('plan', planFilter);
+    if (fromDate) params.set('from', fromDate);
+    if (toDate) params.set('to', toDate);
+
+    const result = await request(`/api/admin/members?${params.toString()}`);
+    state.members = result.members || [];
+    if (!state.selectedMemberId && state.members[0]) state.selectedMemberId = Number(state.members[0].id);
+    renderMembers();
+    if (state.selectedMemberId) await loadMemberDetails(state.selectedMemberId);
+  }
+
+  async function loadMemberDetails(memberId) {
+    const details = document.getElementById('memberDetails');
+    try {
+      const result = await request(`/api/admin/members/${memberId}`);
+      const member = result.member || {};
+      const wallet = result.walletLedger || [];
+      const notes = result.notes || [];
+      const activity = result.activity || [];
+      const statusHistory = result.statusHistory || [];
+
+      details.innerHTML = `
+        <div class="member-card">
+          <h3>${member.full_name || 'Member profile'}</h3>
+          <p><strong>Email:</strong> ${member.email || '—'}</p>
+          <p><strong>Phone:</strong> ${member.phone || '—'}</p>
+          <p><strong>Role:</strong> ${member.role || 'member'}</p>
+          <p><strong>Verification:</strong> ${member.verification_status || 'pending_verification'}</p>
+          <p><strong>Plan:</strong> ${member.package || 'Bronze'}</p>
+          <p><strong>Wallet:</strong> ${money(member.balance || 0)}</p>
+          <p><strong>Status:</strong> ${renderStatusBadge(member.status || member.account_status || 'active')}</p>
+        </div>
+
+        <div class="member-actions-inline">
+          <button type="button" class="primary" data-member-action="activate" data-id="${member.id}">Activate</button>
+          <button type="button" class="secondary" data-member-action="restrict" data-id="${member.id}">Restrict</button>
+          <button type="button" class="secondary" data-member-action="reset-password" data-id="${member.id}">Reset password</button>
+          <button type="button" class="danger" data-member-action="delete" data-id="${member.id}">Delete</button>
+        </div>
+
+        <div class="info-section">
+          <h4>Recent activity</h4>
+          ${activity.length ? activity.slice(0, 6).map((item) => `<div class="feed-item"><strong>${item.action}</strong><small>${new Date(item.created_at).toLocaleString()}</small></div>`).join('') : '<p class="muted">No activity yet.</p>'}
+        </div>
+
+        <div class="info-section">
+          <h4>Wallet ledger</h4>
+          ${wallet.length ? wallet.slice(0, 6).map((item) => `<div class="feed-item"><strong>${item.type} · ${money(item.amount)}</strong><small>${item.reason || item.reference || ''}</small></div>`).join('') : '<p class="muted">No wallet ledger entries.</p>'}
+        </div>
+
+        <div class="info-section">
+          <h4>Status history</h4>
+          ${statusHistory.length ? statusHistory.slice(0, 6).map((item) => `<div class="feed-item"><strong>${item.previous_status || '—'} → ${item.new_status}</strong><small>${item.reason || ''}</small></div>`).join('') : '<p class="muted">No status history.</p>'}
+        </div>
+
+        <div class="info-section">
+          <h4>Internal notes</h4>
+          ${notes.length ? notes.map((item) => `<div class="feed-item"><strong>${item.author_email}</strong><small>${item.note}</small></div>`).join('') : '<p class="muted">No admin notes.</p>'}
+        </div>
+      `;
+
+      details.querySelectorAll('[data-member-action]').forEach((button) => {
+        button.addEventListener('click', async () => {
+          const id = Number(button.dataset.id);
+          const action = button.dataset.memberAction;
+
+          if (action === 'activate') {
+            await request(`/api/admin/members/${id}/status`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status: 'active', reason: 'Activated by administrator' }),
+            });
+          }
+
+          if (action === 'restrict') {
+            await request(`/api/admin/members/${id}/status`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status: 'restricted', reason: 'Restricted for policy review' }),
+            });
+          }
+
+          if (action === 'reset-password') {
+            await request(`/api/admin/members/${id}/reset-password`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ password: 'AdminReset@2026', reason: 'Administrator reset' }),
+            });
+          }
+
+          if (action === 'delete') {
+            await request(`/api/admin/members/${id}/delete`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ reason: 'Deletion requested by admin', confirm: 'CONFIRM_DELETE' }),
+            });
+          }
+
+          await loadAll();
+        });
+      });
+    } catch (error) {
+      details.innerHTML = `<p class="muted">${error.message}</p>`;
+    }
+  }
+
+  async function loadAll() {
+    try {
+      const overview = await request('/api/admin/overview');
+      renderOverview(overview.overview || {});
+      const ledger = await request('/api/admin/wallet-ledger');
+      renderWallet(ledger.transactions || []);
+      const audit = await request('/api/admin/security');
+      renderAudit(audit.auditLogs || []);
+      await loadMembers();
+      toast('Administrator access verified. Records are loaded from the live database.');
+    } catch (error) {
+      fail(error.message || 'Unable to load dashboard records.');
+    }
+  }
+
+  document.getElementById('applyFilters').addEventListener('click', async () => {
+    await loadMembers();
+  });
+
+  document.getElementById('refreshMembers').addEventListener('click', async () => {
+    await loadAll();
+  });
+
+  document.getElementById('memberSearch').addEventListener('keydown', async (event) => {
+    if (event.key === 'Enter') {
+      await loadMembers();
+    }
+  });
+
+  document.getElementById('signOut').addEventListener('click', async () => {
+    try { await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, credentials: 'include' }); } catch (_) {}
+    try { sessionStorage.removeItem('onlineSphereSession'); localStorage.removeItem('onlineSphereToken'); } catch (_) {}
+    window.location.replace('auth.html');
+  });
+
+  if (!token) {
+    fail('Please sign in with an authorized administrator account. Returning to the dashboard…');
+    setTimeout(() => window.location.replace('dashboard.html'), 1600);
+    return;
+  }
+
+  loadAll();
+})();

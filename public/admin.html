@@ -1,37 +1,235 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#07111f">
-  <meta name="robots" content="noindex, nofollow">
-  <title>Administrator Dashboard | Online Sphere</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="admin.css">
-  <script src="admin.js" defer></script>
-</head>
-<body>
-  <main class="admin-shell">
-    <header class="admin-header">
-      <a class="brand" href="dashboard.html"><span class="brand-icon" aria-hidden="true">◎</span><span>ONLINE <b>SPHERE</b><small>ADMINISTRATOR DASHBOARD</small></span></a>
-      <div class="header-actions"><a href="dashboard.html">Member dashboard</a><button id="signOut" type="button">Sign out</button></div>
-    </header>
-    <section class="intro"><span class="eyebrow">PRIVATE ADMINISTRATOR ACCESS</span><h1>Administrator Dashboard</h1><p>Verified platform activity from the Online Sphere database.</p></section>
-    <p class="status" id="status" role="status" aria-live="polite">Verifying administrator access…</p>
-    <section class="overview" id="overview" hidden aria-label="Platform overview">
-      <article class="metric"><span>Total members</span><strong id="members">—</strong></article>
-      <article class="metric"><span>Active members</span><strong id="activeMembers">—</strong></article>
-      <article class="metric"><span>Verified revenue</span><strong id="revenue">—</strong></article>
-      <article class="metric"><span>Pending transactions</span><strong id="pendingTransactions">—</strong></article>
-      <article class="metric"><span>Pending withdrawals</span><strong id="pendingWithdrawals">—</strong></article>
-    </section>
-    <section class="records" id="records" hidden>
-      <article class="panel"><h2>Recent members</h2><div id="recentMembers"></div></article>
-      <article class="panel"><h2>Recent transactions</h2><div id="recentTransactions"></div></article>
-    </section>
-    <a class="back-link" href="dashboard.html">← Return to member dashboard</a>
-  </main>
-</body>
-</html>
+-- =========================================================
+-- ONLINE SPHERE DATABASE
+-- EARNING OPPORTUNITIES + MEMBERSHIP + WALLET
+-- =========================================================
+
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    full_name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    phone TEXT UNIQUE,
+    password_hash TEXT NOT NULL,
+    role TEXT DEFAULT 'member',
+    is_admin INTEGER NOT NULL DEFAULT 0,
+    status TEXT DEFAULT 'active',
+    verification_status TEXT DEFAULT 'pending_verification',
+    last_login_at DATETIME,
+    deleted_at DATETIME,
+    deleted_by INTEGER,
+    delete_reason TEXT,
+    profile_info TEXT,
+    member_notes TEXT,
+    phone_verified INTEGER NOT NULL DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS accounts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL UNIQUE,
+    account_number TEXT UNIQUE NOT NULL,
+    package TEXT DEFAULT 'Bronze',
+    activation_fee INTEGER DEFAULT 0,
+    status TEXT DEFAULT 'active',
+    balance INTEGER NOT NULL DEFAULT 0,
+    total_earned INTEGER DEFAULT 0,
+    total_withdrawn INTEGER DEFAULT 0,
+    pending_withdrawal INTEGER DEFAULT 0,
+    currency TEXT DEFAULT 'KES',
+    last_wallet_adjustment_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS admin_audit_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    actor_user_id INTEGER,
+    actor_email TEXT,
+    action TEXT NOT NULL,
+    entity_type TEXT,
+    entity_id INTEGER,
+    old_value TEXT,
+    new_value TEXT,
+    reason TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS wallet_ledger (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    account_id INTEGER NOT NULL,
+    type TEXT NOT NULL,
+    amount INTEGER NOT NULL,
+    currency TEXT DEFAULT 'KES',
+    reason TEXT NOT NULL,
+    reference TEXT NOT NULL,
+    admin_user_id INTEGER NOT NULL,
+    admin_email TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS member_status_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    previous_status TEXT,
+    new_status TEXT NOT NULL,
+    reason TEXT,
+    admin_user_id INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS member_login_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    action TEXT NOT NULL,
+    ip_address TEXT,
+    user_agent TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS member_activity_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    action TEXT NOT NULL,
+    details TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS membership_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    previous_plan TEXT,
+    new_plan TEXT NOT NULL,
+    reason TEXT,
+    admin_user_id INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS member_admin_notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    author_email TEXT NOT NULL,
+    note TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS packages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    activation_fee INTEGER NOT NULL,
+    description TEXT,
+    status TEXT DEFAULT 'active',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS transactions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    account_id INTEGER NOT NULL,
+    type TEXT NOT NULL,
+    amount INTEGER NOT NULL,
+    status TEXT DEFAULT 'pending',
+    reference TEXT UNIQUE,
+    description TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS opportunities (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    category TEXT NOT NULL,
+    description TEXT NOT NULL,
+    difficulty TEXT DEFAULT 'Beginner',
+    earning_model TEXT,
+    requirements TEXT,
+    platform_name TEXT,
+    external_url TEXT,
+    risk_level TEXT DEFAULT 'Low',
+    featured INTEGER DEFAULT 0,
+    status TEXT DEFAULT 'active',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS saved_opportunities (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    opportunity_id INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, opportunity_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (opportunity_id) REFERENCES opportunities(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS withdrawals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    account_id INTEGER NOT NULL,
+    amount INTEGER NOT NULL,
+    method TEXT NOT NULL,
+    phone TEXT,
+    reference TEXT UNIQUE,
+    status TEXT DEFAULT 'pending',
+    notes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    processed_at DATETIME,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token_hash TEXT NOT NULL,
+    expires_at DATETIME NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+INSERT OR IGNORE INTO packages (name, activation_fee, description)
+VALUES ('Bronze', 1000, 'Basic access to Online Sphere opportunities and learning resources.');
+
+INSERT OR IGNORE INTO packages (name, activation_fee, description)
+VALUES ('Silver', 1750, 'Expanded access to opportunities and advanced learning resources.');
+
+INSERT OR IGNORE INTO packages (name, activation_fee, description)
+VALUES ('Gold', 2500, 'Full access to the Online Sphere opportunity and learning library.');
+
+INSERT OR IGNORE INTO opportunities (title, category, description, difficulty, earning_model, requirements, risk_level, featured)
+VALUES ('Online Transcription', 'Transcription', 'Convert audio or video recordings into written text.', 'Beginner', 'Paid per task or audio minute', 'Good listening skills, typing and attention to detail.', 'Low', 1);
+
+INSERT OR IGNORE INTO opportunities (title, category, description, difficulty, earning_model, requirements, risk_level, featured)
+VALUES ('Data Entry', 'Data Entry', 'Enter, organize and verify information using online tools.', 'Beginner', 'Paid per task or project', 'Basic computer skills and accuracy.', 'Low', 1);
+
+INSERT OR IGNORE INTO opportunities (title, category, description, difficulty, earning_model, requirements, risk_level, featured)
+VALUES ('Freelancing', 'Freelancing', 'Offer professional skills to clients locally or internationally.', 'Beginner-Advanced', 'Paid per project or contract', 'A marketable skill and a professional profile.', 'Low', 1);
+
+INSERT OR IGNORE INTO opportunities (title, category, description, difficulty, earning_model, requirements, risk_level, featured)
+VALUES ('Academic Writing', 'Academic Writing', 'Provide legitimate research and writing assistance while following academic integrity rules.', 'Intermediate', 'Paid per project', 'Strong writing, research and citation skills.', 'Medium', 0);
+
+INSERT OR IGNORE INTO opportunities (title, category, description, difficulty, earning_model, requirements, risk_level, featured)
+VALUES ('Online Gaming', 'Gaming', 'Explore legitimate gaming-related opportunities such as game testing, streaming and content creation.', 'Beginner', 'Task, contract, content or platform based', 'Gaming skills or content creation ability.', 'Medium', 0);
+
+INSERT OR IGNORE INTO opportunities (title, category, description, difficulty, earning_model, requirements, risk_level, featured)
+VALUES ('Content Creation', 'Content', 'Create useful digital content for websites and social platforms.', 'Beginner-Advanced', 'Paid per project, contract or platform', 'Writing, video, design or communication skills.', 'Low', 1);
+
+INSERT OR IGNORE INTO opportunities (title, category, description, difficulty, earning_model, requirements, risk_level, featured)
+VALUES ('Graphic Design', 'Design', 'Create logos, social media graphics, posters and other digital designs.', 'Intermediate', 'Paid per project', 'Design skills and suitable software.', 'Low', 0);
+
+INSERT OR IGNORE INTO opportunities (title, category, description, difficulty, earning_model, requirements, risk_level, featured)
+VALUES ('AI-Assisted Work', 'AI', 'Explore legitimate work involving AI-assisted research, content, data and digital services.', 'Beginner-Advanced', 'Paid per task or project', 'Ability to use AI tools responsibly and verify results.', 'Medium', 1);
+
+INSERT OR IGNORE INTO opportunities (title, category, description, difficulty, earning_model, requirements, risk_level, featured)
+VALUES ('Remote Jobs', 'Remote Jobs', 'Find legitimate remote employment and contract opportunities.', 'Intermediate', 'Salary, contract or project payment', 'Skills and qualifications depend on the job.', 'Low', 1);

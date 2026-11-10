@@ -1,58 +1,134 @@
-(() => {
-  'use strict';
-  const API_BASE = String(window.ONLINE_SPHERE_API_URL || 'https://online-sphere-backend.onrender.com').replace(/\/$/, '');
-  const token = (() => {
-    try { return sessionStorage.getItem('onlineSphereSession') || localStorage.getItem('onlineSphereToken') || ''; }
-    catch (_) { return ''; }
-  })();
-  const status = document.getElementById('status');
-  const number = (value) => new Intl.NumberFormat('en-KE').format(Number(value || 0));
-  const money = (value) => new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', maximumFractionDigits: 0 }).format(Number(value || 0));
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07111f">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Member Management | Online Sphere Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+  <script src="admin.js" defer></script>
+</head>
+<body>
+  <main class="admin-shell">
+    <header class="admin-header">
+      <a class="brand" href="dashboard.html"><span class="brand-icon" aria-hidden="true">◎</span><span>ONLINE <b>SPHERE</b><small>ADMINISTATOR DASHBOARD</small></span></a>
+      <div class="header-actions">
+        <a href="dashboard.html">Member dashboard</a>
+        <button id="signOut" type="button">Sign out</button>
+      </div>
+    </header>
 
-  function deny(message) {
-    status.textContent = message;
-    status.classList.add('error');
-    setTimeout(() => window.location.replace('dashboard.html'), 1600);
-  }
+    <section class="intro">
+      <span class="eyebrow">PRIVATE ADMINISTRATOR ACCESS</span>
+      <h1>Member Management Control Center</h1>
+      <p>Manage accounts, memberships, wallet activity, and operations securely.</p>
+    </section>
 
-  function addText(container, value) {
-    const row = document.createElement('p');
-    row.textContent = value;
-    container.appendChild(row);
-  }
+    <p class="status" id="status" role="status" aria-live="polite">Verifying administrator access…</p>
 
-  async function load() {
-    if (!token) return deny('Please sign in with an authorized administrator account. Returning to the dashboard…');
-    try {
-      const headers = { Authorization: `Bearer ${token}`, Accept: 'application/json' };
-      const accessResponse = await fetch(`${API_BASE}/api/admin/access`, { headers, credentials: 'include', cache: 'no-store' });
-      if (!accessResponse.ok) return deny(accessResponse.status === 401 ? 'Your session expired. Please sign in again.' : 'Administrator access is restricted. Returning to your dashboard…');
-      const overviewResponse = await fetch(`${API_BASE}/api/admin/overview`, { headers, credentials: 'include', cache: 'no-store' });
-      const result = await overviewResponse.json().catch(() => ({}));
-      if (!overviewResponse.ok) throw new Error(result.message || 'Unable to load platform records.');
-      const data = result.overview || {};
-      document.getElementById('members').textContent = number(data.members);
-      document.getElementById('activeMembers').textContent = number(data.activeMembers);
-      document.getElementById('revenue').textContent = money(data.verifiedRevenue);
-      document.getElementById('pendingTransactions').textContent = number(data.pendingTransactions);
-      document.getElementById('pendingWithdrawals').textContent = number(data.pendingWithdrawals);
-      const members = document.getElementById('recentMembers');
-      const transactions = document.getElementById('recentTransactions');
-      (data.recentMembers || []).forEach((member) => addText(members, `${member.fullName || 'Member'} · ${member.email || ''}`));
-      (data.recentTransactions || []).forEach((item) => addText(transactions, `${item.memberName || 'Member'} · ${item.type || 'Transaction'} · ${money(item.amount)} · ${item.status || ''}`));
-      document.getElementById('overview').hidden = false;
-      document.getElementById('records').hidden = false;
-      status.textContent = 'Administrator access verified. Records are loaded from the live database.';
-    } catch (error) {
-      status.textContent = `${error.message} Please try again later.`;
-      status.classList.add('error');
-    }
-  }
+    <section class="overview" id="overview" hidden aria-label="Platform overview">
+      <article class="metric"><span>Total members</span><strong id="members">—</strong></article>
+      <article class="metric"><span>Active members</span><strong id="activeMembers">—</strong></article>
+      <article class="metric"><span>Pending verification</span><strong id="pendingVerification">—</strong></article>
+      <article class="metric"><span>Total wallet</span><strong id="walletTotal">—</strong></article>
+      <article class="metric"><span>Revenue</span><strong id="revenue">—</strong></article>
+      <article class="metric"><span>Pending withdrawals</span><strong id="pendingWithdrawals">—</strong></article>
+    </section>
 
-  document.getElementById('signOut').addEventListener('click', async () => {
-    try { await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, credentials: 'include' }); } catch (_) {}
-    try { sessionStorage.removeItem('onlineSphereSession'); localStorage.removeItem('onlineSphereToken'); } catch (_) {}
-    window.location.replace('auth.html');
-  });
-  load();
-})();
+    <section class="toolbar panel">
+      <div class="field-group search-box">
+        <label for="memberSearch">Search member</label>
+        <input id="memberSearch" type="search" placeholder="Name, email, phone, ID" />
+      </div>
+
+      <div class="field-group">
+        <label for="memberStatusFilter">Status</label>
+        <select id="memberStatusFilter">
+          <option value="">All</option>
+          <option value="active">Active</option>
+          <option value="pending_verification">Pending Verification</option>
+          <option value="suspended">Suspended</option>
+          <option value="restricted">Restricted</option>
+          <option value="banned">Banned</option>
+          <option value="deactivated">Deactivated</option>
+          <option value="deleted">Deleted</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <label for="planFilter">Plan</label>
+        <select id="planFilter">
+          <option value="">All</option>
+          <option value="Bronze">Bronze</option>
+          <option value="Silver">Silver</option>
+          <option value="Gold">Gold</option>
+        </select>
+      </div>
+
+      <div class="field-group width-compact">
+        <label for="fromDate">From</label>
+        <input id="fromDate" type="date" />
+      </div>
+
+      <div class="field-group width-compact">
+        <label for="toDate">To</label>
+        <input id="toDate" type="date" />
+      </div>
+
+      <button id="applyFilters" class="primary" type="button">Apply filters</button>
+    </section>
+
+    <section class="content-grid">
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Members</h2>
+          <button id="refreshMembers" type="button" class="secondary">Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Plan</th>
+                <th>Status</th>
+                <th>Wallet</th>
+                <th>Joined</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="memberTableBody"></tbody>
+          </table>
+        </div>
+      </article>
+
+      <aside class="panel details-panel">
+        <div class="panel-head">
+          <h2>Member details</h2>
+        </div>
+        <div id="memberDetails" class="member-details empty-state">
+          Select a member from the table to inspect account information, wallet, and activity.
+        </div>
+      </aside>
+    </section>
+
+    <section class="bottom-grid">
+      <article class="panel">
+        <div class="panel-head"><h2>Wallet ledger</h2></div>
+        <div id="walletLedger" class="list-block"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head"><h2>Recent admin audit</h2></div>
+        <div id="auditFeed" class="list-block"></div>
+      </article>
+    </section>
+
+    <a class="back-link" href="dashboard.html">← Return to member dashboard</a>
+  </main>
+</body>
+</html>
