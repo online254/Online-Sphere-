@@ -3,2513 +3,907 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Online Sphere | Administrator</title>
+<title>Online Sphere — Administrator Dashboard</title>
 
 <style>
 :root {
-    --bg: #050816;
-    --panel: #0E1B2D;
-    --panel2: #111F34;
-    --border: #24344C;
-    --blue: #3984FF;
-    --purple: #A36BFF;
-    --cyan: #4CE6F5;
-    --text: #F5F8FC;
-    --muted: #94A3B8;
-    --green: #22C55E;
-    --red: #EF4444;
-    --orange: #F59E0B;
+  --gold-50: #fff9e8;
+  --gold-100: #fff0c2;
+  --gold-200: #ffe08a;
+  --gold-300: #ffd05a;
+  --gold-400: #f7bd36;
+  --gold-500: #dfa51b;
+  --gold-600: #b9850d;
+  --gold-700: #8c6208;
+  --gold-800: #604208;
+  --ink: #211704;
+  --muted: #725b2a;
+  --line: #d7ad43;
+  --surface: #fff4cf;
+  --surface2: #ffedb0;
+  --shadow: rgba(98,65,4,.13);
 }
 
 * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: "Manrope", Arial, sans-serif;
-    min-height: 100vh;
+  margin: 0;
+  background: linear-gradient(145deg,#f7d66c 0%,#edbd3e 45%,#dca51d 100%);
+  color: var(--ink);
+  font-family: Manrope,"DM Sans",Arial,sans-serif;
 }
 
-button, input, select {
-    font: inherit;
+button,input,select,textarea {
+  font: inherit;
 }
 
 button {
-    cursor: pointer;
+  cursor: pointer;
 }
 
-.layout {
-    display: flex;
-    min-height: 100vh;
-}
+/* HEADER */
 
-/* SIDEBAR */
-
-.sidebar {
-    width: 255px;
-    background: #081120;
-    border-right: 1px solid var(--border);
-    padding: 22px 14px;
-    position: fixed;
-    inset: 0 auto 0 0;
-    overflow-y: auto;
-    z-index: 100;
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 15px 20px;
+  background: rgba(255,238,181,.96);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid #c89620;
+  box-shadow: 0 5px 20px var(--shadow);
 }
 
 .brand {
-    padding: 8px 12px 25px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 22px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.brand h2 {
-    font-size: 20px;
-    font-weight: 800;
-    letter-spacing: -1px;
+.brand-mark {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg,#fff4c8,#e7ad25);
+  border: 1px solid #c28c12;
+  font-size: 24px;
+  color: #704b04;
 }
 
-.brand h2 span {
-    color: var(--blue);
+.brand strong {
+  font-size: 15px;
+  letter-spacing: .3px;
 }
 
 .brand small {
-    color: var(--muted);
-    font-size: 11px;
-    letter-spacing: 2px;
+  display: block;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #84651c;
+  margin-top: 4px;
 }
 
-.nav-title {
-    color: #64748B;
-    font-size: 10px;
-    font-weight: bold;
-    padding: 12px;
-    letter-spacing: 1.5px;
+.admin-chip {
+  padding: 9px 14px;
+  border-radius: 25px;
+  background: #e8b52c;
+  color: #4a3103;
+  border: 1px solid #b9840e;
+  font-weight: 800;
+  font-size: 12px;
 }
 
-.nav-item {
-    width: 100%;
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    border: none;
-    color: #A9B8CE;
-    background: transparent;
-    padding: 12px;
-    margin-bottom: 5px;
-    border-radius: 10px;
-    text-align: left;
-    font-size: 13px;
-    transition: .2s;
+/* PAGE */
+
+main {
+  max-width: 1200px;
+  margin: auto;
+  padding: 22px;
 }
 
-.nav-item:hover {
-    background: #12223B;
-    color: white;
+.overview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin: 4px 0 25px;
 }
 
-.nav-item.active {
-    background: linear-gradient(110deg, #1C4B91, #342064);
-    color: white;
-    box-shadow: inset 0 0 0 1px #4269B7;
+.overview-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
-.nav-item .icon {
-    width: 22px;
-    text-align: center;
-    font-size: 17px;
+.menu-mark {
+  width: 62px;
+  height: 62px;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  background: #ffedb0;
+  border: 1px solid #c8951c;
+  font-size: 24px;
 }
 
-.nav-item .count {
-    margin-left: auto;
-    font-size: 10px;
-    background: #24344C;
-    padding: 3px 7px;
-    border-radius: 20px;
+.eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #86651a;
 }
 
-.sidebar-bottom {
-    margin-top: 30px;
-    border-top: 1px solid var(--border);
-    padding-top: 18px;
+h1 {
+  font-size: 28px;
+  margin: 7px 0;
 }
 
-/* MAIN */
-
-.main {
-    margin-left: 255px;
-    width: calc(100% - 255px);
-    min-width: 0;
+.overview p {
+  margin: 0;
+  color: #765b20;
+  line-height: 1.6;
 }
 
-.topbar {
-    min-height: 76px;
-    padding: 18px 30px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 15px;
-    background: rgba(8,17,32,.9);
-    position: sticky;
-    top: 0;
-    z-index: 50;
+.refresh {
+  border: 1px solid #b7810c;
+  background: linear-gradient(145deg,#ffdf78,#e9ae22);
+  color: #4b3100;
+  border-radius: 20px;
+  padding: 17px 22px;
+  min-width: 110px;
+  font-weight: 800;
+  box-shadow: 0 5px 14px var(--shadow);
 }
 
-.topbar h3 {
-    font-size: 17px;
+.refresh span {
+  display: block;
+  font-size: 20px;
+  margin-bottom: 5px;
 }
 
-.topbar p {
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 5px;
+/* PANELS */
+
+.panel {
+  background: rgba(255,248,222,.84);
+  border: 1.5px solid #c9971d;
+  border-radius: 27px;
+  margin-bottom: 22px;
+  overflow: hidden;
+  box-shadow: 0 12px 28px var(--shadow);
 }
 
-.top-actions {
-    display: flex;
-    gap: 10px;
-    align-items: center;
+.panel-head {
+  padding: 23px 25px;
+  border-bottom: 1px solid #dfbd62;
 }
 
-.admin-badge {
-    background: #172D50;
-    color: #80B6FF;
-    border: 1px solid #294A7B;
-    padding: 8px 12px;
-    border-radius: 30px;
-    font-size: 11px;
+.panel-head h2 {
+  font-size: 21px;
+  margin: 0;
 }
 
-.content {
-    padding: 28px;
-    max-width: 1700px;
-    margin: auto;
+.panel-body {
+  padding: 22px 25px;
 }
 
-.section {
-    display: none;
+/* QUICK ADMINISTRATION */
+
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 15px;
 }
 
-.section.active {
-    display: block;
+.quick-card {
+  min-height: 170px;
+  text-align: left;
+  padding: 22px 20px;
+  border: 1.5px solid #d6ad45;
+  border-radius: 23px;
+  background: linear-gradient(145deg,#fff8df,#ffedb0);
+  color: #382504;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 15px;
+  box-shadow: 0 4px 12px rgba(114,77,4,.07);
+  transition: transform .18s,border-color .18s;
 }
 
-.page-heading {
-    display: flex;
-    justify-content: space-between;
-    gap: 15px;
-    flex-wrap: wrap;
-    margin-bottom: 25px;
+.quick-card:hover,
+.quick-card:focus-visible {
+  transform: translateY(-2px);
+  border-color: #a87508;
+  outline: 2px solid #e3b332;
+  outline-offset: 1px;
 }
 
-.page-heading h1 {
-    font-size: 25px;
-    letter-spacing: -1px;
+.card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg,#ffe79a,#e8b42b);
+  border: 1px solid #c28d17;
+  font-size: 21px;
+  color: #674500;
 }
 
-.page-heading p {
-    color: var(--muted);
-    margin-top: 8px;
-    font-size: 13px;
+.quick-card strong {
+  font-size: 18px;
+  line-height: 1.45;
 }
 
-/* BUTTONS */
-
-.btn {
-    border: 1px solid var(--border);
-    background: #13233A;
-    color: white;
-    padding: 10px 14px;
-    border-radius: 9px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.btn:hover {
-    filter: brightness(1.2);
-}
-
-.btn-primary {
-    background: linear-gradient(110deg, #2563EB, #6D3BC2);
-    border: none;
-}
-
-.btn-danger {
-    background: #401A25;
-    border-color: #7F2938;
-    color: #FCA5A5;
-}
-
-.btn-success {
-    background: #123526;
-    border-color: #22583A;
-    color: #86EFAC;
+.quick-card small {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #806329;
 }
 
 /* STATISTICS */
 
 .stats {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 13px;
 }
 
-.stat-card {
-    background: linear-gradient(145deg, #101E32, #0B1728);
-    border: 1px solid var(--border);
-    border-radius: 15px;
-    padding: 20px;
-    min-width: 0;
+.stat {
+  background: linear-gradient(145deg,#fff8df,#ffedb0);
+  border: 1px solid #d8b24d;
+  border-radius: 20px;
+  padding: 17px;
 }
 
-.stat-card .stat-top {
-    display: flex;
-    justify-content: space-between;
-    color: var(--muted);
-    font-size: 12px;
-    gap: 8px;
+.stat label {
+  display: block;
+  color: #86671e;
+  font-size: 12px;
+  font-weight: 800;
 }
 
-.stat-icon {
-    width: 35px;
-    height: 35px;
-    border-radius: 10px;
-    background: #1C3B68;
-    color: #81B5FF;
-    display: grid;
-    place-items: center;
-    font-size: 18px;
+.stat strong {
+  display: block;
+  font-size: 22px;
+  margin: 9px 0;
+  overflow-wrap: anywhere;
 }
 
-.stat-card h2 {
-    font-size: 25px;
-    margin-top: 20px;
-    overflow-wrap: anywhere;
+.stat small {
+  color: #806329;
 }
 
-.stat-card small {
-    color: var(--muted);
-    font-size: 11px;
-    display: block;
-    margin-top: 7px;
+/* ADMIN WORKSPACE */
+
+.workspace {
+  display: none;
 }
 
-/* CARDS */
-
-.card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 15px;
-    margin-bottom: 22px;
-    overflow: hidden;
+.workspace.active {
+  display: block;
 }
 
-.card-header {
-    padding: 18px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-    border-bottom: 1px solid var(--border);
+.workspace-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-.card-header h3 {
-    font-size: 14px;
+.tools {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 17px;
 }
 
-.card-body {
-    padding: 20px;
+.tools input,
+.tools select {
+  flex: 1;
+  min-width: 140px;
+  padding: 12px 14px;
+  border: 1px solid #d0a43a;
+  border-radius: 12px;
+  background: #fff9e8;
+  color: #332204;
 }
 
-.grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+.action {
+  padding: 11px 15px;
+  border: 1px solid #bd8a15;
+  border-radius: 12px;
+  background: #f4c541;
+  color: #4b3100;
+  font-weight: 800;
 }
 
-/* TABLES */
+.action.secondary {
+  background: #fff5d4;
+}
 
 .table-wrap {
-    width: 100%;
-    overflow-x: auto;
+  overflow: auto;
+  border: 1px solid #d4ad4b;
+  border-radius: 16px;
 }
 
 table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 650px;
+  width: 100%;
+  min-width: 620px;
+  border-collapse: collapse;
+  font-size: 13px;
 }
 
 th {
-    background: #0A1627;
-    color: #8EA2BE;
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: .6px;
-    text-align: left;
-    padding: 14px 16px;
-    white-space: nowrap;
+  padding: 14px;
+  text-align: left;
+  background: #f7df91;
+  color: #6c4c0b;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .7px;
 }
 
 td {
-    padding: 15px 16px;
-    border-top: 1px solid #1C2B40;
-    font-size: 12px;
-    color: #D8E3F3;
-    white-space: nowrap;
-}
-
-tbody tr:hover {
-    background: #122139;
+  padding: 14px;
+  border-top: 1px solid #ead18a;
+  color: #3e2b08;
 }
 
 .empty {
-    text-align: center;
-    color: var(--muted);
-    padding: 35px;
+  padding: 20px;
+  color: #806329;
 }
 
-.status {
-    display: inline-block;
-    padding: 5px 9px;
-    border-radius: 20px;
-    font-size: 10px;
-    background: #24344C;
-    color: #CBD5E1;
+.notice {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 14px 3px;
+  color: #74591c;
+  font-size: 12px;
 }
 
-.status.active, .status.approved, .status.paid {
-    background: #123526;
-    color: #86EFAC;
+.notice-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #9b710d;
 }
 
-.status.pending {
-    background: #3A2A13;
-    color: #FCD34D;
+footer {
+  text-align: center;
+  padding: 20px;
+  color: #76591a;
+  font-size: 12px;
 }
 
-.status.suspended, .status.rejected, .status.failed {
-    background: #401A25;
-    color: #FCA5A5;
+/* RESPONSIVE */
+
+@media(min-width:850px) {
+  .quick-grid {
+    grid-template-columns: repeat(3,minmax(0,1fr));
+  }
+
+  .stats {
+    grid-template-columns: repeat(3,minmax(0,1fr));
+  }
 }
 
-/* SEARCH AND FORMS */
+@media(max-width:420px) {
+  main {
+    padding: 12px;
+  }
 
-.toolbar {
-    display: flex;
+  .topbar {
+    padding: 12px;
+  }
+
+  .overview {
+    align-items: flex-start;
+  }
+
+  .overview-left {
     gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 18px;
-}
+  }
 
-.field {
-    background: #081525;
-    border: 1px solid #263750;
-    color: white;
-    border-radius: 9px;
-    padding: 11px 13px;
-    min-width: 180px;
-    outline: none;
-}
+  .menu-mark {
+    width: 48px;
+    height: 52px;
+  }
 
-.field:focus {
-    border-color: var(--blue);
-}
+  .overview h1 {
+    font-size: 23px;
+  }
 
-.field::placeholder {
-    color: #64748B;
-}
-
-.form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-}
-
-.form-group label {
-    font-size: 11px;
-    color: #94A3B8;
-}
-
-.form-group .field {
-    width: 100%;
-}
-
-/* QUICK ACTIONS */
-
-.quick-actions {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-}
-
-.quick-action {
-    padding: 18px;
-    background: #101F34;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    color: white;
-    text-align: left;
-}
-
-.quick-action:hover {
-    border-color: var(--blue);
-    background: #142744;
-}
-
-.quick-action strong {
-    display: block;
-    margin-bottom: 8px;
+  .overview p {
     font-size: 13px;
-}
+  }
 
-.quick-action small {
-    color: var(--muted);
-    font-size: 11px;
-}
+  .refresh {
+    padding: 12px 14px;
+    min-width: 83px;
+  }
 
-/* ALERT */
+  .panel-head {
+    padding: 19px;
+  }
 
-.alert {
-    background: #12243C;
-    border: 1px solid #294A7B;
-    padding: 14px;
-    border-radius: 10px;
-    color: #BBD7FF;
+  .panel-body {
+    padding: 15px;
+  }
+
+  .quick-card {
+    min-height: 160px;
+    padding: 17px;
+  }
+
+  .quick-card strong {
+    font-size: 16px;
+  }
+
+  .quick-card small {
     font-size: 12px;
-    margin-bottom: 20px;
-}
+  }
 
-#toast {
-    position: fixed;
-    bottom: 25px;
-    right: 25px;
-    z-index: 500;
-    background: #14243B;
-    border: 1px solid #31517A;
-    padding: 15px 20px;
-    border-radius: 12px;
-    display: none;
-    max-width: 90%;
-    font-size: 13px;
-}
-
-/* MODAL */
-
-.modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.75);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    z-index: 300;
-}
-
-.modal.show {
-    display: flex;
-}
-
-.modal-box {
-    width: 100%;
-    max-width: 520px;
-    background: #0E1B2D;
-    border: 1px solid #2A3D58;
-    border-radius: 16px;
-    padding: 25px;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-
-.modal-box h3 {
-    margin-bottom: 20px;
-}
-
-.modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
-}
-
-/* MOBILE */
-
-.mobile-menu {
-    display: none;
-}
-
-@media(max-width:1100px) {
-    .stats {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .grid-2 {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media(max-width:760px) {
-    .sidebar {
-        transform: translateX(-100%);
-        transition: .25s;
-        box-shadow: 20px 0 60px #0008;
-    }
-
-    .sidebar.open {
-        transform: translateX(0);
-    }
-
-    .main {
-        margin-left: 0;
-        width: 100%;
-    }
-
-    .topbar {
-        padding: 14px 16px;
-    }
-
-    .mobile-menu {
-        display: inline-block;
-    }
-
-    .content {
-        padding: 18px 14px;
-    }
-
-    .page-heading h1 {
-        font-size: 22px;
-    }
-
-    .stats {
-        gap: 10px;
-    }
-
-    .stat-card {
-        padding: 15px;
-    }
-
-    .stat-card h2 {
-        font-size: 21px;
-    }
-
-    .quick-actions {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .admin-badge {
-        display: none;
-    }
-
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media(max-width:380px) {
-    .stats {
-        grid-template-columns: 1fr;
-    }
+  .stat strong {
+    font-size: 19px;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<div class="layout">
-
-<!-- SIDEBAR -->
-<aside class="sidebar" id="sidebar">
-
-    <div class="brand">
-        <h2>ONLINE <span>SPHERE</span></h2>
-        <small>ADMIN CONTROL CENTER</small>
-    </div>
-
-    <div class="nav-title">WORKSPACE</div>
-
-    <button class="nav-item active" data-page="overview">
-        <span class="icon">◈</span> Overview
-    </button>
-
-    <button class="nav-item" data-page="members">
-        <span class="icon">♙</span> Members
-    </button>
-
-    <button class="nav-item" data-page="tasks">
-        <span class="icon">▣</span> Opportunities
-    </button>
-
-    <button class="nav-item" data-page="submissions">
-        <span class="icon">▤</span> Submissions
-    </button>
-
-    <button class="nav-item" data-page="memberships">
-        <span class="icon">◇</span> Memberships
-    </button>
-
-    <div class="nav-title">FINANCIAL MANAGEMENT</div>
-
-    <button class="nav-item" data-page="payments">
-        <span class="icon">↗</span> Payments
-    </button>
-
-    <button class="nav-item" data-page="wallets">
-        <span class="icon">▤</span> Wallets
-    </button>
-
-    <button class="nav-item" data-page="withdrawals">
-        <span class="icon">↙</span> Withdrawals
-    </button>
-
-    <button class="nav-item" data-page="referrals">
-        <span class="icon">♧</span> Referrals
-    </button>
-
-    <button class="nav-item" data-page="finance">
-        <span class="icon">▥</span> Finance
-    </button>
-
-    <div class="nav-title">SYSTEM MANAGEMENT</div>
-
-    <button class="nav-item" data-page="reports">
-        <span class="icon">▧</span> Reports
-    </button>
-
-    <button class="nav-item" data-page="notifications">
-        <span class="icon">♧</span> Notifications
-    </button>
-
-    <button class="nav-item" data-page="audit">
-        <span class="icon">◷</span> Audit Logs
-    </button>
-
-    <button class="nav-item" data-page="settings">
-        <span class="icon">⚙</span> Settings
-    </button>
-
-    <div class="sidebar-bottom">
-        <button class="nav-item" onclick="goBack()">
-            <span class="icon">←</span> Member Dashboard
-        </button>
-
-        <button class="nav-item" onclick="logout()">
-            <span class="icon">⇥</span> Sign Out
-        </button>
-    </div>
-</aside>
-
-<!-- MAIN -->
-<main class="main">
-
 <header class="topbar">
-    <div style="display:flex;align-items:center;gap:12px">
-        <button class="btn mobile-menu" onclick="toggleSidebar()">☰</button>
-        <div>
-            <h3 id="topTitle">Administrator Overview</h3>
-            <p>Online Sphere management workspace</p>
-        </div>
+  <div class="brand">
+    <div class="brand-mark">◎</div>
+    <div>
+      <strong>ONLINE <span style="color:#9b6b08">SPHERE</span></strong>
+      <small>DISCOVER. LEARN. WORK.</small>
     </div>
-
-    <div class="top-actions">
-        <span class="admin-badge">● ADMINISTRATOR</span>
-        <button class="btn" onclick="refreshCurrent()">↻ Refresh</button>
-    </div>
+  </div>
+  <span class="admin-chip">ADMINISTRATOR</span>
 </header>
 
-<div class="content">
+<main>
 
-<!-- OVERVIEW -->
-<section class="section active" id="overview">
-
-    <div class="page-heading">
-        <div>
-            <h1>Administrator Overview</h1>
-            <p>Monitor platform activity and manage your organization.</p>
-        </div>
+<section class="overview">
+  <div class="overview-left">
+    <div class="menu-mark">☰</div>
+    <div>
+      <div class="eyebrow">ADMINISTRATION</div>
+      <h1>Administrator Overview</h1>
+      <p>Online Sphere management workspace</p>
     </div>
+  </div>
 
-    <div class="alert">
-        Administrator workspace. All account and financial changes must be authorized and recorded by the backend.
+  <button class="refresh" onclick="refreshDashboard()">
+    <span>↻</span>Refresh
+  </button>
+</section>
+
+<!-- QUICK ADMINISTRATION -->
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Quick Administration</h2>
+  </div>
+
+  <div class="panel-body">
+    <div class="quick-grid">
+
+      <button class="quick-card" onclick="openModule('members')">
+        <span class="card-icon">♙</span>
+        <strong>Manage Members</strong>
+        <small>Accounts and profiles</small>
+      </button>
+
+      <button class="quick-card" onclick="openModule('wallets')">
+        <span class="card-icon">KSh</span>
+        <strong>Update Wallet</strong>
+        <small>Balance adjustments</small>
+      </button>
+
+      <button class="quick-card" onclick="openModule('withdrawals')">
+        <span class="card-icon">↗</span>
+        <strong>Withdrawals</strong>
+        <small>Review requests</small>
+      </button>
+
+      <button class="quick-card" onclick="openModule('opportunities')">
+        <span class="card-icon">▤</span>
+        <strong>Opportunities</strong>
+        <small>Publish and manage</small>
+      </button>
+
+      <button class="quick-card" onclick="openModule('payments')">
+        <span class="card-icon">↓</span>
+        <strong>Payments</strong>
+        <small>Transaction records</small>
+      </button>
+
+      <button class="quick-card" onclick="openModule('reports')">
+        <span class="card-icon">▥</span>
+        <strong>Reports</strong>
+        <small>Platform reporting</small>
+      </button>
+
+      <button class="quick-card" onclick="openModule('memberships')">
+        <span class="card-icon">♛</span>
+        <strong>Memberships</strong>
+        <small>Bronze, Silver and Gold</small>
+      </button>
+
+      <button class="quick-card" onclick="openModule('affiliates')">
+        <span class="card-icon">♧</span>
+        <strong>Affiliates</strong>
+        <small>Referral management</small>
+      </button>
+
+      <button class="quick-card" onclick="openModule('submissions')">
+        <span class="card-icon">✓</span>
+        <strong>Submissions</strong>
+        <small>Review completed work</small>
+      </button>
+
+      <button class="quick-card" onclick="openModule('finance')">
+        <span class="card-icon">◈</span>
+        <strong>Finance</strong>
+        <small>Revenue and financial reports</small>
+      </button>
+
+      <button class="quick-card" onclick="openModule('audit')">
+        <span class="card-icon">◷</span>
+        <strong>Audit Logs</strong>
+        <small>Administrator activity</small>
+      </button>
+
     </div>
+  </div>
+</section>
 
+<!-- PLATFORM STATISTICS -->
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Platform Statistics</h2>
+  </div>
+
+  <div class="panel-body">
     <div class="stats">
 
-        <div class="stat-card">
-            <div class="stat-top">
-                Total Members
-                <span class="stat-icon">♙</span>
-            </div>
-            <h2 id="statMembers">—</h2>
-            <small>Registered accounts</small>
-        </div>
+      <div class="stat">
+        <label>TOTAL MEMBERS</label>
+        <strong id="totalMembers">—</strong>
+        <small>Registered accounts</small>
+      </div>
 
-        <div class="stat-card">
-            <div class="stat-top">
-                Active Members
-                <span class="stat-icon">✓</span>
-            </div>
-            <h2 id="statActive">—</h2>
-            <small>Active accounts</small>
-        </div>
+      <div class="stat">
+        <label>ACTIVE MEMBERS</label>
+        <strong id="activeMembers">—</strong>
+        <small>Active accounts</small>
+      </div>
 
-        <div class="stat-card">
-            <div class="stat-top">
-                Total Opportunities
-                <span class="stat-icon">▣</span>
-            </div>
-            <h2 id="statTasks">—</h2>
-            <small>Platform opportunities</small>
-        </div>
+      <div class="stat">
+        <label>SUSPENDED</label>
+        <strong id="suspendedMembers">—</strong>
+        <small>Restricted accounts</small>
+      </div>
 
-        <div class="stat-card">
-            <div class="stat-top">
-                Pending Withdrawals
-                <span class="stat-icon">↙</span>
-            </div>
-            <h2 id="statWithdrawals">—</h2>
-            <small>Awaiting processing</small>
-        </div>
+      <div class="stat">
+        <label>TOTAL DEPOSITS</label>
+        <strong id="deposits">KES —</strong>
+        <small>Verified deposits</small>
+      </div>
 
-    </div>
+      <div class="stat">
+        <label>WITHDRAWALS</label>
+        <strong id="withdrawals">KES —</strong>
+        <small>Verified withdrawals</small>
+      </div>
 
-    <div class="grid-2">
-
-        <div class="card">
-            <div class="card-header">
-                <h3>Quick Administration</h3>
-            </div>
-
-            <div class="card-body">
-                <div class="quick-actions">
-
-                    <button class="quick-action" onclick="navigate('members')">
-                        <strong>Manage Members</strong>
-                        <small>Accounts and profiles</small>
-                    </button>
-
-                    <button class="quick-action" onclick="navigate('wallets')">
-                        <strong>Update Wallet</strong>
-                        <small>Balance adjustments</small>
-                    </button>
-
-                    <button class="quick-action" onclick="navigate('withdrawals')">
-                        <strong>Withdrawals</strong>
-                        <small>Review requests</small>
-                    </button>
-
-                    <button class="quick-action" onclick="navigate('tasks')">
-                        <strong>Opportunities</strong>
-                        <small>Publish and manage</small>
-                    </button>
-
-                    <button class="quick-action" onclick="navigate('payments')">
-                        <strong>Payments</strong>
-                        <small>Transaction records</small>
-                    </button>
-
-                    <button class="quick-action" onclick="navigate('reports')">
-                        <strong>Reports</strong>
-                        <small>Platform reporting</small>
-                    </button>
-
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h3>Recent Activity</h3>
-                <button class="btn" onclick="navigate('audit')">View Logs</button>
-            </div>
-            <div class="card-body" id="recentActivity">
-                <div class="empty">Connect the administrator API to load activity.</div>
-            </div>
-        </div>
+      <div class="stat">
+        <label>PLATFORM REVENUE</label>
+        <strong id="revenue">KES —</strong>
+        <small>Recorded revenue</small>
+      </div>
 
     </div>
 
+    <div class="notice">
+      <span class="notice-dot"></span>
+      Statistics load only from authenticated administrator APIs.
+    </div>
+  </div>
 </section>
 
-<!-- MEMBERS -->
-<section class="section" id="members">
+<!-- MANAGEMENT WORKSPACE -->
 
-    <div class="page-heading">
-        <div>
-            <h1>Member Management</h1>
-            <p>Manage registered users and account access.</p>
-        </div>
-        <button class="btn" onclick="openMemberModal()">+ Add Member</button>
+<section class="panel workspace" id="workspace">
+
+  <div class="panel-head workspace-head">
+    <h2 id="workspaceTitle">Management</h2>
+    <button class="action secondary" onclick="closeModule()">Close ×</button>
+  </div>
+
+  <div class="panel-body">
+
+    <div class="tools">
+      <input id="searchInput"
+             placeholder="Search records..."
+             oninput="filterRows()">
+
+      <button class="action" onclick="loadModule()">↻ Refresh</button>
     </div>
 
-    <div class="card">
-        <div class="card-body">
-
-            <div class="toolbar">
-                <input class="field" id="memberSearch"
-                       placeholder="Search name, email or phone..."
-                       oninput="filterTable('memberSearch','membersTable')">
-
-                <select class="field" id="memberStatus"
-                        onchange="filterTable('memberStatus','membersTable')">
-                    <option value="">All statuses</option>
-                    <option>Active</option>
-                    <option>Suspended</option>
-                    <option>Pending</option>
-                </select>
-
-                <button class="btn" onclick="loadMembers()">↻ Reload</button>
-            </div>
-
-            <div class="table-wrap">
-                <table id="membersTable">
-                    <thead>
-                        <tr>
-                            <th>Member</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Membership</th>
-                            <th>Balance</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td colspan="7" class="empty">Loading members...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-        </div>
+    <div id="workspaceContent">
+      <p class="empty">Choose a management section.</p>
     </div>
 
+  </div>
 </section>
 
-<!-- OPPORTUNITIES -->
-<section class="section" id="tasks">
-
-    <div class="page-heading">
-        <div>
-            <h1>Opportunities</h1>
-            <p>Create and manage platform opportunities.</p>
-        </div>
-        <button class="btn btn-primary" onclick="openTaskModal()">+ Create Opportunity</button>
-    </div>
-
-    <div class="card">
-        <div class="card-body">
-
-            <div class="toolbar">
-                <input class="field" id="taskSearch"
-                       placeholder="Search opportunities..."
-                       oninput="filterTable('taskSearch','tasksTable')">
-                <button class="btn" onclick="loadTasks()">↻ Reload</button>
-            </div>
-
-            <div class="table-wrap">
-                <table id="tasksTable">
-                    <thead>
-                        <tr>
-                            <th>Opportunity</th>
-                            <th>Category</th>
-                            <th>Reward</th>
-                            <th>Slots</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td colspan="6" class="empty">Loading opportunities...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-        </div>
-    </div>
-
-</section>
-
-<!-- SUBMISSIONS -->
-<section class="section" id="submissions">
-
-    <div class="page-heading">
-        <div>
-            <h1>Submissions</h1>
-            <p>Review submitted work and approval records.</p>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-body">
-            <div class="toolbar">
-                <input class="field" id="submissionSearch"
-                       placeholder="Search submissions..."
-                       oninput="filterTable('submissionSearch','submissionsTable')">
-                <button class="btn" onclick="loadSubmissions()">↻ Reload</button>
-            </div>
-
-            <div class="table-wrap">
-                <table id="submissionsTable">
-                    <thead>
-                        <tr>
-                            <th>Member</th>
-                            <th>Opportunity</th>
-                            <th>Submitted</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td colspan="5" class="empty">Loading submissions...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-</section>
-
-<!-- MEMBERSHIPS -->
-<section class="section" id="memberships">
-
-    <div class="page-heading">
-        <div>
-            <h1>Membership Management</h1>
-            <p>View membership activations and payment status.</p>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-body">
-            <div class="toolbar">
-                <input class="field" id="membershipSearch"
-                       placeholder="Search memberships..."
-                       oninput="filterTable('membershipSearch','membershipsTable')">
-                <button class="btn" onclick="loadMemberships()">↻ Reload</button>
-            </div>
-
-            <div class="table-wrap">
-                <table id="membershipsTable">
-                    <thead>
-                        <tr>
-                            <th>Member</th>
-                            <th>Package</th>
-                            <th>Amount</th>
-                            <th>Payment Reference</th>
-                            <th>Status</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td colspan="6" class="empty">Loading memberships...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-</section>
-
-<!-- PAYMENTS -->
-<section class="section" id="payments">
-
-    <div class="page-heading">
-        <div>
-            <h1>Payments</h1>
-            <p>Track payment transactions and verification.</p>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-body">
-            <div class="toolbar">
-                <input class="field" id="paymentSearch"
-                       placeholder="Search payment reference..."
-                       oninput="filterTable('paymentSearch','paymentsTable')">
-                <button class="btn" onclick="loadPayments()">↻ Reload</button>
-            </div>
-
-            <div class="table-wrap">
-                <table id="paymentsTable">
-                    <thead>
-                        <tr>
-                            <th>Member</th>
-                            <th>Reference</th>
-                            <th>Method</th>
-                            <th>Amount</th>
-                            <th>Status</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td colspan="6" class="empty">Loading payments...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-</section>
-
-<!-- WALLETS -->
-<section class="section" id="wallets">
-
-    <div class="page-heading">
-        <div>
-            <h1>Wallet Management</h1>
-            <p>Review balances and authorized wallet adjustments.</p>
-        </div>
-        <button class="btn btn-primary" onclick="openWalletModal()">Adjust Balance</button>
-    </div>
-
-    <div class="card">
-        <div class="card-body">
-            <div class="toolbar">
-                <input class="field" id="walletSearch"
-                       placeholder="Search member..."
-                       oninput="filterTable('walletSearch','walletsTable')">
-                <button class="btn" onclick="loadWallets()">↻ Reload</button>
-            </div>
-
-            <div class="table-wrap">
-                <table id="walletsTable">
-                    <thead>
-                        <tr>
-                            <th>Member</th>
-                            <th>Account</th>
-                            <th>Available Balance</th>
-                            <th>Pending Balance</th>
-                            <th>Total Earned</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td colspan="6" class="empty">Loading wallets...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-</section>
-
-<!-- WITHDRAWALS -->
-<section class="section" id="withdrawals">
-
-    <div class="page-heading">
-        <div>
-            <h1>Withdrawals</h1>
-            <p>Review and process member withdrawal requests.</p>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-body">
-            <div class="toolbar">
-                <input class="field" id="withdrawalSearch"
-                       placeholder="Search withdrawal..."
-                       oninput="filterTable('withdrawalSearch','withdrawalsTable')">
-                <button class="btn" onclick="loadWithdrawals()">↻ Reload</button>
-            </div>
-
-            <div class="table-wrap">
-                <table id="withdrawalsTable">
-                    <thead>
-                        <tr>
-                            <th>Member</th>
-                            <th>Amount</th>
-                            <th>Phone</th>
-                            <th>Reference</th>
-                            <th>Status</th>
-                            <th>Requested</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td colspan="7" class="empty">Loading withdrawals...</td></tr>
-                    </tbody>
-                </table>
-        </div>
-        </div>
-    </div>
-
-</section>
-
-<!-- REFERRALS -->
-<section class="section" id="referrals">
-
-    <div class="page-heading">
-        <div>
-            <h1>Referral Management</h1>
-            <p>Track referral activations and commission records.</p>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-body">
-            <div class="toolbar">
-                <input class="field" id="referralSearch"
-                       placeholder="Search referrals..."
-                       oninput="filterTable('referralSearch','referralsTable')">
-                <button class="btn" onclick="loadReferrals()">↻ Reload</button>
-            </div>
-
-            <div class="table-wrap">
-                <table id="referralsTable">
-                    <thead>
-                        <tr>
-                            <th>Referrer</th>
-                            <th>Referred Member</th>
-                            <th>Package</th>
-                            <th>Commission</th>
-                            <th>Status</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td colspan="6" class="empty">Loading referrals...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-</section>
-
-<!-- FINANCE -->
-<section class="section" id="finance">
-
-    <div class="page-heading">
-        <div>
-            <h1>Financial Management</h1>
-            <p>Review platform financial summaries and records.</p>
-        </div>
-    </div>
-
-    <div class="stats">
-        <div class="stat-card">
-            <div class="stat-top">Membership Revenue</div>
-            <h2 id="financeRevenue">—</h2>
-        </div>
-        <div class="stat-card">
-            <div class="stat-top">Approved Withdrawals</div>
-            <h2 id="financeWithdrawals">—</h2>
-        </div>
-        <div class="stat-card">
-            <div class="stat-top">Platform Fees</div>
-            <h2 id="financeFees">—</h2>
-        </div>
-        <div class="stat-card">
-            <div class="stat-top">Wallet Liability</div>
-            <h2 id="financeLiability">—</h2>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-header">
-            <h3>Financial Records</h3>
-            <button class="btn" onclick="loadFinance()">↻ Reload</button>
-        </div>
-        <div class="card-body" id="financeRecords">
-            <div class="empty">Connect finance API to load records.</div>
-        </div>
-    </div>
-
-</section>
-
-<!-- REPORTS -->
-<section class="section" id="reports">
-
-    <div class="page-heading">
-        <div>
-            <h1>Reports</h1>
-            <p>Platform performance and management reports.</p>
-        </div>
-        <button class="btn" onclick="loadReports()">↻ Refresh Reports</button>
-    </div>
-
-    <div class="card">
-        <div class="card-header"><h3>Reporting Tools</h3></div>
-        <div class="card-body">
-            <div class="toolbar">
-                <select class="field" id="reportType">
-                    <option value="members">Member Report</option>
-                    <option value="payments">Payments Report</option>
-                    <option value="withdrawals">Withdrawal Report</option>
-                    <option value="memberships">Membership Report</option>
-                    <option value="referrals">Referral Report</option>
-                </select>
-
-                <button class="btn btn-primary" onclick="generateReport()">Generate Report</button>
-            </div>
-
-            <div id="reportResults">
-                <div class="empty">Select a report and generate it.</div>
-            </div>
-        </div>
-    </div>
-
-</section>
-
-<!-- NOTIFICATIONS -->
-<section class="section" id="notifications">
-
-    <div class="page-heading">
-        <div>
-            <h1>Notifications</h1>
-            <p>Send platform announcements to members.</p>
-        </div>
-        <button class="btn btn-primary" onclick="openNotificationModal()">+ New Announcement</button>
-    </div>
-
-    <div class="card">
-        <div class="card-header">
-            <h3>Announcement History</h3>
-            <button class="btn" onclick="loadNotifications()">↻ Reload</button>
-        </div>
-        <div class="card-body" id="notificationHistory">
-            <div class="empty">Loading announcements...</div>
-        </div>
-    </div>
-
-</section>
-
-<!-- AUDIT -->
-<section class="section" id="audit">
-
-    <div class="page-heading">
-        <div>
-            <h1>Audit Logs</h1>
-            <p>Monitor administrator actions and account changes.</p>
-        </div>
-        <button class="btn" onclick="loadAudit()">↻ Refresh Logs</button>
-    </div>
-
-    <div class="card">
-        <div class="card-body">
-            <div class="toolbar">
-                <input class="field" id="auditSearch"
-                       placeholder="Search audit records..."
-                       oninput="filterTable('auditSearch','auditTable')">
-            </div>
-
-            <div class="table-wrap">
-                <table id="auditTable">
-                    <thead>
-                        <tr>
-                            <th>Administrator</th>
-                            <th>Action</th>
-                            <th>Target</th>
-                            <th>Details</th>
-                            <th>Timestamp</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td colspan="5" class="empty">Loading audit logs...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-</section>
-
-<!-- SETTINGS -->
-<section class="section" id="settings">
-
-    <div class="page-heading">
-        <div>
-            <h1>Administrator Settings</h1>
-            <p>Administrator account and system configuration.</p>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-header"><h3>System Information</h3></div>
-        <div class="card-body" id="systemInfo">
-            <p style="color:var(--muted);font-size:13px">
-                Backend connection and system information will appear here.
-            </p>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-header"><h3>Account Security</h3></div>
-        <div class="card-body">
-            <button class="btn" onclick="changePassword()">Change Administrator Password</button>
-        </div>
-    </div>
-
-</section>
-
+<div class="notice">
+  <span class="notice-dot"></span>
+  Administrator access must be verified by the backend for every protected action.
 </div>
+
 </main>
-</div>
 
-<!-- MEMBER MODAL -->
-<div class="modal" id="memberModal">
-<div class="modal-box">
-    <h3>Create Member</h3>
-
-    <div class="form-grid">
-        <div class="form-group">
-            <label>Full Name</label>
-            <input class="field" id="newMemberName" required>
-        </div>
-
-        <div class="form-group">
-            <label>Email</label>
-            <input class="field" id="newMemberEmail" type="email" required>
-        </div>
-
-        <div class="form-group">
-            <label>Phone</label>
-            <input class="field" id="newMemberPhone">
-        </div>
-
-        <div class="form-group">
-            <label>Membership</label>
-            <select class="field" id="newMemberPackage">
-                <option value="Bronze">Bronze</option>
-                <option value="Silver">Silver</option>
-                <option value="Gold">Gold</option>
-            </select>
-        </div>
-    </div>
-
-    <div class="modal-footer">
-        <button class="btn" onclick="closeModal('memberModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="createMember()">Create Member</button>
-    </div>
-</div>
-</div>
-
-<!-- WALLET MODAL -->
-<div class="modal" id="walletModal">
-<div class="modal-box">
-    <h3>Adjust Member Balance</h3>
-
-    <div class="form-group">
-        <label>Member ID</label>
-        <input class="field" id="walletMemberId" placeholder="Enter member ID">
-    </div>
-
-    <div class="form-group" style="margin-top:15px">
-        <label>Adjustment Type</label>
-        <select class="field" id="walletType">
-            <option value="credit">Credit / Add Funds</option>
-            <option value="debit">Debit / Deduct Funds</option>
-        </select>
-    </div>
-
-    <div class="form-group" style="margin-top:15px">
-        <label>Amount (KES)</label>
-        <input class="field" id="walletAmount" type="number" min="1">
-    </div>
-
-    <div class="form-group" style="margin-top:15px">
-        <label>Reason</label>
-        <input class="field" id="walletReason" placeholder="Reason for adjustment">
-    </div>
-
-    <div class="modal-footer">
-        <button class="btn" onclick="closeModal('walletModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="adjustWallet()">Confirm Adjustment</button>
-    </div>
-</div>
-</div>
-
-<!-- OPPORTUNITY MODAL -->
-<div class="modal" id="taskModal">
-<div class="modal-box">
-    <h3>Create Opportunity</h3>
-
-    <div class="form-group">
-        <label>Opportunity Title</label>
-        <input class="field" id="taskTitle">
-    </div>
-
-    <div class="form-group" style="margin-top:15px">
-        <label>Description</label>
-        <textarea class="field" id="taskDescription" rows="4"></textarea>
-    </div>
-
-    <div class="form-grid" style="margin-top:15px">
-        <div class="form-group">
-            <label>Category</label>
-            <select class="field" id="taskCategory">
-                <option>Transcription</option>
-                <option>Data Entry</option>
-                <option>Writing</option>
-                <option>Freelancing</option>
-                <option>Graphic Design</option>
-                <option>Video Editing</option>
-                <option>Social Media</option>
-                <option>Research</option>
-                <option>Virtual Assistance</option>
-                <option>Technology</option>
-                <option>Translation</option>
-                <option>Academic Tasks</option>
-                <option>Other Digital Tasks</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Reward (KES)</label>
-            <input class="field" id="taskReward" type="number" min="0">
-        </div>
-
-        <div class="form-group">
-            <label>Available Slots</label>
-            <input class="field" id="taskSlots" type="number" min="1">
-        </div>
-
-        <div class="form-group">
-            <label>Status</label>
-            <select class="field" id="taskStatus">
-                <option value="active">Active</option>
-                <option value="draft">Draft</option>
-            </select>
-        </div>
-    </div>
-
-    <div class="modal-footer">
-        <button class="btn" onclick="closeModal('taskModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="createTask()">Publish Opportunity</button>
-    </div>
-</div>
-</div>
-
-<!-- ANNOUNCEMENT MODAL -->
-<div class="modal" id="notificationModal">
-<div class="modal-box">
-    <h3>New Announcement</h3>
-
-    <div class="form-group">
-        <label>Announcement Title</label>
-        <input class="field" id="notificationTitle">
-    </div>
-
-    <div class="form-group" style="margin-top:15px">
-        <label>Message</label>
-        <textarea class="field" id="notificationMessage" rows="5"></textarea>
-    </div>
-
-    <div class="form-group" style="margin-top:15px">
-        <label>Audience</label>
-        <select class="field" id="notificationAudience">
-            <option value="all">All Members</option>
-            <option value="active">Active Members</option>
-            <option value="bronze">Bronze Members</option>
-            <option value="silver">Silver Members</option>
-            <option value="gold">Gold Members</option>
-        </select>
-    </div>
-
-    <div class="modal-footer">
-        <button class="btn" onclick="closeModal('notificationModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="sendAnnouncement()">Send Announcement</button>
-    </div>
-</div>
-</div>
-
-<div id="toast"></div>
+<footer>
+  ONLINE SPHERE · ADMINISTRATION
+</footer>
 
 <script>
-/*
-==========================================================
-ONLINE SPHERE ADMINISTRATOR DASHBOARD
-==========================================================
+const ADMIN_EMAIL = "muthinibenson7@gmail.com";
+const API_BASE = "https://online-sphere-backend.onrender.com/api/admin";
 
-Backend:
-https://online-sphere-backend.onrender.com
+let activeModule = "";
+let cachedRows = [];
 
-API routes below are administrator API contracts.
-They must exist in your Express backend.
+/* HTML ESCAPING */
 
-No fake members, balances or transactions are generated.
-
-==========================================================
-*/
-
-const API_BASE = "https://online-sphere-backend.onrender.com/api";
-
-let currentPage = "overview";
-
-const pageTitles = {
-    overview: "Administrator Overview",
-    members: "Member Management",
-    tasks: "Opportunity Management",
-    submissions: "Submission Management",
-    memberships: "Membership Management",
-    payments: "Payment Management",
-    wallets: "Wallet Management",
-    withdrawals: "Withdrawal Management",
-    referrals: "Referral Management",
-    finance: "Financial Management",
-    reports: "Reports",
-    notifications: "Notifications",
-    audit: "Audit Logs",
-    settings: "Administrator Settings"
-};
-
-/* AUTHENTICATION */
-
-function getAdminToken() {
-    return localStorage.getItem("adminToken")
-        || localStorage.getItem("token")
-        || sessionStorage.getItem("adminToken")
-        || "";
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, character => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[character]);
 }
 
-function authHeaders() {
-    return {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + getAdminToken()
-    };
-}
-
-/* API REQUESTS */
-
-async function api(path, options = {}) {
-
-    const response = await fetch(API_BASE + path, {
-        ...options,
-        headers: {
-            ...authHeaders(),
-            ...(options.headers || {})
-        }
-    });
-
-    if (response.status === 401 || response.status === 403) {
-        throw new Error("Administrator authorization failed.");
-    }
-
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok || data.success === false) {
-        throw new Error(data.message || "Request failed.");
-    }
-
-    return data;
-}
-
-function unwrap(data) {
-    if (Array.isArray(data)) return data;
-
-    return data.items
-        || data.members
-        || data.tasks
-        || data.opportunities
-        || data.submissions
-        || data.payments
-        || data.withdrawals
-        || data.referrals
-        || data.memberships
-        || data.records
-        || data.logs
-        || data.notifications
-        || [];
-}
+/* CURRENCY */
 
 function money(value) {
-    return "KES " + Number(value || 0).toLocaleString("en-KE", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    });
+  return "KES " + Number(value || 0).toLocaleString("en-KE", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
 }
 
-function safe(value) {
-    return String(value ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
+/* AUTHENTICATED API */
 
-function statusBadge(status) {
-    const value = String(status || "unknown").toLowerCase();
-
-    return `<span class="status ${safe(value)}">${safe(status || "Unknown")}</span>`;
-}
-
-function toast(message) {
-    const element = document.getElementById("toast");
-
-    element.textContent = message;
-    element.style.display = "block";
-
-    setTimeout(() => {
-        element.style.display = "none";
-    }, 4000);
-}
-
-function setLoading(tableId, colspan) {
-    const body = document.querySelector("#" + tableId + " tbody");
-
-    if (body) {
-        body.innerHTML =
-            `<tr><td colspan="${colspan}" class="empty">Loading...</td></tr>`;
+async function apiRequest(path, options = {}) {
+  const response = await fetch(API_BASE + path, {
+    credentials: "include",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {})
     }
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.message || ("API error " + response.status));
+  }
+
+  return data;
 }
 
-function renderRows(tableId, rows, renderer, colspan) {
+/* ADMIN VERIFICATION */
 
-    const body = document.querySelector("#" + tableId + " tbody");
+async function verifyAdmin() {
+  try {
+    const data = await apiRequest("/me");
 
-    if (!body) return;
-
-    if (!rows.length) {
-        body.innerHTML =
-            `<tr><td colspan="${colspan}" class="empty">No records found.</td></tr>`;
-        return;
+    if (
+      data.success !== true ||
+      String(data.email || "").toLowerCase() !== ADMIN_EMAIL ||
+      data.isAdmin !== true
+    ) {
+      denyAccess();
+      return false;
     }
 
-    body.innerHTML = rows.map(renderer).join("");
+    return true;
+
+  } catch (error) {
+    denyAccess();
+    return false;
+  }
 }
 
-/* NAVIGATION */
-
-function navigate(page) {
-
-    const target = document.getElementById(page);
-
-    if (!target) return;
-
-    currentPage = page;
-
-    document.querySelectorAll(".section").forEach(section => {
-        section.classList.remove("active");
-    });
-
-    target.classList.add("active");
-
-    document.querySelectorAll(".nav-item[data-page]").forEach(button => {
-        button.classList.toggle("active", button.dataset.page === page);
-    });
-
-    document.getElementById("topTitle").textContent =
-        pageTitles[page] || "Administrator";
-
-    document.getElementById("sidebar").classList.remove("open");
-
-    loadPage(page);
+function denyAccess() {
+  document.body.innerHTML = `
+    <div style="padding:30px;color:#432d03;font-family:Arial">
+      <h2>Administrator access denied.</h2>
+      <p>Please sign in with the authorized administrator account.</p>
+    </div>
+  `;
 }
 
-document.querySelectorAll(".nav-item[data-page]").forEach(button => {
-    button.addEventListener("click", () => navigate(button.dataset.page));
-});
+/* DASHBOARD STATISTICS */
 
-function toggleSidebar() {
-    document.getElementById("sidebar").classList.toggle("open");
+async function refreshDashboard() {
+  if (!await verifyAdmin()) return;
+
+  try {
+    const data = await apiRequest("/stats");
+    const stats = data.stats || data;
+
+    document.getElementById("totalMembers").textContent =
+      stats.totalMembers ?? 0;
+
+    document.getElementById("activeMembers").textContent =
+      stats.activeMembers ?? 0;
+
+    document.getElementById("suspendedMembers").textContent =
+      stats.suspendedMembers ?? 0;
+
+    document.getElementById("deposits").textContent =
+      money(stats.totalDeposits);
+
+    document.getElementById("withdrawals").textContent =
+      money(stats.totalWithdrawals);
+
+    document.getElementById("revenue").textContent =
+      money(stats.revenue);
+
+  } catch (error) {
+    console.warn("Statistics unavailable:", error.message);
+  }
 }
 
-function goBack() {
-    window.location.href = "dashboard.html";
+/* OPEN ADMIN MODULE */
+
+async function openModule(name) {
+  if (!await verifyAdmin()) return;
+
+  activeModule = name;
+
+  document.getElementById("workspace").classList.add("active");
+
+  document.getElementById("workspaceTitle").textContent =
+    name.charAt(0).toUpperCase() + name.slice(1);
+
+  document.getElementById("searchInput").value = "";
+
+  await loadModule();
+
+  document.getElementById("workspace").scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
 }
 
-function logout() {
-    if (!confirm("Sign out of the administrator dashboard?")) return;
+/* CLOSE MODULE */
 
-    localStorage.removeItem("adminToken");
-    sessionStorage.removeItem("adminToken");
-
-    window.location.href = "login.html";
+function closeModule() {
+  document.getElementById("workspace").classList.remove("active");
+  activeModule = "";
 }
 
-/* PAGE LOADER */
+/* LOAD MODULE RECORDS */
 
-function loadPage(page) {
+async function loadModule() {
+  if (!activeModule) return;
 
-    const loaders = {
-        overview: loadOverview,
-        members: loadMembers,
-        tasks: loadTasks,
-        submissions: loadSubmissions,
-        memberships: loadMemberships,
-        payments: loadPayments,
-        wallets: loadWallets,
-        withdrawals: loadWithdrawals,
-        referrals: loadReferrals,
-        finance: loadFinance,
-        reports: loadReports,
-        notifications: loadNotifications,
-        audit: loadAudit,
-        settings: loadSettings
-    };
+  const content = document.getElementById("workspaceContent");
 
-    if (loaders[page]) loaders[page]();
-}
+  content.innerHTML =
+    "<p class='empty'>Loading secure records...</p>";
 
-function refreshCurrent() {
-    loadPage(currentPage);
-}
+  try {
+    const data = await apiRequest("/" + activeModule);
 
-/* OVERVIEW */
+    cachedRows =
+      data[activeModule] ||
+      data.records ||
+      data.data ||
+      data.members ||
+      data.transactions ||
+      data.payments ||
+      [];
 
-async function loadOverview() {
-
-    try {
-        const data = await api("/admin/dashboard");
-
-        const stats = data.stats || data;
-
-        document.getElementById("statMembers").textContent =
-            stats.totalMembers ?? "—";
-
-        document.getElementById("statActive").textContent =
-            stats.activeMembers ?? "—";
-
-        document.getElementById("statTasks").textContent =
-            stats.totalTasks ?? "—";
-
-        document.getElementById("statWithdrawals").textContent =
-            stats.pendingWithdrawals ?? "—";
-
-        document.getElementById("financeRevenue").textContent =
-            money(stats.membershipRevenue);
-
-        document.getElementById("financeWithdrawals").textContent =
-            money(stats.totalWithdrawals);
-
-        document.getElementById("financeFees").textContent =
-            money(stats.platformFees);
-
-        document.getElementById("financeLiability").textContent =
-            money(stats.walletLiability);
-
-        const activity = data.recentActivity || [];
-
-        document.getElementById("recentActivity").innerHTML =
-            activity.length
-            ? activity.map(item => `
-                <div style="padding:12px 0;border-bottom:1px solid #24344C">
-                    <strong>${safe(item.action || item.description)}</strong>
-                    <p style="color:#94A3B8;margin-top:5px;font-size:11px">
-                        ${safe(item.createdAt || item.timestamp || "")}
-                    </p>
-                </div>
-            `).join("")
-            : '<div class="empty">No recent activity.</div>';
-
-    } catch (error) {
-        toast(error.message);
+    if (!Array.isArray(cachedRows)) {
+      content.innerHTML =
+        "<p class='empty'>No records returned.</p>";
+      return;
     }
+
+    renderRows(cachedRows);
+
+  } catch (error) {
+    content.innerHTML =
+      "<p class='empty'>" +
+      escapeHTML(error.message) +
+      " — backend endpoint may not be configured yet.</p>";
+  }
 }
 
-/* MEMBERS */
+/* TABLE RENDERING */
 
-async function loadMembers() {
+function renderRows(rows) {
+  const content = document.getElementById("workspaceContent");
 
-    setLoading("membersTable", 7);
+  if (!rows.length) {
+    content.innerHTML =
+      "<p class='empty'>No records available.</p>";
+    return;
+  }
 
-    try {
-        const data = await api("/admin/members");
+  const columns = Object.keys(rows[0]).slice(0, 7);
 
-        const rows = unwrap(data);
+  content.innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            ${columns.map(column =>
+              "<th>" + escapeHTML(column) + "</th>"
+            ).join("")}
+          </tr>
+        </thead>
 
-        renderRows("membersTable", rows, member => `
+        <tbody>
+          ${rows.map(row => `
             <tr>
-                <td>
-                    <strong>${safe(member.name || member.fullName)}</strong>
-                    <br><small style="color:#64748B">${safe(member.id)}</small>
-                </td>
-                <td>${safe(member.email)}</td>
-                <td>${safe(member.phone)}</td>
-                <td>${safe(member.packageName || member.membership)}</td>
-                <td>${money(member.balance)}</td>
-                <td>${statusBadge(member.status)}</td>
-                <td>
-                    <button class="btn" onclick="viewMember('${safe(member.id)}')">View</button>
-                    <button class="btn" onclick="suspendMember('${safe(member.id)}')">Suspend</button>
-                    <button class="btn btn-danger" onclick="deleteMember('${safe(member.id)}')">Delete</button>
-                </td>
+              ${columns.map(column =>
+                "<td>" + escapeHTML(row[column]) + "</td>"
+              ).join("")}
             </tr>
-        `, 7);
-
-    } catch (error) {
-        setLoading("membersTable", 7);
-        toast(error.message);
-    }
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
 }
 
-function openMemberModal() {
-    document.getElementById("memberModal").classList.add("show");
+/* SEARCH */
+
+function filterRows() {
+  const query =
+    document.getElementById("searchInput").value.toLowerCase();
+
+  const filtered = cachedRows.filter(record =>
+    JSON.stringify(record).toLowerCase().includes(query)
+  );
+
+  renderRows(filtered);
 }
 
-async function createMember() {
+/* INITIALIZATION */
 
-    const name = document.getElementById("newMemberName").value.trim();
-    const email = document.getElementById("newMemberEmail").value.trim();
-    const phone = document.getElementById("newMemberPhone").value.trim();
-    const packageName = document.getElementById("newMemberPackage").value;
-
-    if (!name || !email) {
-        toast("Name and email are required.");
-        return;
-    }
-
-    try {
-        await api("/admin/members", {
-            method: "POST",
-            body: JSON.stringify({ name, email, phone, packageName })
-        });
-
-        closeModal("memberModal");
-        toast("Member created.");
-        loadMembers();
-
-    } catch (error) {
-        toast(error.message);
-    }
-}
-
-async function viewMember(id) {
-
-    try {
-        const data = await api("/admin/members/" + encodeURIComponent(id));
-
-        const member = data.member || data;
-
-        alert(
-            "Member: " + (member.name || member.fullName || "") +
-            "\nEmail: " + (member.email || "") +
-            "\nPhone: " + (member.phone || "") +
-            "\nStatus: " + (member.status || "") +
-            "\nBalance: " + money(member.balance)
-        );
-
-    } catch (error) {
-        toast(error.message);
-    }
-}
-
-async function suspendMember(id) {
-
-    const reason = prompt("Enter reason for suspension:");
-
-    if (reason === null || !reason.trim()) return;
-
-    if (!confirm("Suspend this member account?")) return;
-
-    try {
-        await api("/admin/members/" + encodeURIComponent(id) + "/suspend", {
-            method: "POST",
-            body: JSON.stringify({ reason })
-        });
-
-        toast("Member suspended.");
-        loadMembers();
-
-    } catch (error) {
-        toast(error.message);
-    }
-}
-
-async function deleteMember(id) {
-
-    const confirmation = prompt(
-        "Permanent deletion. Type DELETE to confirm."
-    );
-
-    if (confirmation !== "DELETE") return;
-
-    try {
-        await api("/admin/members/" + encodeURIComponent(id), {
-            method: "DELETE"
-        });
-
-        toast("Member deletion requested.");
-        loadMembers();
-
-    } catch (error) {
-        toast(error.message);
-    }
-}
-
-/* OPPORTUNITIES */
-
-async function loadTasks() {
-
-    setLoading("tasksTable", 6);
-
-    try {
-        const data = await api("/admin/opportunities");
-
-        renderRows("tasksTable", unwrap(data), task => `
-            <tr>
-                <td><strong>${safe(task.title)}</strong></td>
-                <td>${safe(task.category)}</td>
-                <td>${money(task.reward)}</td>
-                <td>${safe(task.slots ?? task.availableSlots ?? "—")}</td>
-                <td>${statusBadge(task.status)}</td>
-                <td>
-                    <button class="btn" onclick="toggleTask('${safe(task.id)}')">Toggle</button>
-                    <button class="btn btn-danger" onclick="deleteTask('${safe(task.id)}')">Delete</button>
-                </td>
-            </tr>
-        `, 6);
-
-    } catch (error) {
-        toast(error.message);
-    }
-}
-
-function openTaskModal() {
-    document.getElementById("taskModal").classList.add("show");
-}
-
-async function createTask() {
-
-    const title = document.getElementById("taskTitle").value.trim();
-    const description = document.getElementById("taskDescription").value.trim();
-    const category = document.getElementById("taskCategory").value;
-    const reward = Number(document.getElementById("taskReward").value);
-    const slots = Number(document.getElementById("taskSlots").value);
-    const status = document.getElementById("taskStatus").value;
-
-    if (!title || !description || reward < 0 || slots < 1) {
-        toast("Complete all required opportunity fields.");
-        return;
-    }
-
-    try {
-        await api("/admin/opportunities", {
-            method: "POST",
-            body: JSON.stringify({ title, description, category, reward, slots, status })
-        });
-
-        closeModal("taskModal");
-        toast("Opportunity created.");
-        loadTasks();
-
-    } catch (error) {
-        toast(error.message);
-    }
-}
-
-async function toggleTask(id) {
-
-    try {
-        await api("/admin/opportunities/" + encodeURIComponent(id) + "/toggle", {
-            method: "POST"
-        });
-
-        toast("Opportunity updated.");
-        loadTasks();
-
-    } catch (error) {
-        toast(error.message);
-    }
-}
-
-async function deleteTask(id) {
-
-    if (!confirm("Delete this opportunity?")) return;
-
-    try {
-        await api("/admin/opportunities/" + encodeURIComponent(id), {
-            method: "DELETE"
-        });
-
-        toast("Opportunity deleted.");
-        loadTasks();
-
-    } catch (error) {
-        toast(error.message);
-    }
-}
-
-/* SUBMISSIONS */
-
-async function loadSubmissions() {
-
-    setLoading("submissionsTable", 5);
-
-    try {
-        const data = await api("/admin/submissions");
-
-        renderRows("submissionsTable", unwrap(data), item => `
-            <tr>
-                <td>${safe(item.memberName || item.memberId)}</td>
-                <td>${safe(item.taskTitle || item.opportunityTitle)}</td>
-                <td>${safe(item.createdAt || item.submittedAt)}</td>
-                <td>${statusBadge(item.status)}</td>
-                <td>
-                    <button class="btn btn-success" onclick="reviewSubmission('${safe(item.id)}','approve')">Approve</button>
-                    <button class="btn btn-danger" onclick="reviewSubmission('${safe(item.id)}','reject')">Reject</button>
-                </td>
-            </tr>
-        `, 5);
-
-    } catch (error) {
-        toast(error.message);
-    }
-}
-
-async function reviewSubmission(id, action) {
-
-    const reason = action === "reject"
-        ? prompt("Enter rejection reason:")
-        : "";
-
-    if (action === "reject" && reason === null) return;
-
-    if (!confirm("Confirm submission " + action + "?")) return;
-
-    try {
-        await api("/admin/submissions/" + encodeURIComponent(id) + "/review", {
-            method: "POST",
-            body: JSON.stringify({ action, reason })
-        });
-
-        toast("Submission reviewed.");
-        loadSubmissions();
-
-    } catch (error) {
-        toast(error.message);
-    }
-}
-
-/* MEMBERSHIPS */
-
-async function loadMemberships() {
-
-    setLoading("membershipsTable", 6);
-
-    try {
-        const data = await api("/admin/memberships");
-
-        renderRows("membershipsTable", unwrap(data), item => `
-            <tr>
-                <td>${safe(item.memberName || item.memberId)}</td>
-                <td>${safe(item.packageName)}</td>
-                <td>${money(item.amount)}</td>
-                <td>${safe(item.paymentReference || item.reference)}</td>
-                <td>${statusBadge(item.status)}</td>
-                <td>${safe(item.createdAt || item.date)}</td>
-            </tr>
-        `, 6);
-
-    } catch (error) {
-        toast(error.message);
-    }
-}
-
-/* PAYMENTS */
-
-async function loadPayments() {
-
-    setLoading("paymentsTable", 6);
-
-    try {
-        const data = await api("/admin/payments");
-
-        renderRows("paymentsTable", unwrap(data), item => `
-            <tr>
-                <td>${safe(item.memberName || item.memberId)}</td>
-                <td>${safe(item.reference || item.transactionId)}</td>
-                <td>${safe(item.method || "M-Pesa")}</td>
-                <td>${money(item.amount)}</td>
-                <td>${statusBadge(item.status)}</td>
-                <td>${safe(item.createdAt || item.date)}</td>
-            </tr>
-        `, 6);
-
-    } catch (error) {
-        toast(error.message);
-    }
-}
-
-/* WALLETS */
-
-async function loadWallets() {
-
-    setLoading("walletsTable", 6);
-
-    try {
-        const data = await api("/admin/wallets");
-
-        renderRows("walletsTable", unwrap(data), item => `
-            <tr>
-                <td>${safe(item.memberName || item.name)}</td>
-                <td>${safe(item.memberId || item.accountId)}</td>
-                <td>${money(item.balance)}</td>
-                <td>${money(item.pendingBalance)}</td>
-                <td>${money(item.totalEarned)}</td>
-                <td>
-                    <button class="btn" onclick="openWalletModal('${safe(item.memberId || item.accountId)}')">Adjust</button>
-                </td>
-            </tr>
-        `, 6);
-
-    } catch (error) {
-        toast(error.message);
-    }
-}
-
-function openWalletModal(memberId = "") {
-
-    document.getElementById("walletMemberId").value = memberId;
-    document.getElementById("walletAmount").value = "";
-    document.getElementById("walletReason").value = "";
-
-    document.getElementById("walletModal").classList.add("show");
-}
-
-async function adjustWallet() {
-
-    const memberId = document.getElementById("walletMemberId").value.trim();
-    const type = document.getElementById("walletType").value;
-    const amount = Number(document.getElementById("walletAmount").value);
-    const reason = document.getElementById("walletReason").value.trim();
-
-    if (!memberId || amount <= 0 || !reason) {
-        toast("Member ID, amount and reason are required.");
-        return;
-    }
-
-    if (!confirm(
-        "Confirm " + type + " of " + money(amount) +
-        " for member " + memberId + "?"
-    )) return;
-
-    try {
-        await api("/admin/wallets/adjust", {
-            method: "POST",
-            body: JSON.stringify({ memberId, type, amount, reason })
-        });
-
-        closeModal("walletModal");
-        toast("Wallet adjustment recorded.");
-        loadWallets();
-
-    } catch (error) {
-        toast(error.message);
-    }
-}
-
-/* WITHDRAWALS */
-
-async function loadWithdrawals() {
-
-    setLoading("withdrawalsTable", 7);
-
-    try {
-        const data = await api("/admin/withdrawals");
-
-        renderRows("withdrawalsTable", unwrap(data), item => `
-            <tr>
-                <td>${safe(item.memberName || item.memberId)}</td>
-                <td>${money(item.amount)}</td>
-                <td>${safe(item.phone || item.mpesaPhone)}</td>
-                <td>${safe(item.reference || item.id)}</td>
-                <td>${statusBadge(item.status)}</td>
-                <td>${safe(item.createdAt || item.date)}</td>
-                <td>
-                    <button class="btn btn-success" onclick="processWithdrawal('${safe(item.id)}','approve')">Approve</button>
-                    <button class="btn btn-danger" onclick="processWithdrawal('${safe(item.id)}','reject')">Reject</button>
-                </td>
-            </tr>
-        `, 7);
-
-    } catch (error) {
-        toast(error.message);
-    }
-}
-
-async function processWithdrawal(id, action) {
-
-    const reason = action === "reject"
-        ? prompt("Reason for rejection:")
-        : "";
-
-    if (action === "reject" && reason === null) return;
-
-    if (!confirm("Confirm withdrawal " + action + "?")) return;
-
-    try {
-        await api("/admin/withdrawals/" + encodeURIComponent(id) + "/process", {
-            method: "POST",
-            body: JSON.stringify({ action, reason })
-        });
-
-        toast("Withdrawal processed.");
-        loadWithdrawals();
-
-    } catch (error) {
-        toast(error.message);
-    }
-}
-
-/* REFERRALS */
-
-async function loadReferrals() {
-
-    setLoading("referralsTable", 6);
-
-    try {
-        const data = await api("/admin/referrals");
-
-        renderRows("referralsTable", unwrap(data), item => `
-            <tr>
-                <td>${safe(item.referrerName || item.referrerId)}</td>
-                <td>${safe(item.referredName || item.referredId)}</td>
-                <td>${safe(item.packageName)}</td>
-                <td>${money(item.commission)}</td>
-                <td>${statusBadge(item.status)}</td>
-                <td>${safe(item.createdAt || item.date)}</td>
-            </tr>
-        `, 6);
-
-    } catch (error) {
-        toast(error.message);
-    }
-}
-
-/* FINANCE */
-
-async function loadFinance() {
-
-    try {
-        const data = await api("/admin/finance");
-
-        document.getElementById("financeRevenue").textContent =
-            money(data.membershipRevenue);
-
-        document.getElementById("financeWithdrawals").textContent =
-            money(data.totalWithdrawals);
-
-        document.getElementById("financeFees").textContent =
-            money(data.platformFees);
-
-        document.getElementById("financeLiability").textContent =
-            money(data.walletLiability);
-
-        document.getElementById("financeRecords").innerHTML =
-            data.records && data.records.length
-            ? data.records.map(item => `
-                <div style="padding:12px;border-bottom:1px solid #24344C">
-                    <strong>${safe(item.description || item.type)}</strong>
-                    <span style="float:right">${money(item.amount)}</span>
-                    <p style="color:#94A3B8;font-size:11px;margin-top:6px">
-                        ${safe(item.createdAt || "")}
-                    </p>
-                </div>
-            `).join("")
-            : '<div class="empty">No financial records available.</div>';
-
-    } catch (error) {
-        toast(error.message);
-    }
-}
-
-/* REPORTS */
-
-async function loadReports() {
-    // Reports are generated when the administrator selects a report type.
-}
-
-async function generateReport() {
-
-    const type = document.getElementById("reportType").value;
-
-    try {
-        const data = await api("/admin/reports/" + encodeURIComponent(type));
-
-        document.getElementById("reportResults").innerHTML =
-            `<pre style="white-space:pre-wrap;color:#CBD5E1;font-size:12px">
-${safe(JSON.stringify(data, null, 2))}
-</pre>`;
-
-    } catch (error) {
-        toast(error.message);
-    }
-}
-
-/* NOTIFICATIONS */
-
-function openNotificationModal() {
-    document.getElementById("notificationModal").classList.add("show");
-}
-
-async function sendAnnouncement() {
-
-    const title = document.getElementById("notificationTitle").value.trim();
-    const message = document.getElementById("notificationMessage").value.trim();
-    const audience = document.getElementById("notificationAudience").value;
-
-    if (!title || !message) {
-        toast("Title and message are required.");
-        return;
-    }
-
-    if (!confirm("Send this announcement to " + audience + "?")) return;
-
-    try {
-        await api("/admin/notifications", {
-            method: "POST",
-            body: JSON.stringify({ title, message, audience })
-        });
-
-        closeModal("notificationModal");
-        toast("Announcement sent.");
-        loadNotifications();
-
-    } catch (error) {
-        toast(error.message);
-    }
-}
-
-async function loadNotifications() {
-
-    try {
-        const data = await api("/admin/notifications");
-
-        const items = unwrap(data);
-
-        document.getElementById("notificationHistory").innerHTML =
-            items.length
-            ? items.map(item => `
-                <div style="padding:15px;border-bottom:1px solid #24344C">
-                    <strong>${safe(item.title)}</strong>
-                    <p style="margin-top:8px;font-size:12px;color:#CBD5E1">
-                        ${safe(item.message)}
-                    </p>
-                    <small style="color:#64748B">
-                        ${safe(item.createdAt || "")}
-                    </small>
-                </div>
-            `).join("")
-            : '<div class="empty">No announcements found.</div>';
-
-    } catch (error) {
-        toast(error.message);
-    }
-}
-
-/* AUDIT */
-
-async function loadAudit() {
-
-    setLoading("auditTable", 5);
-
-    try {
-        const data = await api("/admin/audit");
-
-        renderRows("auditTable", unwrap(data), item => `
-            <tr>
-                <td>${safe(item.adminName || item.adminId)}</td>
-                <td>${safe(item.action)}</td>
-                <td>${safe(item.target || item.targetId)}</td>
-                <td>${safe(item.details || item.reason)}</td>
-                <td>${safe(item.createdAt || item.timestamp)}</td>
-            </tr>
-        `, 5);
-
-    } catch (error) {
-        toast(error.message);
-    }
-}
-
-/* SETTINGS */
-
-async function loadSettings() {
-
-    try {
-        const data = await api("/admin/system");
-
-        document.getElementById("systemInfo").innerHTML = `
-            <p style="font-size:13px;line-height:2">
-                <strong>Service:</strong> ${safe(data.service || "Online Sphere")}<br>
-                <strong>Status:</strong> ${safe(data.status || "Connected")}<br>
-                <strong>Database:</strong> ${safe(data.database || "Unknown")}<br>
-                <strong>M-Pesa:</strong> ${safe(data.mpesaEnvironment || "Configured")}
-            </p>
-        `;
-
-    } catch (error) {
-        toast(error.message);
-    }
-}
-
-async function changePassword() {
-
-    const oldPassword = prompt("Enter current password:");
-
-    if (oldPassword === null) return;
-
-    const newPassword = prompt("Enter new password:");
-
-    if (!newPassword || newPassword.length < 8) {
-        toast("Password must have at least 8 characters.");
-        return;
-    }
-
-    try {
-        await api("/admin/change-password", {
-            method: "POST",
-            body: JSON.stringify({ oldPassword, newPassword })
-        });
-
-        toast("Administrator password changed.");
-
-    } catch (error) {
-        toast(error.message);
-    }
-}
-
-/* FILTERS */
-
-function filterTable(inputId, tableId) {
-
-    const search = document.getElementById(inputId).value.toLowerCase();
-
-    const rows = document.querySelectorAll("#" + tableId + " tbody tr");
-
-    rows.forEach(row => {
-        row.style.display =
-            row.textContent.toLowerCase().includes(search) ? "" : "none";
-    });
-}
-
-/* MODALS */
-
-function closeModal(id) {
-    document.getElementById(id).classList.remove("show");
-}
-
-document.querySelectorAll(".modal").forEach(modal => {
-    modal.addEventListener("click", event => {
-        if (event.target === modal) modal.classList.remove("show");
-    });
-});
-
-/* START */
-
-document.addEventListener("DOMContentLoaded", () => {
-
-    if (!getAdminToken()) {
-        toast("Administrator login token not found. Sign in first.");
-    }
-
-    loadOverview();
-
-});
+refreshDashboard();
 </script>
 
 </body>
 </html>
-
