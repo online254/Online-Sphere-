@@ -238,7 +238,182 @@ app.post('/api/ai/chat', async (req, res) => {
    Admin email: muthinibenson7@gmail.com
    ========================================================= */
 
-const ADMIN_EMAIL = 'muthinibenson7@gmail.com';
+
+/* =========================================================
+   ONLINE SPHERE ADMIN AUTHENTICATION
+   ========================================================= */
+
+const ADMIN_EMAIL = normalizeEmail(
+  process.env.ADMIN_EMAIL || 'muthinibenson7@gmail.com'
+);
+
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+db.exec(`
+CREATE TABLE IF NOT EXISTS admin_sessions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  token_hash TEXT NOT NULL UNIQUE,
+  admin_user_id INTEGER NOT NULL,
+  expires_at TEXT NOT NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+`);
+
+function requireAdmin(req, res, next) {
+  try {
+    const header = String(req.get('authorization') || '');
+    const token = /^Bearer\s+(.+)$/i.exec(header)?.[1];
+
+    if (!token || token.length > 512) {
+      return res.status(401).json({
+        success: false,
+        message: 'Administrator login required.'
+      });
+    }
+
+    const session = db.prepare(`
+      SELECT admin_user_id
+      FROM admin_sessions
+      WHERE token_hash=?
+        AND datetime(expires_at)>datetime('now')
+      LIMIT 1
+    `).get(sha256(token));
+
+    if (!session) {
+      return res.status(401).json({
+        success: false,
+        message: 'Admin session expired. Sign in again.'
+      });
+    }
+
+    const admin = db.prepare(`
+      SELECT id,full_name,email
+      FROM users
+      WHERE id=? AND lower(email)=?
+      LIMIT 1
+    `).get(session.admin_user_id, ADMIN_EMAIL);
+
+    if (!admin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Administrator access denied.'
+      });
+    }
+
+    req.admin = admin;
+    req.adminTokenHash = sha256(token);
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
+/* Administrator login */
+app.post('/api/admin/login', async (req, res, next) => {
+  try {
+    if (!ADMIN_PASSWORD) {
+      return res.status(503).json({
+        success: false,
+        message: 'Administrator password is not configured.'
+      });
+    }
+
+    const email = normalizeEmail(req.body?.email);
+    const password = String(req.body?.password || '');
+
+    if (
+      email !== ADMIN_EMAIL ||
+      password.length === 0 ||
+      password.length > 256
+    ) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid administrator credentials.'
+      });
+    }
+
+    const admin = db.prepare(`
+      SELECT id,full_name,email
+      FROM users
+      WHERE lower(email)=?
+      LIMIT 1
+    `).get(ADMIN_EMAIL);
+
+    if (!admin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Register this administrator email first.'
+      });
+    }
+
+    const supplied = Buffer.from(password);
+    const expected = Buffer.from(ADMIN_PASSWORD);
+
+    if (
+      supplied.length !== expected.length ||
+      !crypto.timingSafeEqual(supplied, expected)
+    ) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid administrator credentials.'
+      });
+    }
+
+    const token = crypto.randomBytes(32).toString('base64url');
+    const tokenHash = sha256(token);
+    const expiresAt = new Date(
+      Date.now() + 8 * 60 * 60 * 1000
+    ).toISOString();
+
+    db.prepare(`
+      INSERT INTO admin_sessions
+      (token_hash,admin_user_id,expires_at)
+      VALUES (?,?,?)
+    `).run(tokenHash, admin.id, expiresAt);
+
+    res.json({
+      success: true,
+      token,
+      expiresAt,
+      admin: {
+        id: admin.id,
+        name: admin.full_name,
+        email: admin.email
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/* Administrator session verification */
+app.get('/api/admin/me', requireAdmin, (req, res) => {
+  res.json({
+    success: true,
+    isAdmin: true,
+    admin: req.admin
+  });
+});
+
+/* Administrator logout */
+app.post('/api/admin/logout', requireAdmin, (req, res) => {
+  db.prepare(`
+    DELETE FROM admin_sessions
+    WHERE token_hash=?
+  `).run(req.adminTokenHash);
+
+  res.json({
+    success: true,
+    message: 'Administrator logged out.'
+  });
+});
+
+/* Remove expired admin sessions */
+db.prepare(`
+  DELETE FROM admin_sessions
+  WHERE datetime(expires_at)<=datetime('now')
+`).run();
+
 
 function requireAdmin(req, res, next) {
   try {
