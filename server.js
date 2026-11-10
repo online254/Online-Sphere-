@@ -232,6 +232,357 @@ app.post('/api/ai/chat', async (req, res) => {
     res.json({ success: true, reply: response.output_text });
   } catch (error) { console.error('[Online Sphere AI]', error.message); res.status(502).json({ success: false, message: 'Online Sphere AI is temporarily unavailable.' }); }
 });
+
+/* =========================================================
+   ONLINE SPHERE ADMINISTRATOR API
+   Admin email: muthinibenson7@gmail.com
+   ========================================================= */
+
+const ADMIN_EMAIL = 'muthinibenson7@gmail.com';
+
+function requireAdmin(req, res, next) {
+  try {
+    const member = findSession(req);
+
+    if (!member) {
+      return res.status(401).json({
+        success: false,
+        message: 'Please sign in first.'
+      });
+    }
+
+    if (normalizeEmail(member.email) !== ADMIN_EMAIL) {
+      return res.status(403).json({
+        success: false,
+        message: 'Administrator access denied.'
+      });
+    }
+
+    req.admin = member;
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
+// Verify administrator access
+app.get('/api/admin/me', requireAdmin, (req, res) => {
+  res.json({
+    success: true,
+    isAdmin: true,
+    admin: {
+      id: req.admin.id,
+      name: req.admin.full_name,
+      email: req.admin.email
+    }
+  });
+});
+
+// Administrator dashboard statistics
+app.get('/api/admin/stats', requireAdmin, (req, res) => {
+  const members = db.prepare(
+    'SELECT COUNT(*) AS total FROM users'
+  ).get().total;
+
+  const activeMembers = db.prepare(
+    "SELECT COUNT(*) AS total FROM accounts WHERE lower(status)='active'"
+  ).get().total;
+
+  const suspendedMembers = db.prepare(
+    "SELECT COUNT(*) AS total FROM accounts WHERE lower(status)='suspended'"
+  ).get().total;
+
+  const transactions = db.prepare(
+    'SELECT COUNT(*) AS total FROM transactions'
+  ).get().total;
+
+  const revenue = db.prepare(`
+    SELECT COALESCE(SUM(amount),0) AS total
+    FROM transactions
+    WHERE type='membership_payment'
+      AND lower(status) IN ('completed','verified','paid','approved')
+  `).get().total;
+
+  const withdrawals = db.prepare(`
+    SELECT COALESCE(SUM(amount),0) AS total
+    FROM withdrawals
+    WHERE lower(status)='pending'
+  `).get().total;
+
+  res.json({
+    success: true,
+    stats: {
+      totalMembers: Number(members),
+      activeMembers: Number(activeMembers),
+      suspendedMembers: Number(suspendedMembers),
+      totalTransactions: Number(transactions),
+      membershipRevenue: Number(revenue),
+      pendingWithdrawals: Number(withdrawals)
+    }
+  });
+});
+
+// List registered members
+app.get('/api/admin/members', requireAdmin, (req, res) => {
+  const page = Math.max(1, Number(req.query.page) || 1);
+  const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
+  const offset = (page - 1) * limit;
+  const search = String(req.query.search || '').trim();
+
+  const members = db.prepare(`
+    SELECT
+      u.id,
+      u.full_name,
+      u.email,
+      u.phone,
+      u.created_at,
+      a.account_number,
+      a.package,
+      a.status AS account_status,
+      a.balance,
+      a.total_earned,
+      a.total_withdrawn,
+      a.currency
+    FROM users u
+    LEFT JOIN accounts a ON a.user_id=u.id
+    WHERE (
+      ? = ''
+      OR lower(u.full_name) LIKE lower(?)
+      OR lower(u.email) LIKE lower(?)
+      OR u.phone LIKE ?
+    )
+    ORDER BY u.id DESC
+    LIMIT ? OFFSET ?
+  `).all(search, `%${search}%`, `%${search}%`, `%${search}%`, limit, offset);
+
+  const total = db.prepare(`
+    SELECT COUNT(*) AS total
+    FROM users
+    WHERE (
+      ? = ''
+      OR lower(full_name) LIKE lower(?)
+      OR lower(email) LIKE lower(?)
+      OR phone LIKE ?
+    )
+  `).get(search, `%${search}%`, `%${search}%`, `%${search}%`).total;
+
+  res.json({
+    success: true,
+    members,
+    pagination: {
+      page,
+      limit,
+      total: Number(total),
+      pages: Math.ceil(Number(total) / limit)
+    }
+  });
+});
+
+// Get one member
+app.get('/api/admin/members/:id', requireAdmin, (req, res) => {
+  const member = db.prepare(`
+    SELECT
+      u.id,u.full_name,u.email,u.phone,u.created_at,
+      a.account_number,a.package,a.status AS account_status,
+      a.balance,a.total_earned,a.total_withdrawn,a.currency
+    FROM users u
+    LEFT JOIN accounts a ON a.user_id=u.id
+    WHERE u.id=?
+  `).get(Number(req.params.id));
+
+  if (!member) {
+    return res.status(404).json({
+      success: false,
+      message: 'Member not found.'
+    });
+  }
+
+  const transactions = db.prepare(`
+    SELECT id,type,amount,status,reference,description,created_at
+    FROM transactions
+    WHERE user_id=?
+    ORDER BY id DESC
+    LIMIT 100
+  `).all(member.id);
+
+  res.json({ success: true, member, transactions });
+});
+
+// Suspend or reactivate a member
+app.patch('/api/admin/members/:id/status', requireAdmin, (req, res) => {
+  const userId = Number(req.params.id);
+  const status = String(req.body?.status || '').toLowerCase();
+
+  if (!['active', 'suspended', 'inactive'].includes(status)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Status must be active, suspended, or inactive.'
+    });
+  }
+
+  if (userId === req.admin.id && status === 'suspended') {
+    return res.status(400).json({
+      success: false,
+      message: 'You cannot suspend your own administrator account.'
+    });
+  }
+
+  const account = db.prepare(
+    'SELECT id FROM accounts WHERE user_id=?'
+  ).get(userId);
+
+  if (!account) {
+    return res.status(404).json({
+      success: false,
+      message: 'Member account not found.'
+    });
+  }
+
+  db.prepare(`
+    UPDATE accounts
+    SET status=?,updated_at=CURRENT_TIMESTAMP
+    WHERE user_id=?
+  `).run(status, userId);
+
+  res.json({
+    success: true,
+    message: `Member account status updated to ${status}.`
+  });
+});
+
+// Auditable wallet adjustment
+app.post('/api/admin/members/:id/balance', requireAdmin, (req, res) => {
+  const userId = Number(req.params.id);
+  const amount = Number(req.body?.amount);
+  const description = String(req.body?.description || '').trim();
+
+  if (!Number.isSafeInteger(amount) || amount === 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Enter a valid non-zero adjustment amount.'
+    });
+  }
+
+  if (Math.abs(amount) > 10000000) {
+    return res.status(400).json({
+      success: false,
+      message: 'Adjustment exceeds the allowed limit.'
+    });
+  }
+
+  if (!description || description.length < 3 || description.length > 200) {
+    return res.status(400).json({
+      success: false,
+      message: 'Provide a reason for this adjustment.'
+    });
+  }
+
+  const account = db.prepare(`
+    SELECT id,balance FROM accounts WHERE user_id=?
+  `).get(userId);
+
+  if (!account) {
+    return res.status(404).json({
+      success: false,
+      message: 'Member account not found.'
+    });
+  }
+
+  const newBalance = Number(account.balance || 0) + amount;
+
+  if (newBalance < 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Adjustment cannot make the wallet negative.'
+    });
+  }
+
+  const reference = `ADMIN-${crypto.randomUUID()}`;
+
+  db.transaction(() => {
+    db.prepare(`
+      UPDATE accounts
+      SET balance=?,updated_at=CURRENT_TIMESTAMP
+      WHERE id=?
+    `).run(newBalance, account.id);
+
+    db.prepare(`
+      INSERT INTO transactions
+      (user_id,account_id,type,amount,status,reference,description)
+      VALUES (?,?,?,?,?,?,?)
+    `).run(
+      userId,
+      account.id,
+      amount > 0 ? 'admin_credit' : 'admin_debit',
+      Math.abs(amount),
+      'completed',
+      reference,
+      `Administrator adjustment: ${description}`
+    );
+  })();
+
+  res.json({
+    success: true,
+    message: 'Wallet adjustment recorded.',
+    balance: newBalance,
+    reference
+  });
+});
+
+// Delete member account permanently
+app.delete('/api/admin/members/:id', requireAdmin, (req, res) => {
+  const userId = Number(req.params.id);
+
+  if (!Number.isSafeInteger(userId) || userId <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid member ID.'
+    });
+  }
+
+  if (userId === req.admin.id) {
+    return res.status(400).json({
+      success: false,
+      message: 'You cannot delete your own administrator account.'
+    });
+  }
+
+  const member = db.prepare(
+    'SELECT id,email FROM users WHERE id=?'
+  ).get(userId);
+
+  if (!member) {
+    return res.status(404).json({
+      success: false,
+      message: 'Member not found.'
+    });
+  }
+
+  // Preserve payment/financial history; do not delete accounts
+  // with recorded transactions or withdrawals.
+  const financialRecords = db.prepare(`
+    SELECT
+      (SELECT COUNT(*) FROM transactions WHERE user_id=?) +
+      (SELECT COUNT(*) FROM withdrawals WHERE user_id=?) AS total
+  `).get(userId, userId).total;
+
+  if (Number(financialRecords) > 0) {
+    return res.status(409).json({
+      success: false,
+      message: 'This member has financial records. Suspend the account instead to preserve audit history.'
+    });
+  }
+
+  db.prepare('DELETE FROM users WHERE id=?').run(userId);
+
+  res.json({
+    success: true,
+    message: 'Member account deleted.'
+  });
+});
+
+// All administrator API routes above this point.
+
 app.use((req, res) => res.status(404).json({ success: false, message: 'API endpoint not found.' }));
 app.use((err, _req, res, _next) => {
   console.error('[API error]', err.message);
