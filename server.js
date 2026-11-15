@@ -445,12 +445,19 @@ app.get('/api/admin/stats', requireAdmin, (req, res) => {
     WHERE lower(status)='pending'
   `).get().total;
 
+  const memberships = db.prepare(`
+    SELECT COUNT(*) AS total
+    FROM packages
+    WHERE lower(status)='active'
+  `).get().total;
+
   res.json({
     success: true,
     stats: {
       totalMembers: Number(members),
       activeMembers: Number(activeMembers),
       suspendedMembers: Number(suspendedMembers),
+      totalMemberships: Number(memberships),
       totalTransactions: Number(transactions),
       membershipRevenue: Number(revenue),
       pendingWithdrawals: Number(withdrawals)
@@ -715,6 +722,53 @@ app.delete('/api/admin/members/:id', requireAdmin, (req, res) => {
     success: true,
     message: 'Member account deleted.'
   });
+});
+
+// Read-only administrator summaries for sections backed by existing tables.
+app.get('/api/admin/records', requireAdmin, (req, res) => {
+  const section = String(req.query.section || '').toLowerCase();
+  const queries = {
+    opportunities: `
+      SELECT id,title,category,difficulty,status,created_at
+      FROM opportunities ORDER BY id DESC LIMIT 100
+    `,
+    packages: `
+      SELECT id,name,activation_fee,status,created_at
+      FROM packages ORDER BY activation_fee ASC
+    `,
+    payments: `
+      SELECT t.id,u.full_name AS member,t.type,t.amount,t.status,t.reference,t.created_at
+      FROM transactions t JOIN users u ON u.id=t.user_id
+      ORDER BY t.id DESC LIMIT 100
+    `,
+    withdrawals: `
+      SELECT w.id,u.full_name AS member,w.amount,w.method,w.phone,w.status,w.reference,w.created_at
+      FROM withdrawals w JOIN users u ON u.id=w.user_id
+      ORDER BY w.id DESC LIMIT 100
+    `,
+    finance: `
+      SELECT
+        (SELECT COUNT(*) FROM transactions) AS transactions,
+        (SELECT COALESCE(SUM(amount),0) FROM transactions
+          WHERE lower(status) IN ('completed','verified','paid','approved')) AS processed_transactions,
+        (SELECT COUNT(*) FROM withdrawals) AS withdrawals,
+        (SELECT COALESCE(SUM(amount),0) FROM withdrawals
+          WHERE lower(status)='pending') AS pending_withdrawal_amount
+    `,
+    revenue: `
+      SELECT type,status,COUNT(*) AS records,COALESCE(SUM(amount),0) AS amount
+      FROM transactions
+      WHERE lower(status) IN ('completed','verified','paid','approved')
+      GROUP BY type,status ORDER BY amount DESC
+    `
+  };
+
+  if (!queries[section]) {
+    return res.status(400).json({ success: false, message: 'Unsupported administrator records section.' });
+  }
+
+  res.set('Cache-Control', 'no-store');
+  res.json({ success: true, section, records: db.prepare(queries[section]).all() });
 });
 
 // All administrator API routes above this point.

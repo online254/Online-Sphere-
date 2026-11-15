@@ -1,653 +1,110 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Online Sphere | Administrator</title>
-
-<style>
-:root {
-  --gold:#d4a017;
-  --gold2:#f4d16b;
-  --bg:#fffaf0;
-  --panel:#ffffff;
-  --text:#352709;
-  --muted:#89774e;
-  --line:#eee2c3;
-  --danger:#c0392b;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;background:var(--bg);color:var(--text);
-  font-family:Inter,Arial,sans-serif
-}
-button,input,select{font:inherit}
-button{cursor:pointer}
-.hidden{display:none!important}
-#loginScreen{
-  min-height:100vh;display:grid;place-items:center;padding:20px;
-  background:linear-gradient(135deg,#fff7dc,#f4d16b,#fffaf0)
-}
-.login-card{
-  width:100%;max-width:420px;background:white;padding:35px;
-  border-radius:20px;box-shadow:0 20px 60px #80600022
-}
-.logo{
-  width:55px;height:55px;border-radius:15px;
-  background:linear-gradient(135deg,#f4d16b,#b8860b);
-  display:grid;place-items:center;color:white;font-weight:900;
-  font-size:22px;margin-bottom:18px
-}
-h1,h2,h3,p{margin-top:0}
-.login-card h1{font-size:25px}
-.login-card p{color:var(--muted)}
-label{display:block;font-size:13px;font-weight:700;margin:16px 0 7px}
-input,select{
-  width:100%;padding:12px;border:1px solid var(--line);
-  border-radius:10px;background:white;color:var(--text)
-}
-.btn{
-  border:0;border-radius:10px;padding:12px 16px;
-  background:linear-gradient(135deg,#f4d16b,#c18b08);
-  color:#382600;font-weight:800
-}
-.btn-dark{background:#3c2c08;color:#fff}
-.btn-danger{background:#b83226;color:#fff}
-.btn-outline{background:white;border:1px solid var(--line)}
-.login-card .btn{width:100%;margin-top:22px}
-#loginMessage{color:#b83226;font-size:13px;margin-top:12px}
-.layout{display:flex;min-height:100vh}
-.sidebar{
-  width:250px;background:#fff;border-right:1px solid var(--line);
-  padding:24px 15px;flex-shrink:0
-}
-.brand{display:flex;gap:12px;align-items:center;margin-bottom:30px}
-.brand .logo{margin:0;width:42px;height:42px}
-.brand strong{display:block}
-.brand small{color:var(--muted)}
-.nav{
-  display:flex;align-items:center;gap:12px;width:100%;
-  padding:13px;border:0;background:transparent;border-radius:10px;
-  color:#705b2b;text-align:left;margin:4px 0;font-weight:600
-}
-.nav.active,.nav:hover{background:#fff1c7;color:#8a6100}
-.sidebar-footer{margin-top:35px;border-top:1px solid var(--line);padding-top:15px}
-.main{flex:1;min-width:0;padding:25px}
-.topbar{
-  display:flex;justify-content:space-between;align-items:center;
-  gap:15px;flex-wrap:wrap;margin-bottom:25px
-}
-.topbar h1{font-size:25px;margin-bottom:5px}
-.muted{color:var(--muted)}
-.admin-badge{
-  display:inline-block;background:#fff1c7;color:#946700;
-  border-radius:20px;padding:7px 12px;font-size:12px;font-weight:800
-}
-.cards{
-  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:16px;margin-bottom:25px
-}
-.card{
-  background:var(--panel);border:1px solid var(--line);
-  border-radius:15px;padding:20px
-}
-.stat-label{color:var(--muted);font-size:13px}
-.stat-value{font-size:28px;font-weight:900;margin:12px 0}
-.stat-icon{font-size:24px}
-.section{display:none}
-.section.active{display:block}
-.section-title{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
-.toolbar input{max-width:320px}
-.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
-table{width:100%;border-collapse:collapse;background:white;min-width:750px}
-th,td{padding:13px;text-align:left;border-bottom:1px solid var(--line);font-size:13px}
-th{background:#fff5d7;color:#775300}
-.status{padding:5px 9px;border-radius:20px;background:#eaf8ed;color:#24733a;font-size:11px;font-weight:800}
-.status.suspended{background:#ffe8e5;color:#b83226}
-.actions{display:flex;gap:7px;flex-wrap:wrap}
-.actions button{padding:7px 9px;border-radius:7px;font-size:11px}
-.notice{padding:14px;background:#fff3ce;border-radius:10px;color:#725200}
-.quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
-.quick-grid .card{cursor:pointer}
-.quick-grid .card:hover{border-color:var(--gold)}
-.empty{padding:25px;text-align:center;color:var(--muted)}
-#toast{
-  position:fixed;bottom:20px;right:20px;padding:14px 20px;
-  background:#352709;color:white;border-radius:10px;
-  display:none;z-index:99
-}
-@media(max-width:850px){
-  .sidebar{width:75px;padding:15px 8px}
-  .brand strong,.brand small,.nav span,.sidebar-footer button span{display:none}
-  .brand{justify-content:center}
-  .nav{justify-content:center;padding:14px 5px}
-  .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .quick-grid{grid-template-columns:1fr}
-  .main{padding:17px}
-}
-@media(max-width:480px){
-  .cards{grid-template-columns:1fr}
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#071426">
+  <title>Online Sphere | Administrator</title>
+  <link rel="stylesheet" href="admin.css">
+  <script src="admin.js" defer></script>
 </head>
 <body>
+  <section id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <div class="brand-mark" aria-hidden="true">OS</div>
+      <p class="eyebrow">ONLINE SPHERE</p>
+      <h1>Administrator Login</h1>
+      <p class="login-copy">Sign in to manage platform activity and member accounts.</p>
+      <form id="loginForm" novalidate>
+        <label for="email">Administrator email</label>
+        <input id="email" name="email" type="email" value="muthinibenson7@gmail.com" autocomplete="username" required>
+        <label for="password">Administrator password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+        <button class="button button-primary button-wide" id="loginButton" type="submit">Sign in securely</button>
+        <p id="loginMessage" class="form-message" role="alert" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
 
-<!-- ADMIN LOGIN -->
-<div id="loginScreen">
-  <div class="login-card">
-    <div class="logo">OS</div>
-    <h1>Administrator Login</h1>
-    <p>Online Sphere secure administration</p>
+  <div id="adminPanel" class="admin-layout hidden">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark small" aria-hidden="true">OS</div>
+        <div><strong>ONLINE SPHERE</strong><span>Administrator</span></div>
+      </div>
+      <nav class="navigation" aria-label="Administrator sections">
+        <button class="nav-item active" data-page="overview"><span aria-hidden="true">◈</span>Overview</button>
+        <button class="nav-item" data-page="members"><span aria-hidden="true">♙</span>Members</button>
+        <button class="nav-item" data-page="opportunities"><span aria-hidden="true">◇</span>Opportunities</button>
+        <button class="nav-item" data-page="submissions"><span aria-hidden="true">▤</span>Submissions</button>
+        <button class="nav-item" data-page="memberships"><span aria-hidden="true">★</span>Memberships</button>
+        <button class="nav-item" data-page="payments"><span aria-hidden="true">▣</span>Payments</button>
+        <button class="nav-item" data-page="wallets"><span aria-hidden="true">◉</span>Wallets</button>
+        <button class="nav-item" data-page="withdrawals"><span aria-hidden="true">⇥</span>Withdrawals</button>
+        <button class="nav-item" data-page="referrals"><span aria-hidden="true">⌁</span>Referrals</button>
+        <button class="nav-item" data-page="finance"><span aria-hidden="true">₿</span>Finance</button>
+        <button class="nav-item" data-page="revenue"><span aria-hidden="true">↗</span>Revenue</button>
+        <button class="nav-item" data-page="reports"><span aria-hidden="true">▥</span>Reports</button>
+        <button class="nav-item" data-page="notifications"><span aria-hidden="true">◌</span>Notifications</button>
+        <button class="nav-item" data-page="audit-logs"><span aria-hidden="true">☷</span>Audit Logs</button>
+        <button class="nav-item" data-page="profile"><span aria-hidden="true">●</span>Profile</button>
+      </nav>
+      <button class="nav-item logout-item" id="logoutButton"><span aria-hidden="true">↪</span>Logout</button>
+    </aside>
 
-    <form id="loginForm">
-      <label for="email">Administrator Email</label>
-      <input id="email" type="email"
-        value="muthinibenson7@gmail.com" required autocomplete="username">
+    <div class="content-shell">
+      <header class="topbar">
+        <button class="menu-button" id="menuButton" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">☰</button>
+        <div>
+          <p class="eyebrow">CONTROL CENTER</p>
+          <h1 id="pageTitle">Administrator Overview</h1>
+        </div>
+        <div class="identity" id="adminIdentity">ADMINISTRATOR</div>
+      </header>
 
-      <label for="password">Administrator Password</label>
-      <input id="password" type="password"
-        required autocomplete="current-password">
+      <main class="content">
+        <div id="globalState" class="state-bar" role="status" aria-live="polite">Loading administrator data…</div>
 
-      <button class="btn" type="submit" id="loginButton">
-        Sign in securely
-      </button>
-      <div id="loginMessage"></div>
-    </form>
+        <section class="page-section active" id="overview">
+          <div class="section-heading"><div><p class="eyebrow">LIVE PLATFORM DATA</p><h2>Overview</h2></div><button class="button button-secondary" data-refresh>Refresh data</button></div>
+          <div class="stat-grid">
+            <article class="stat-card"><span class="stat-label">Total members</span><strong id="totalMembers">—</strong><small>Registered accounts</small></article>
+            <article class="stat-card"><span class="stat-label">Active members</span><strong id="activeMembers">—</strong><small>Active account status</small></article>
+            <article class="stat-card"><span class="stat-label">Suspended members</span><strong id="suspendedMembers">—</strong><small>Requires attention</small></article>
+            <article class="stat-card"><span class="stat-label">Memberships</span><strong id="totalMemberships">—</strong><small>Active packages</small></article>
+            <article class="stat-card"><span class="stat-label">Payments</span><strong id="totalPayments">—</strong><small>Recorded transactions</small></article>
+            <article class="stat-card"><span class="stat-label">Revenue</span><strong id="revenue">—</strong><small>Verified membership revenue</small></article>
+            <article class="stat-card"><span class="stat-label">Withdrawals</span><strong id="pendingWithdrawals">—</strong><small>Pending amount</small></article>
+          </div>
+          <div class="panel-grid">
+            <article class="panel"><div class="panel-heading"><h3>Administrator workspace</h3><span class="status-chip">Connected</span></div><p>Use the navigation to review live records, member accounts, finances, and platform activity. Empty states identify sections with no records rather than hiding content.</p></article>
+            <article class="panel"><div class="panel-heading"><h3>System status</h3><span class="status-chip success">Protected</span></div><p>Administrator authentication and database values are loaded from the existing backend session.</p></article>
+          </div>
+        </section>
+
+        <section class="page-section" id="members">
+          <div class="section-heading"><div><p class="eyebrow">ACCOUNT MANAGEMENT</p><h2>Members</h2></div><button class="button button-secondary" data-refresh>Refresh members</button></div>
+          <div class="toolbar"><input id="memberSearch" type="search" placeholder="Search name, email or phone"><button class="button button-primary" id="memberSearchButton">Search</button></div>
+          <div class="table-wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Package</th><th>Status</th><th>Balance</th><th>Actions</th></tr></thead><tbody id="membersBody"><tr><td colspan="7" class="empty">Loading members…</td></tr></tbody></table></div>
+        </section>
+
+        <section class="page-section" id="opportunities"><div class="section-heading"><div><p class="eyebrow">PLATFORM CONTENT</p><h2>Opportunities</h2></div></div><div class="record-panel" data-records="opportunities"><p class="empty">Loading opportunities…</p></div></section>
+        <section class="page-section" id="submissions"><div class="section-heading"><div><p class="eyebrow">MEMBER ACTIVITY</p><h2>Submissions</h2></div></div><div class="record-panel"><div class="empty-state"><strong>Submissions are not stored by the current backend.</strong><p>No records are fabricated. This section remains available for the submission API when enabled.</p></div></div></section>
+        <section class="page-section" id="memberships"><div class="section-heading"><div><p class="eyebrow">PLANS AND ACTIVATION</p><h2>Memberships</h2></div></div><div class="record-panel" data-records="packages"><p class="empty">Loading membership packages…</p></div></section>
+        <section class="page-section" id="payments"><div class="section-heading"><div><p class="eyebrow">M-PESA AND TRANSACTIONS</p><h2>Payments</h2></div></div><div class="record-panel" data-records="payments"><p class="empty">Loading payments…</p></div></section>
+        <section class="page-section" id="wallets"><div class="section-heading"><div><p class="eyebrow">MEMBER BALANCES</p><h2>Wallets</h2></div></div><div class="record-panel"><div class="empty-state"><strong>Wallet balances are managed in Members.</strong><p>Open Members to inspect balances and use the audited adjustment action.</p><button class="button button-secondary" data-go="members">Open Members</button></div></div></section>
+        <section class="page-section" id="withdrawals"><div class="section-heading"><div><p class="eyebrow">PAYOUT REVIEW</p><h2>Withdrawals</h2></div></div><div class="record-panel" data-records="withdrawals"><p class="empty">Loading withdrawals…</p></div></section>
+        <section class="page-section" id="referrals"><div class="section-heading"><div><p class="eyebrow">GROWTH</p><h2>Referrals</h2></div></div><div class="record-panel"><div class="empty-state"><strong>Referral administration is not exposed by the current backend.</strong><p>The section is visible and ready without presenting fake referral values.</p></div></div></section>
+        <section class="page-section" id="finance"><div class="section-heading"><div><p class="eyebrow">FINANCIAL CONTROL</p><h2>Finance</h2></div></div><div class="record-panel" data-records="finance"><p class="empty">Loading finance summary…</p></div></section>
+        <section class="page-section" id="revenue"><div class="section-heading"><div><p class="eyebrow">VERIFIED INCOME</p><h2>Revenue</h2></div></div><div class="record-panel" data-records="revenue"><p class="empty">Loading revenue summary…</p></div></section>
+        <section class="page-section" id="reports"><div class="section-heading"><div><p class="eyebrow">REPORTING</p><h2>Reports</h2></div></div><div class="report-grid"><article class="report-card"><span>Total members</span><strong id="reportMembers">—</strong></article><article class="report-card"><span>Active members</span><strong id="reportActive">—</strong></article><article class="report-card"><span>Verified revenue</span><strong id="reportRevenue">—</strong></article></div></section>
+        <section class="page-section" id="notifications"><div class="section-heading"><div><p class="eyebrow">SYSTEM MESSAGES</p><h2>Notifications</h2></div></div><div class="record-panel"><div class="empty-state"><strong>No administrator notifications.</strong><p>New backend notifications will appear here when generated.</p></div></div></section>
+        <section class="page-section" id="audit-logs"><div class="section-heading"><div><p class="eyebrow">ACCOUNTABILITY</p><h2>Audit Logs</h2></div></div><div class="record-panel"><div class="empty-state"><strong>Audited wallet actions are preserved in transactions.</strong><p>Dedicated administrator audit-log storage is not present in the current schema.</p></div></div></section>
+        <section class="page-section" id="profile"><div class="section-heading"><div><p class="eyebrow">ACCESS IDENTITY</p><h2>Profile</h2></div></div><div class="profile-card"><span class="profile-avatar">OS</span><div><h3 id="profileEmail">Administrator</h3><p>Authorized administrator account</p></div></div></section>
+      </main>
+    </div>
   </div>
-</div>
-
-<!-- ADMIN PANEL -->
-<div id="adminPanel" class="layout hidden">
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="logo">OS</div>
-      <div><strong>ONLINE SPHERE</strong><small>Administrator</small></div>
-    </div>
-
-    <button class="nav active" data-page="overview">📊 <span>Overview</span></button>
-    <button class="nav" data-page="members">👥 <span>Members</span></button>
-    <button class="nav" data-page="transactions">💳 <span>Transactions</span></button>
-    <button class="nav" data-page="withdrawals">💸 <span>Withdrawals</span></button>
-    <button class="nav" data-page="membership">🏆 <span>Membership</span></button>
-    <button class="nav" data-page="reports">📈 <span>Reports</span></button>
-
-    <div class="sidebar-footer">
-      <button class="nav" id="logoutButton">🚪 <span>Logout</span></button>
-    </div>
-  </aside>
-
-  <main class="main">
-    <header class="topbar">
-      <div>
-        <h1 id="pageTitle">Administrator Overview</h1>
-        <div class="muted">Manage Online Sphere platform</div>
-      </div>
-      <div class="admin-badge" id="adminIdentity">ADMINISTRATOR</div>
-    </header>
-
-    <!-- OVERVIEW -->
-    <section class="section active" id="overview">
-      <div class="cards">
-        <div class="card">
-          <div class="stat-label">Total Members</div>
-          <div class="stat-value" id="totalMembers">—</div>
-          <div class="stat-icon">👥</div>
-        </div>
-        <div class="card">
-          <div class="stat-label">Active Members</div>
-          <div class="stat-value" id="activeMembers">—</div>
-          <div class="stat-icon">🟢</div>
-        </div>
-        <div class="card">
-          <div class="stat-label">Suspended Members</div>
-          <div class="stat-value" id="suspendedMembers">—</div>
-          <div class="stat-icon">⛔</div>
-        </div>
-        <div class="card">
-          <div class="stat-label">Transactions</div>
-          <div class="stat-value" id="totalTransactions">—</div>
-          <div class="stat-icon">💳</div>
-        </div>
-        <div class="card">
-          <div class="stat-label">Membership Revenue</div>
-          <div class="stat-value" id="revenue">—</div>
-          <div class="stat-icon">💰</div>
-        </div>
-        <div class="card">
-          <div class="stat-label">Pending Withdrawals</div>
-          <div class="stat-value" id="pendingWithdrawals">—</div>
-          <div class="stat-icon">⏳</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>Quick Administration</h3>
-        <div class="quick-grid">
-          <div class="card" onclick="navigate('members')">
-            <h3>👥 Members</h3>
-            <p class="muted">Search, suspend, reactivate and manage accounts.</p>
-          </div>
-          <div class="card" onclick="navigate('transactions')">
-            <h3>💳 Transactions</h3>
-            <p class="muted">Review member financial activity.</p>
-          </div>
-          <div class="card" onclick="navigate('reports')">
-            <h3>📈 Reports</h3>
-            <p class="muted">Review platform statistics.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- MEMBERS -->
-    <section class="section" id="members">
-      <div class="section-title">
-        <h2>Member Management</h2>
-        <button class="btn" onclick="loadMembers()">Refresh</button>
-      </div>
-      <div class="toolbar">
-        <input id="memberSearch" placeholder="Search name, email or phone">
-        <button class="btn" onclick="loadMembers()">Search</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th><th>Name</th><th>Email</th><th>Package</th>
-              <th>Status</th><th>Balance</th><th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="membersBody">
-            <tr><td colspan="7" class="empty">Load members to begin.</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- TRANSACTIONS -->
-    <section class="section" id="transactions">
-      <h2>Transactions</h2>
-      <div class="notice">
-        Member transactions are available from the member details API.
-        Select a member in Member Management to inspect their financial history.
-      </div>
-    </section>
-
-    <!-- WITHDRAWALS -->
-    <section class="section" id="withdrawals">
-      <h2>Withdrawals</h2>
-      <div class="notice">
-        Withdrawal review requires a withdrawal management API.
-        No withdrawal is automatically approved from this page.
-      </div>
-    </section>
-
-    <!-- MEMBERSHIP -->
-    <section class="section" id="membership">
-      <h2>Membership Management</h2>
-      <div class="cards">
-        <div class="card"><h3>Bronze</h3><strong>KSh 1,000</strong></div>
-        <div class="card"><h3>Silver</h3><strong>KSh 1,750</strong></div>
-        <div class="card"><h3>Gold</h3><strong>KSh 2,500</strong></div>
-      </div>
-      <div class="notice">Membership activation must continue to depend on verified M-Pesa callbacks.</div>
-    </section>
-
-    <!-- REPORTS -->
-    <section class="section" id="reports">
-      <h2>Platform Reports</h2>
-      <div class="card">
-        <p>Total members: <strong id="reportMembers">—</strong></p>
-        <p>Active members: <strong id="reportActive">—</strong></p>
-        <p>Membership revenue: <strong id="reportRevenue">—</strong></p>
-      </div>
-    </section>
-  </main>
-</div>
-
-<div id="toast"></div>
-
-<script>
-const API = 'https://online-sphere-backend.onrender.com/api/admin';
-const TOKEN_KEY = 'onlineSphereAdminToken';
-
-let adminToken = sessionStorage.getItem(TOKEN_KEY) || '';
-
-function authHeaders(){
-  return {
-    'Content-Type':'application/json',
-    'Authorization':'Bearer '+adminToken
-  };
-}
-
-async function api(path, options={}){
-  const response = await fetch(API+path,{
-    ...options,
-    headers:{...authHeaders(),...(options.headers||{})}
-  });
-
-  const data = await response.json().catch(()=>({}));
-
-  if(response.status===401){
-    logout(false);
-    throw new Error(data.message||'Admin session expired.');
-  }
-  if(!response.ok) throw new Error(data.message||'Request failed.');
-  return data;
-}
-
-function money(value){
-  return 'KSh '+Number(value||0).toLocaleString('en-KE');
-}
-
-function toast(message){
-  const el=document.getElementById('toast');
-  el.textContent=message;
-  el.style.display='block';
-  setTimeout(()=>el.style.display='none',3500);
-}
-
-function showLogin(message=''){
-  document.getElementById('loginScreen').classList.remove('hidden');
-  document.getElementById('adminPanel').classList.add('hidden');
-  document.getElementById('loginMessage').textContent=message;
-}
-
-function showAdmin(){
-  document.getElementById('loginScreen').classList.add('hidden');
-  document.getElementById('adminPanel').classList.remove('hidden');
-}
-
-document.getElementById('loginForm').addEventListener('submit',async e=>{
-  e.preventDefault();
-
-  const button=document.getElementById('loginButton');
-  const message=document.getElementById('loginMessage');
-  button.disabled=true;
-  button.textContent='Authenticating...';
-  message.textContent='';
-
-  try{
-    const response=await fetch(API+'/login',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        email:document.getElementById('email').value.trim(),
-        password:document.getElementById('password').value
-      })
-    });
-
-    const data=await response.json();
-
-    if(!response.ok||!data.success) throw new Error(data.message||'Login failed.');
-
-    adminToken=data.token;
-    sessionStorage.setItem(TOKEN_KEY,adminToken);
-
-    await verifyAdmin();
-    toast('Administrator authenticated.');
-  }catch(error){
-    adminToken='';
-    sessionStorage.removeItem(TOKEN_KEY);
-    message.textContent=error.message;
-  }finally{
-    button.disabled=false;
-    button.textContent='Sign in securely';
-  }
-});
-
-async function verifyAdmin(){
-  const data=await api('/me');
-  if(!data.isAdmin) throw new Error('Administrator access denied.');
-
-  document.getElementById('adminIdentity').textContent=
-    data.admin.email;
-
-  showAdmin();
-  await loadStats();
-}
-
-async function loadStats(){
-  const data=await api('/stats');
-  const s=data.stats||{};
-
-  document.getElementById('totalMembers').textContent=s.totalMembers??0;
-  document.getElementById('activeMembers').textContent=s.activeMembers??0;
-  document.getElementById('suspendedMembers').textContent=s.suspendedMembers??0;
-  document.getElementById('totalTransactions').textContent=s.totalTransactions??0;
-  document.getElementById('revenue').textContent=money(s.membershipRevenue);
-  document.getElementById('pendingWithdrawals').textContent=money(s.pendingWithdrawals);
-
-  document.getElementById('reportMembers').textContent=s.totalMembers??0;
-  document.getElementById('reportActive').textContent=s.activeMembers??0;
-  document.getElementById('reportRevenue').textContent=money(s.membershipRevenue);
-}
-
-async function loadMembers(){
-  const body=document.getElementById('membersBody');
-  body.innerHTML='<tr><td colspan="7">Loading members...</td></tr>';
-
-  try{
-    const search=encodeURIComponent(document.getElementById('memberSearch').value.trim());
-    const data=await api('/members?limit=100&search='+search);
-
-    body.innerHTML='';
-
-    if(!data.members?.length){
-      body.innerHTML='<tr><td colspan="7" class="empty">No members found.</td></tr>';
-      return;
-    }
-
-    data.members.forEach(m=>{
-      const tr=document.createElement('tr');
-
-      const status=String(m.account_status||'inactive').toLowerCase();
-      const suspended=status==='suspended';
-
-      tr.innerHTML=`
-        <td>${m.id}</td>
-        <td>${escapeHTML(m.full_name)}</td>
-        <td>${escapeHTML(m.email)}</td>
-        <td>${escapeHTML(m.package||'—')}</td>
-        <td><span class="status ${suspended?'suspended':''}">
-          ${escapeHTML(status)}</span></td>
-        <td>${money(m.balance)}</td>
-        <td><div class="actions">
-          <button class="btn-outline" data-action="status">
-            ${suspended?'Reactivate':'Suspend'}
-          </button>
-          <button class="btn-outline" data-action="balance">Balance</button>
-          <button class="btn-outline" data-action="details">Details</button>
-          <button class="btn-danger" data-action="delete">Delete</button>
-        </div></td>`;
-
-      tr.querySelector('[data-action=status]').onclick=()=>changeStatus(m.id,suspended?'active':'suspended');
-      tr.querySelector('[data-action=balance]').onclick=()=>adjustBalance(m.id);
-      tr.querySelector('[data-action=details]').onclick=()=>memberDetails(m.id);
-      tr.querySelector('[data-action=delete]').onclick=()=>deleteMember(m.id);
-
-      body.appendChild(tr);
-    });
-  }catch(error){
-    body.innerHTML='<tr><td colspan="7">'+escapeHTML(error.message)+'</td></tr>';
-  }
-}
-
-function escapeHTML(value){
-  return String(value??'').replace(/[&<>"']/g,c=>({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-  }[c]));
-}
-
-async function changeStatus(id,status){
-  if(!confirm('Change member '+id+' status to '+status+'?'))return;
-  try{
-    await api('/members/'+id+'/status',{
-      method:'PATCH',
-      body:JSON.stringify({status})
-    });
-    toast('Member status updated.');
-    await loadMembers();
-    await loadStats();
-  }catch(error){alert(error.message);}
-}
-
-async function adjustBalance(id){
-  const amount=prompt('Enter adjustment amount. Example: 500 or -200');
-  if(amount===null)return;
-
-  const number=Number(amount);
-  if(!Number.isSafeInteger(number)||number===0){
-    alert('Enter a valid non-zero whole-number amount.');
-    return;
-  }
-
-  const description=prompt('Reason for this wallet adjustment:');
-  if(!description)return;
-
-  if(!confirm('Record '+money(number)+' adjustment for member '+id+'?'))return;
-
-  try{
-    await api('/members/'+id+'/balance',{
-      method:'POST',
-      body:JSON.stringify({amount:number,description})
-    });
-    toast('Wallet adjustment recorded.');
-    await loadMembers();
-    await loadStats();
-  }catch(error){alert(error.message);}
-}
-
-async function memberDetails(id){
-  try{
-    const data=await api('/members/'+id);
-    const m=data.member;
-    alert(
-      'MEMBER DETAILS\\n\\n'+
-      'Name: '+m.full_name+'\\n'+
-      'Email: '+m.email+'\\n'+
-      'Phone: '+(m.phone||'—')+'\\n'+
-      'Package: '+(m.package||'—')+'\\n'+
-      'Status: '+m.account_status+'\\n'+
-      'Balance: '+money(m.balance)+'\\n'+
-      'Transactions: '+(data.transactions?.length||0)
-    );
-  }catch(error){alert(error.message);}
-}
-
-async function deleteMember(id){
-  if(!confirm('PERMANENTLY delete member '+id+'?'))return;
-  if(!confirm('Final confirmation: this cannot be undone.'))return;
-
-  try{
-    await api('/members/'+id,{method:'DELETE'});
-    toast('Member deleted.');
-    await loadMembers();
-    await loadStats();
-  }catch(error){alert(error.message);}
-}
-
-function navigate(page){
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.nav[data-page]').forEach(n=>n.classList.remove('active'));
-
-  document.getElementById(page)?.classList.add('active');
-  document.querySelector('.nav[data-page="'+page+'"]')?.classList.add('active');
-
-  const titles={
-    overview:'Administrator Overview',
-    members:'Member Management',
-    transactions:'Transactions',
-    withdrawals:'Withdrawals',
-    membership:'Membership Management',
-    reports:'Platform Reports'
-  };
-
-  document.getElementById('pageTitle').textContent=titles[page]||'Administrator';
-
-  if(page==='members')loadMembers();
-  if(page==='overview')loadStats();
-}
-
-document.querySelectorAll('.nav[data-page]').forEach(n=>{
-  n.addEventListener('click',()=>navigate(n.dataset.page));
-});
-
-async function logout(callServer=true){
-  const token=adminToken;
-  adminToken='';
-  sessionStorage.removeItem(TOKEN_KEY);
-  showLogin('You have been logged out.');
-
-  if(callServer&&token){
-    fetch(API+'/logout',{
-      method:'POST',
-      headers:{Authorization:'Bearer '+token}
-    }).catch(()=>{});
-  }
-}
-
-document.getElementById('logoutButton').onclick=()=>logout();
-
-(async()=>{
-  if(!adminToken){
-    showLogin();
-    return;
-  }
-  try{
-    await verifyAdmin();
-  }catch(error){
-    logout(false);
-    showLogin(error.message);
-  }
-})();
-</script>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </body>
 </html>
-
-/* ADMIN LOGIN CONTRAST FIX */
-#loginScreen .login-card{
-  color:#352709!important;
-  background:#ffffff!important;
-}
-
-#loginScreen .login-card h1{
-  color:#241800!important;
-  font-weight:900!important;
-  opacity:1!important;
-}
-
-#loginScreen .login-card p{
-  color:#75602d!important;
-  opacity:1!important;
-}
-
-#loginScreen .login-card label{
-  color:#49340a!important;
-  font-weight:800!important;
-  opacity:1!important;
-}
-
-#loginScreen .login-card input{
-  color:#241800!important;
-  background:#fff!important;
-  border:2px solid #e8d5a4!important;
-  font-size:16px!important;
-  opacity:1!important;
-}
-
-#loginScreen .login-card input::placeholder{
-  color:#8a7953!important;
-}
-
-#loginScreen .login-card button{
-  color:#382600!important;
-  font-weight:900!important;
-}
-
-#loginScreen #loginMessage{
-  color:#a32121!important;
-  font-weight:700!important;
-  opacity:1!important;
-}
