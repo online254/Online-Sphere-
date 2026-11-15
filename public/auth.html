@@ -79,13 +79,13 @@
     document.getElementById('phone').required = registering;
     document.getElementById('confirmationField').hidden = !registering;
     document.getElementById('passwordConfirmation').required = registering;
-    password.required = !resetMode;
+    password.required = true;
     document.getElementById('otpField').hidden = true;
     document.getElementById('forgotButton').hidden = registering;
     identifier.hidden = registering;
     document.getElementById('title').textContent = registering ? 'Create your account' : 'Welcome back';
     document.getElementById('subtitle').textContent = registering ? 'Create an account to start using Online Sphere.' : 'Sign in to continue to your dashboard.';
-    document.getElementById('passwordLabel').textContent = registering ? 'Password' : 'Password (optional)';
+    document.getElementById('passwordLabel').textContent = 'Password';
     button.textContent = registering ? 'Create account' : 'Sign in';
     password.autocomplete = registering ? 'new-password' : 'current-password';
     document.getElementById('switchText').innerHTML = registering ? 'Already a member? <button id="switchButton" type="button">Sign in</button>' : 'New to Online Sphere? <button id="switchButton" type="button">Create an account</button>';
@@ -125,7 +125,7 @@
         await api('/api/auth/password-reset', { password: password.value, passwordConfirmation: document.getElementById('passwordConfirmation').value });
         resetMode = false; setMode('login'); notify('Password updated. Sign in with your new password.'); return;
       }
-      button.textContent = mode === 'register' ? 'Sending code…' : 'Sending code…';
+      button.textContent = mode === 'register' ? 'Creating account…' : 'Signing in…';
       const body = { channel, identifier: identifier.value.trim(), password: password.value };
       if (mode === 'register') {
       body.fullName = document.getElementById('fullName').value.trim();
@@ -136,7 +136,8 @@
       if (ref) body.ref = ref;
       }
       const result = await api(`/api/auth/${mode === 'register' ? 'register' : 'login'}`, body);
-      challengeId = result.challengeId; step = 'otp'; document.getElementById('otp').required = true; document.getElementById('otpField').hidden = false; button.textContent = 'Verify code'; notify(result.message);
+      notify(result.message);
+      window.location.replace('dashboard.html');
     } catch (error) {
       notify(error.message || 'Unable to reach the account service. Please try again.', 'error');
     } finally {

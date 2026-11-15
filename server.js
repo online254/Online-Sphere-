@@ -224,7 +224,7 @@ app.get('/', (_req, res) => res.json({ success: true, service: 'Online Sphere Ba
 app.get('/health', (_req, res) => res.json({ success: true, service: 'Online Sphere Backend', status: 'ready', database: 'connected' }));
 app.get('/api/packages', (_req, res) => res.json({ success: true, currency: 'KES', packages: Object.entries(PACKAGES).map(([name, price]) => ({ name, price })) }));
 
-// Registration and login use server-side OTP challenges and expiring HTTP-only cookies.
+// Registration and login use password authentication and expiring HTTP-only cookies.
 app.post('/api/auth/register', assertSameOrigin, async (req, res, next) => {
   try {
     const fullName = String(req.body?.fullName || '').trim().replace(/\s+/g, ' ');
@@ -233,7 +233,6 @@ app.post('/api/auth/register', assertSameOrigin, async (req, res, next) => {
     const password = typeof req.body?.password === 'string' ? req.body.password : '';
     const passwordConfirmation = typeof req.body?.passwordConfirmation === 'string' ? req.body.passwordConfirmation : '';
     const referralCode = String(req.body?.ref || req.body?.referralCode || '').trim();
-    const channel = normalizeChannel(req.body?.channel) || 'email';
     if (fullName.length < 2 || fullName.length > 100) return res.status(400).json({ success: false, message: 'Enter your full name (2–100 characters).' });
     if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ success: false, message: 'Enter a valid email address.' });
     if (!phone) return res.status(400).json({ success: false, message: 'Enter a valid Kenyan mobile number.' });
@@ -241,12 +240,11 @@ app.post('/api/auth/register', assertSameOrigin, async (req, res, next) => {
     if (password !== passwordConfirmation) return res.status(400).json({ success: false, message: 'Passwords do not match.' });
     const duplicate = db.prepare('SELECT email, phone FROM users WHERE lower(email)=? OR phone=? LIMIT 1').get(email, phone);
     if (duplicate) return res.status(409).json({ success: false, message: duplicate.email.toLowerCase() === email ? 'An account with this email already exists. Sign in instead.' : 'An account with this phone number already exists.' });
-    db.prepare('DELETE FROM pending_registrations WHERE email=? OR phone=?').run(email, phone);
     const passwordHash = await hashPassword(password);
-    const pendingId = crypto.randomUUID();
-    db.prepare('INSERT INTO pending_registrations (id,full_name,email,phone,password_hash,referral_code,expires_at) VALUES (?,?,?,?,?,?,?)').run(pendingId, fullName, email, phone, passwordHash, referralCode || null, new Date(Date.now() + 15 * 60000).toISOString());
-    const challengeId = await createChallenge({ purpose: 'registration', channel, destination: requestDestination(channel, email, phone), requestIp: req.ip });
-    return res.status(202).json({ success: true, challengeId, channel, message: `Verification code sent to your ${channel}.` });
+    const userId = createUserAccount({ fullName, email, phone, passwordHash, referralCode });
+    setSessionCookie(res, issueSession(userId));
+    audit('registration_completed', { userId });
+    return res.status(201).json({ success: true, message: 'Account created. Welcome to Online Sphere.' });
   } catch (error) {
     if (error.status) return res.status(error.status).json({ success: false, message: error.message });
     if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') return res.status(409).json({ success: false, message: 'An account with these details already exists.' });
@@ -264,9 +262,10 @@ app.post('/api/auth/login', assertSameOrigin, async (req, res, next) => {
     const user = channel === 'email'
       ? db.prepare('SELECT id,full_name,email,phone,password_hash FROM users WHERE lower(email)=? LIMIT 1').get(email)
       : db.prepare('SELECT id,full_name,email,phone,password_hash FROM users WHERE phone=? LIMIT 1').get(phone);
-    if (!user || (password && !(await verifyPassword(password, user.password_hash)))) return res.status(401).json({ success: false, message: 'The login details are incorrect.' });
-    const challengeId = await createChallenge({ userId: user.id, purpose: 'login', channel, destination: requestDestination(channel, user.email, user.phone), requestIp: req.ip });
-    return res.status(202).json({ success: true, challengeId, channel, message: `Verification code sent to your ${channel}.` });
+    if (!user || !password || !(await verifyPassword(password, user.password_hash))) return res.status(401).json({ success: false, message: 'The login details are incorrect.' });
+    setSessionCookie(res, issueSession(user.id));
+    audit('login_completed', { userId: user.id, channel });
+    return res.json({ success: true, message: 'Signed in successfully.' });
   } catch (error) {
     if (error.status) return res.status(error.status).json({ success: false, message: error.message });
     next(error);
