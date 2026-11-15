@@ -414,45 +414,6 @@ db.prepare(`
   WHERE datetime(expires_at)<=datetime('now')
 `).run();
 
-
-function requireAdmin(req, res, next) {
-  try {
-    const member = findSession(req);
-
-    if (!member) {
-      return res.status(401).json({
-        success: false,
-        message: 'Please sign in first.'
-      });
-    }
-
-    if (normalizeEmail(member.email) !== ADMIN_EMAIL) {
-      return res.status(403).json({
-        success: false,
-        message: 'Administrator access denied.'
-      });
-    }
-
-    req.admin = member;
-    next();
-  } catch (error) {
-    next(error);
-  }
-}
-
-// Verify administrator access
-app.get('/api/admin/me', requireAdmin, (req, res) => {
-  res.json({
-    success: true,
-    isAdmin: true,
-    admin: {
-      id: req.admin.id,
-      name: req.admin.full_name,
-      email: req.admin.email
-    }
-  });
-});
-
 // Administrator dashboard statistics
 app.get('/api/admin/stats', requireAdmin, (req, res) => {
   const members = db.prepare(
