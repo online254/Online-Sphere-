@@ -1,4 +1,4 @@
-/* Member dashboard entry. Uses backend-verified data only and respects legacy and session token names. */
+/* Member dashboard entry. Uses backend-verified data only and an HTTP-only session cookie. */
 (() => {
   'use strict';
   const API_BASE = String(window.ONLINE_SPHERE_API_URL || 'https://online-sphere-backend.onrender.com').replace(/\/$/, '');
@@ -6,12 +6,6 @@
   const statusBox = $('#loadState');
   const statusMessage = $('#loadMessage');
 
-  function readToken() {
-    try { return sessionStorage.getItem('onlineSphereSession') || localStorage.getItem('onlineSphereToken') || ''; }
-    catch (_) { return ''; }
-  }
-
-  const token = readToken();
   const money = (value, currency = 'KES') => {
     if (value === null || value === undefined || !Number.isFinite(Number(value))) return '—';
     try { return new Intl.NumberFormat('en-KE', { style: 'currency', currency, maximumFractionDigits: 2 }).format(Number(value)); }
@@ -43,10 +37,10 @@
 
   async function checkAdminAccess() {
     const tab = $('#adminDashboardTab');
-    if (!tab || !token) return;
+    if (!tab) return;
     try {
       const response = await fetch(`${API_BASE}/api/admin/access`, {
-        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+        headers: { Accept: 'application/json' },
         credentials: 'include', cache: 'no-store'
       });
       if (response.ok) tab.hidden = false;
@@ -126,24 +120,16 @@
   }
 
   async function loadDashboard() {
-    if (!token) {
-      setStatus('Sign in to continue. Redirecting to secure account access…');
-      setTimeout(() => window.location.replace('auth.html'), 700);
-      return;
-    }
-
     try {
-      const headers = { Authorization: `Bearer ${token}`, Accept: 'application/json' };
       const [dashboardResponse, identityResponse] = await Promise.all([
-        fetch(`${API_BASE}/api/me/dashboard`, { headers, credentials: 'include', cache: 'no-store' }),
-        fetch(`${API_BASE}/api/auth/me`, { headers, credentials: 'include', cache: 'no-store' })
+        fetch(`${API_BASE}/api/me/dashboard`, { headers: { Accept: 'application/json' }, credentials: 'include', cache: 'no-store' }),
+        fetch(`${API_BASE}/api/auth/me`, { headers: { Accept: 'application/json' }, credentials: 'include', cache: 'no-store' })
       ]);
       const [dashboardResult, identityResult] = await Promise.all([
         dashboardResponse.json().catch(() => ({})), identityResponse.json().catch(() => ({}))
       ]);
 
       if ([dashboardResponse.status, identityResponse.status].includes(401) || [dashboardResponse.status, identityResponse.status].includes(403)) {
-        try { sessionStorage.removeItem('onlineSphereSession'); localStorage.removeItem('onlineSphereToken'); } catch (_) {}
         setStatus('Your session expired. Redirecting to sign in…');
         setTimeout(() => window.location.replace('auth.html'), 700);
         return;
@@ -187,8 +173,7 @@
     }
   });
   $('#signOutButton')?.addEventListener('click', async () => {
-    try { await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, credentials: 'include' }); } catch (_) {}
-    try { sessionStorage.removeItem('onlineSphereSession'); localStorage.removeItem('onlineSphereToken'); } catch (_) {}
+    try { await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', credentials: 'include' }); } catch (_) {}
     window.location.replace('auth.html');
   });
 
