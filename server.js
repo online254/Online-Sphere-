@@ -57,7 +57,8 @@ function findSession(req) {
   const token = bearer || req.get('x-online-sphere-session');
   if (!token || token.length > 512) return null;
   return db.prepare(`SELECT u.id, u.full_name, u.email, u.phone, u.created_at, u.referral_code,
-      a.id AS account_id, a.package, a.status AS account_status, a.currency, a.account_number
+      a.id AS account_id, a.package, a.status AS account_status, a.currency, a.account_number,
+      a.balance, a.total_earned, a.total_withdrawn, a.pending_withdrawal
     FROM sessions s JOIN users u ON u.id=s.user_id
     LEFT JOIN accounts a ON a.user_id=u.id
     WHERE s.token_hash=? AND datetime(s.expires_at)>datetime('now') LIMIT 1`).get(sha256(token)) || null;
@@ -141,11 +142,15 @@ app.get('/api/me/dashboard', requireSession, (req, res) => {
   const pending = db.prepare(`SELECT COALESCE(SUM(amount),0) AS total FROM transactions WHERE user_id=? AND lower(status)='pending'`).get(member.id).total;
   const membershipActive = String(member.account_status || '').toLowerCase() === 'active';
   const referralCount = db.prepare('SELECT COUNT(*) AS count FROM users WHERE referred_by_user_id=?').get(member.id).count;
+  const accountBalance = Number(member.balance || 0);
+  const totalEarned = Number(member.total_earned || 0) || sumTypes(['earning', 'task_earning', 'commission']);
+  const totalWithdrawn = Number(member.total_withdrawn || 0) || sumTypes(['withdrawal']);
+  const pendingWithdrawal = Number(member.pending_withdrawal || 0);
   res.json({ success: true, dashboard: {
     user: { id: member.id, fullName: member.full_name, email: member.email, phone: member.phone, createdAt: member.created_at, status: member.account_status },
     membership: { name: member.package, package: member.package, status: member.account_status, active: membershipActive },
-    wallet: { currency: member.currency || 'KES', walletBalance: sumTypes(['deposit','earning','task_earning','commission','transfer_in']) - sumTypes(['withdrawal','transfer_out']), availableBalance: sumTypes(['deposit','earning','task_earning','commission','transfer_in']) - sumTypes(['withdrawal','transfer_out']), pendingBalance: Number(pending), totalDeposited: sumTypes(['deposit','membership_payment']), totalWithdrawn: sumTypes(['withdrawal']), totalEarnings: sumTypes(['earning','task_earning','commission']) },
-    statistics: { transactionCount: Number(txCount), totalDeposited: sumTypes(['deposit','membership_payment']), totalWithdrawn: sumTypes(['withdrawal']), todayEarnings: sumTypes(['earning','task_earning','commission']) },
+    wallet: { currency: member.currency || 'KES', walletBalance: accountBalance, availableBalance: Math.max(0, accountBalance - pendingWithdrawal), pendingBalance: Number(pending), totalDeposited: sumTypes(['deposit','membership_payment']), totalWithdrawn, totalEarnings: totalEarned },
+    statistics: { transactionCount: Number(txCount), totalDeposited: sumTypes(['deposit','membership_payment']), totalWithdrawn, todayEarnings: totalEarned },
     referrals: { sponsorName: null, joinedCount: Number(referralCount), verifiedCount: Number(referralCount), url: member.referral_code ? `${process.env.PUBLIC_SITE_URL || 'https://onlinespherecommercecompany.com'}/register?ref=${encodeURIComponent(member.referral_code)}` : null, pendingCommissions: 0, paidCommissions: 0 }
   } });
 });
