@@ -14,7 +14,6 @@
     <a class="brand" href="../index.html"><span class="mark">◎</span><span>ONLINE <b>SPHERE</b></span></a>
     <div class="tabs" role="tablist" aria-label="Account access"><button id="loginTab" class="active" type="button" role="tab" aria-selected="true">Sign in</button><button id="registerTab" type="button" role="tab" aria-selected="false">Create account</button></div>
     <h1 id="title">Welcome back</h1><p id="subtitle">Sign in to continue to your dashboard.</p>
-    <div class="tabs" id="channelTabs" role="tablist" aria-label="Verification method"><button id="emailChannel" class="active" type="button">Email</button><button id="phoneChannel" type="button">Phone</button></div>
     <form id="authForm" novalidate>
       <div class="field" id="nameField" hidden><label for="fullName">Full name</label><input id="fullName" autocomplete="name" minlength="2"></div>
       <div class="field"><label id="identifierLabel" for="identifier">Email address</label><input id="identifier" type="email" autocomplete="email" required></div>
@@ -22,11 +21,10 @@
       <div class="field" id="phoneField" hidden><label for="phone">Phone number</label><input id="phone" type="tel" autocomplete="tel"></div>
       <div class="field"><label id="passwordLabel" for="password">Password</label><input id="password" type="password" minlength="8" autocomplete="current-password"></div>
       <div class="field" id="confirmationField" hidden><label for="passwordConfirmation">Confirm password</label><input id="passwordConfirmation" type="password" minlength="8" autocomplete="new-password"></div>
-      <div class="field" id="otpField" hidden><label for="otp">Six-digit verification code</label><input id="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}"></div>
-      <button class="submit" id="submitButton" type="submit">Sign in</button><button class="switch" id="forgotButton" type="button">Forgot password?</button><div class="notice" id="notice" role="status" aria-live="polite"></div>
+      <button class="submit" id="submitButton" type="submit">Sign in</button><div class="notice" id="notice" role="status" aria-live="polite"></div>
     </form>
     <p class="switch" id="switchText">New to Online Sphere? <button id="switchButton" type="button">Create an account</button></p>
-    <div class="security">Protect your password and verification codes. Never share your M-Pesa PIN. Registration and sign-in lead directly to the member dashboard.</div>
+    <div class="security">Use your email and password to access your account. Never share your password or M-Pesa PIN.</div>
   </main>
 <script>
 (() => {
@@ -36,12 +34,8 @@
   const notice = document.getElementById('notice');
   const button = document.getElementById('submitButton');
   const password = document.getElementById('password');
-  const channelTabs = document.getElementById('channelTabs');
   const identifier = document.getElementById('identifier');
-  let channel = 'email';
-  let step = 'details';
-  let challengeId = '';
-  let resetMode = false;
+  const channel = 'email';
   let mode = new URLSearchParams(location.search).get('mode') === 'register' ? 'register' : 'login';
   const notify = (message, type = 'info') => { notice.textContent = message; notice.className = `notice show ${type}`; };
   const api = async (path, body) => {
@@ -50,27 +44,15 @@
     if (!response.ok) throw new Error(result.message || 'The account service is temporarily unavailable.');
     return result;
   };
-  function setChannel(next) {
-    channel = next;
-    const phone = channel === 'phone';
-    document.getElementById('emailChannel').classList.toggle('active', !phone);
-    document.getElementById('phoneChannel').classList.toggle('active', phone);
-    identifier.type = phone ? 'tel' : 'email';
-    identifier.autocomplete = phone ? 'tel' : 'email';
-    identifier.placeholder = phone ? '07XXXXXXXX or 2547XXXXXXXX' : 'you@example.com';
-    document.getElementById('identifierLabel').textContent = phone ? 'Phone number' : 'Email address';
-  }
   const wireSwitch = () => document.getElementById('switchButton').addEventListener('click', () => setMode(mode === 'login' ? 'register' : 'login'));
   function setMode(next) {
     mode = next;
-    resetMode = false; step = 'details'; challengeId = '';
     const registering = mode === 'register';
     document.getElementById('loginTab').classList.toggle('active', !registering);
     document.getElementById('registerTab').classList.toggle('active', registering);
     document.getElementById('loginTab').setAttribute('aria-selected', String(!registering));
     document.getElementById('registerTab').setAttribute('aria-selected', String(registering));
     document.getElementById('nameField').hidden = !registering;
-    channelTabs.hidden = false;
     document.getElementById('phoneField').hidden = !registering;
     document.getElementById('emailField').hidden = !registering;
     document.getElementById('fullName').required = registering;
@@ -80,8 +62,6 @@
     document.getElementById('confirmationField').hidden = !registering;
     document.getElementById('passwordConfirmation').required = registering;
     password.required = true;
-    document.getElementById('otpField').hidden = true;
-    document.getElementById('forgotButton').hidden = registering;
     identifier.hidden = registering;
     document.getElementById('title').textContent = registering ? 'Create your account' : 'Welcome back';
     document.getElementById('subtitle').textContent = registering ? 'Create an account to start using Online Sphere.' : 'Sign in to continue to your dashboard.';
@@ -94,37 +74,12 @@
   }
   document.getElementById('loginTab').addEventListener('click', () => setMode('login'));
   document.getElementById('registerTab').addEventListener('click', () => setMode('register'));
-  document.getElementById('emailChannel').addEventListener('click', () => setChannel('email'));
-  document.getElementById('phoneChannel').addEventListener('click', () => setChannel('phone'));
-  document.getElementById('forgotButton').addEventListener('click', () => {
-    resetMode = true; mode = 'login'; step = 'reset-request'; channelTabs.hidden = false;
-    document.getElementById('title').textContent = 'Reset your password';
-    document.getElementById('subtitle').textContent = 'Request a verification code using your registered contact.';
-  document.getElementById('nameField').hidden = true; document.getElementById('emailField').hidden = true; document.getElementById('phoneField').hidden = true; identifier.hidden = false; identifier.required = true; password.hidden = true; password.required = false; document.getElementById('confirmationField').hidden = true; document.getElementById('forgotButton').hidden = true; button.textContent = 'Send reset code'; notify('');
-  });
   wireSwitch();
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!form.reportValidity()) return;
     button.disabled = true;
     try {
-      if (step === 'otp') {
-        document.getElementById('otp').required = true;
-        await api('/api/auth/verify-otp', { challengeId, otp: document.getElementById('otp').value.trim() });
-        if (resetMode) {
-          step = 'reset-password'; document.getElementById('otpField').hidden = true; document.getElementById('otp').required = false; password.hidden = false; password.required = true; document.getElementById('confirmationField').hidden = false; document.getElementById('passwordConfirmation').required = true; button.textContent = 'Set new password'; notify('Code verified. Choose a new password.'); return;
-        }
-        window.location.replace('dashboard.html'); return;
-      }
-      if (resetMode && step === 'reset-request') {
-        const result = await api('/api/auth/password-reset/request', { channel, identifier: identifier.value.trim() });
-        if (!result.challengeId) throw new Error('If an account matches, a verification code has been sent.');
-        challengeId = result.challengeId; step = 'otp'; document.getElementById('otpField').hidden = false; button.textContent = 'Verify code'; notify(result.message); return;
-      }
-      if (resetMode && step === 'reset-password') {
-        await api('/api/auth/password-reset', { password: password.value, passwordConfirmation: document.getElementById('passwordConfirmation').value });
-        resetMode = false; setMode('login'); notify('Password updated. Sign in with your new password.'); return;
-      }
       button.textContent = mode === 'register' ? 'Creating account…' : 'Signing in…';
       const body = { channel, identifier: identifier.value.trim(), password: password.value };
       if (mode === 'register') {
@@ -144,7 +99,7 @@
       button.disabled = false;
     }
   });
-  setMode(mode); setChannel('email');
+  setMode(mode);
 })();
 </script>
 </body>
