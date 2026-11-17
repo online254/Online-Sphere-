@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3000;
 const scrypt = promisify(crypto.scrypt);
 
 app.disable('x-powered-by');
-const allowedOrigins = new Set(String(process.env.PUBLIC_SITE_ORIGINS || 'https://onlinespherecommercecompany.com,https://www.onlinespherecommercecompany.com,http://localhost:3000,http://localhost:5500').split(',').map((origin) => origin.trim()).filter(Boolean));
+const allowedOrigins = new Set(String(process.env.PUBLIC_SITE_ORIGINS || 'https://onlinespherecommercecompany.com,https://www.onlinespherecommercecompany.com,https://online254.github.io,http://localhost:3000,http://localhost:4173,http://localhost:5500').split(',').map((origin) => origin.trim()).filter(Boolean));
 app.use(cors({
   origin(origin, callback) {
     if (!origin || allowedOrigins.has(origin)) return callback(null, true);
@@ -299,7 +299,9 @@ app.post('/api/ai/chat', async (req, res) => {
    ========================================================= */
 
 const ADMIN_EMAIL = normalizeEmail(
-  process.env.ADMIN_EMAIL || 'muthinibenson7@gmail.com'
+  process.env.ADMIN_EMAIL ||
+  String(process.env.ADMIN_EMAILS || '').split(',')[0] ||
+  'muthinibenson7@gmail.com'
 );
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;

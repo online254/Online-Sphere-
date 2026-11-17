@@ -35,6 +35,9 @@
     document.querySelectorAll(`[data-stat="${key}"]`).forEach((el) => { el.textContent = value === null || value === undefined ? '—' : String(value); });
   }
 
+  const adminTab = $('#adminDashboardTab');
+  if (adminTab) adminTab.hidden = false;
+
   function showDashboard(data, authenticatedUser = {}) {
     const user = { ...(data.user || {}), ...authenticatedUser };
     const membership = data.membership || {};
