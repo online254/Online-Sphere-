@@ -41,10 +41,7 @@ db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_referral_code ON users(refe
 
 const PACKAGES = Object.freeze({ Bronze: 1000, Silver: 1750, Gold: 2500 });
 const TOKEN_TTL_DAYS = Number(process.env.SESSION_TTL_DAYS) || 30;
-const OTP_TTL_MINUTES = 5;
-const OTP_COOLDOWN_SECONDS = 60;
 const SESSION_COOKIE = 'online_sphere_session';
-const RESET_COOKIE = 'online_sphere_reset';
 const sha256 = (value) => crypto.createHash('sha256').update(value).digest('hex');
 const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
 const normalizePhone = (phone) => {
@@ -78,12 +75,8 @@ function writeCookie(res, name, value, options) {
 function setSessionCookie(res, token) {
   writeCookie(res, SESSION_COOKIE, token, cookieOptions(TOKEN_TTL_DAYS * 86400000));
 }
-function setResetCookie(res, token) {
-  writeCookie(res, RESET_COOKIE, token, cookieOptions(15 * 60 * 1000));
-}
 function clearAuthCookies(res) {
   writeCookie(res, SESSION_COOKIE, '', cookieOptions(0));
-  writeCookie(res, RESET_COOKIE, '', cookieOptions(0));
 }
 function issueSession(userId) {
   const token = crypto.randomBytes(32).toString('base64url');
@@ -130,96 +123,11 @@ function createUserAccount({ fullName, email, phone, passwordHash, referralCode 
 function audit(event, details = {}) {
   console.info(`[auth] ${event}`, JSON.stringify(details));
 }
-function normalizeChannel(value) {
-  return value === 'phone' ? 'phone' : value === 'email' ? 'email' : null;
-}
-function requestDestination(channel, email, phone) {
-  return channel === 'phone' ? phone : email;
-}
-function otpHash(challengeId, otp) {
-  return sha256(`${challengeId}:${otp}:${process.env.OTP_PEPPER || ''}`);
-}
-function newOtp() {
-  return String(crypto.randomInt(100000, 1000000));
-}
 function assertSameOrigin(req, res, next) {
   const origin = req.get('origin');
   if (origin && !allowedOrigins.has(origin)) return res.status(403).json({ success: false, message: 'Request origin is not allowed.' });
   next();
 }
-function providerConfig(channel) {
-  if (channel === 'email') return process.env.RESEND_API_KEY && process.env.EMAIL_FROM ? null : ['RESEND_API_KEY', 'EMAIL_FROM'];
-  return process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM ? null : ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_FROM'];
-}
-async function deliverOtp(channel, destination, otp) {
-  const missing = providerConfig(channel);
-  if (missing) throw Object.assign(new Error(`OTP delivery is not configured. Set ${missing.join(', ')}.`), { status: 503 });
-  if (channel === 'email') {
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from: process.env.EMAIL_FROM,
-        to: [destination],
-        subject: 'Your Online Sphere verification code',
-        text: `Your Online Sphere verification code is ${otp}. It expires in five minutes. If you did not request this, ignore this message.`
-      }),
-      signal: AbortSignal.timeout(20000)
-    });
-    if (!response.ok) throw new Error('Email provider rejected the OTP request.');
-    return;
-  }
-  const body = new URLSearchParams({ To: `+${destination}`, From: process.env.TWILIO_FROM, Body: `Online Sphere code: ${otp}. Expires in 5 minutes.` });
-  const credentials = Buffer.from(`${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`).toString('base64');
-  const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(process.env.TWILIO_ACCOUNT_SID)}/Messages.json`, {
-    method: 'POST',
-    headers: { Authorization: `Basic ${credentials}`, 'Content-Type': 'application/x-www-form-urlencoded' },
-    body,
-    signal: AbortSignal.timeout(20000)
-  });
-  if (!response.ok) throw new Error('SMS provider rejected the OTP request.');
-}
-function ensureOtpRequestAllowed(destination, requestIp) {
-  const recent = db.prepare(`SELECT created_at FROM auth_challenges WHERE destination=? AND created_at>datetime('now','-1 hour') ORDER BY created_at DESC LIMIT 5`).all(destination);
-  if (recent.length >= 5) throw Object.assign(new Error('Too many verification requests. Try again later.'), { status: 429 });
-  if (recent[0] && Date.now() - new Date(`${recent[0].created_at}Z`).getTime() < OTP_COOLDOWN_SECONDS * 1000) throw Object.assign(new Error('Please wait before requesting another code.'), { status: 429 });
-  if (requestIp) {
-    const ipCount = db.prepare(`SELECT COUNT(*) AS count FROM auth_challenges WHERE request_ip=? AND created_at>datetime('now','-1 hour')`).get(requestIp).count;
-    if (ipCount >= 20) throw Object.assign(new Error('Too many verification requests from this network. Try again later.'), { status: 429 });
-  }
-}
-async function createChallenge({ userId = null, purpose, channel, destination, requestIp }) {
-  if (!process.env.OTP_PEPPER) throw Object.assign(new Error('OTP delivery is not configured. Set OTP_PEPPER.'), { status: 503 });
-  ensureOtpRequestAllowed(destination, requestIp);
-  const id = crypto.randomUUID();
-  const otp = newOtp();
-  const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60000).toISOString();
-  db.prepare(`INSERT INTO auth_challenges (id,user_id,purpose,channel,destination,otp_hash,expires_at,request_ip) VALUES (?,?,?,?,?,?,?,?)`).run(id, userId, purpose, channel, destination, otpHash(id, otp), expiresAt, requestIp || null);
-  try {
-    await deliverOtp(channel, destination, otp);
-  } catch (error) {
-    db.prepare('DELETE FROM auth_challenges WHERE id=?').run(id);
-    throw error;
-  }
-  audit('otp_sent', { purpose, channel, destination: channel === 'email' ? destination.replace(/^(.{2}).+(@.*)$/, '$1***$2') : `${destination.slice(0, 3)}******${destination.slice(-2)}` });
-  return id;
-}
-function getChallenge(id, otp) {
-  const challenge = db.prepare('SELECT * FROM auth_challenges WHERE id=? LIMIT 1').get(String(id || ''));
-  if (!challenge || challenge.consumed_at) throw Object.assign(new Error('This verification code is no longer valid.'), { status: 400 });
-  if (new Date(challenge.expires_at).getTime() <= Date.now()) throw Object.assign(new Error('This verification code has expired. Request a new one.'), { status: 400 });
-  if (challenge.attempts >= challenge.max_attempts) throw Object.assign(new Error('Too many incorrect attempts. Request a new code.'), { status: 429 });
-  db.prepare('UPDATE auth_challenges SET attempts=attempts+1 WHERE id=?').run(challenge.id);
-  const suppliedHash = otpHash(challenge.id, otp);
-  const expectedHash = Buffer.from(challenge.otp_hash, 'hex');
-  const actualHash = Buffer.from(suppliedHash, 'hex');
-  if (!/^\d{6}$/.test(String(otp || '')) || expectedHash.length !== actualHash.length || !crypto.timingSafeEqual(expectedHash, actualHash)) throw Object.assign(new Error('The verification code is incorrect.'), { status: 400 });
-  return challenge;
-}
-function consumeChallenge(id) {
-  db.prepare('UPDATE auth_challenges SET consumed_at=CURRENT_TIMESTAMP WHERE id=?').run(id);
-}
-
 app.get('/', (_req, res) => res.json({ success: true, service: 'Online Sphere Backend', status: 'running' }));
 app.get('/health', (_req, res) => res.json({ success: true, service: 'Online Sphere Backend', status: 'ready', database: 'connected' }));
 app.get('/api/packages', (_req, res) => res.json({ success: true, currency: 'KES', packages: Object.entries(PACKAGES).map(([name, price]) => ({ name, price })) }));
@@ -253,86 +161,20 @@ app.post('/api/auth/register', assertSameOrigin, async (req, res, next) => {
 });
 app.post('/api/auth/login', assertSameOrigin, async (req, res, next) => {
   try {
-    const channel = normalizeChannel(req.body?.channel) || 'email';
     const identifier = String(req.body?.identifier || '').trim();
-    const email = channel === 'email' ? normalizeEmail(identifier) : null;
-    const phone = channel === 'phone' ? normalizePhone(identifier) : null;
+    const email = normalizeEmail(identifier);
+    const phone = normalizePhone(identifier);
     const password = typeof req.body?.password === 'string' ? req.body.password : '';
-    if (!(email || phone)) return res.status(400).json({ success: false, message: `Enter a valid ${channel}.` });
-    const user = channel === 'email'
-      ? db.prepare('SELECT id,full_name,email,phone,password_hash FROM users WHERE lower(email)=? LIMIT 1').get(email)
-      : db.prepare('SELECT id,full_name,email,phone,password_hash FROM users WHERE phone=? LIMIT 1').get(phone);
+    if ((!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) && !phone) return res.status(400).json({ success: false, message: 'Enter a valid email address or phone number.' });
+    const user = db.prepare('SELECT id,full_name,email,phone,password_hash FROM users WHERE lower(email)=? OR phone=? LIMIT 1').get(email, phone);
     if (!user || !password || !(await verifyPassword(password, user.password_hash))) return res.status(401).json({ success: false, message: 'The login details are incorrect.' });
     setSessionCookie(res, issueSession(user.id));
-    audit('login_completed', { userId: user.id, channel });
+    audit('login_completed', { userId: user.id, identifierType: phone ? 'phone' : 'email' });
     return res.json({ success: true, message: 'Signed in successfully.' });
   } catch (error) {
     if (error.status) return res.status(error.status).json({ success: false, message: error.message });
     next(error);
   }
-});
-app.post('/api/auth/verify-otp', assertSameOrigin, async (req, res, next) => {
-  try {
-    const challenge = getChallenge(req.body?.challengeId, req.body?.otp);
-    if (challenge.purpose === 'registration') {
-      const pending = db.prepare('SELECT * FROM pending_registrations WHERE (email=? OR phone=?) AND datetime(expires_at)>datetime("now") LIMIT 1').get(challenge.channel === 'email' ? challenge.destination : '', challenge.channel === 'phone' ? challenge.destination : '');
-      if (!pending) return res.status(400).json({ success: false, message: 'Registration expired. Please start again.' });
-      const userId = createUserAccount({ fullName: pending.full_name, email: pending.email, phone: pending.phone, passwordHash: pending.password_hash, referralCode: pending.referral_code });
-      db.transaction(() => { consumeChallenge(challenge.id); db.prepare('DELETE FROM pending_registrations WHERE id=?').run(pending.id); })();
-      setSessionCookie(res, issueSession(userId));
-      audit('registration_verified', { userId, channel: challenge.channel });
-      return res.status(201).json({ success: true, message: 'Account verified. Welcome to Online Sphere.' });
-    }
-    if (challenge.purpose === 'login') {
-      consumeChallenge(challenge.id);
-      setSessionCookie(res, issueSession(challenge.user_id));
-      audit('login_verified', { userId: challenge.user_id, channel: challenge.channel });
-      return res.json({ success: true, message: 'Signed in successfully.' });
-    }
-    if (challenge.purpose === 'password_reset') {
-      consumeChallenge(challenge.id);
-      const resetToken = crypto.randomBytes(32).toString('base64url');
-      db.prepare('INSERT INTO password_reset_tokens (token_hash,user_id,expires_at) VALUES (?,?,?)').run(sha256(resetToken), challenge.user_id, new Date(Date.now() + 15 * 60000).toISOString());
-      setResetCookie(res, resetToken);
-      return res.json({ success: true, message: 'Code verified. Choose a new password.' });
-    }
-    return res.status(400).json({ success: false, message: 'Unsupported verification request.' });
-  } catch (error) {
-    if (error.status) return res.status(error.status).json({ success: false, message: error.message });
-    next(error);
-  }
-});
-app.post('/api/auth/password-reset/request', assertSameOrigin, async (req, res, next) => {
-  try {
-    const channel = normalizeChannel(req.body?.channel) || 'email';
-    const identifier = String(req.body?.identifier || '').trim();
-    const email = channel === 'email' ? normalizeEmail(identifier) : null;
-    const phone = channel === 'phone' ? normalizePhone(identifier) : null;
-    const user = channel === 'email' ? db.prepare('SELECT id,email,phone FROM users WHERE lower(email)=?').get(email) : db.prepare('SELECT id,email,phone FROM users WHERE phone=?').get(phone);
-    const challengeId = user ? await createChallenge({ userId: user.id, purpose: 'password_reset', channel, destination: requestDestination(channel, user.email, user.phone), requestIp: req.ip }) : null;
-    return res.status(202).json({ success: true, challengeId, message: 'If an account matches, a verification code has been sent.' });
-  } catch (error) {
-    if (error.status) return res.status(error.status).json({ success: false, message: error.message });
-    next(error);
-  }
-});
-app.post('/api/auth/password-reset', assertSameOrigin, async (req, res, next) => {
-  try {
-    const password = typeof req.body?.password === 'string' ? req.body.password : '';
-    const confirmation = typeof req.body?.passwordConfirmation === 'string' ? req.body.passwordConfirmation : '';
-    const token = req.cookies?.[RESET_COOKIE];
-    if (!token || password.length < 8 || password.length > 128 || password !== confirmation) return res.status(400).json({ success: false, message: 'Choose matching passwords of at least 8 characters.' });
-    const reset = db.prepare(`SELECT * FROM password_reset_tokens WHERE token_hash=? AND consumed_at IS NULL AND datetime(expires_at)>datetime('now')`).get(sha256(token));
-    if (!reset) return res.status(400).json({ success: false, message: 'Password reset session expired. Start again.' });
-    const passwordHash = await hashPassword(password);
-    db.transaction(() => {
-      db.prepare('UPDATE users SET password_hash=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').run(passwordHash, reset.user_id);
-      db.prepare('UPDATE password_reset_tokens SET consumed_at=CURRENT_TIMESTAMP WHERE token_hash=?').run(reset.token_hash);
-      db.prepare('DELETE FROM sessions WHERE user_id=?').run(reset.user_id);
-    })();
-    writeCookie(res, RESET_COOKIE, '', cookieOptions(0));
-    return res.json({ success: true, message: 'Password updated. Please sign in again.' });
-  } catch (error) { next(error); }
 });
 app.get('/api/auth/me', requireSession, (req, res) => res.json({ success: true, user: { id: req.member.id, fullName: req.member.full_name, email: req.member.email, phone: req.member.phone } }));
 app.post('/api/auth/logout', assertSameOrigin, (req, res) => {
