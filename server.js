@@ -374,6 +374,44 @@ function requireAdmin(req, res, next) {
   }
 }
 
+async function ensureAdministratorAccount() {
+  let admin = db.prepare(`
+    SELECT id,full_name,email
+    FROM users
+    WHERE lower(email)=?
+    LIMIT 1
+  `).get(ADMIN_EMAIL);
+
+  if (admin) {
+    if (db.prepare('PRAGMA table_info(users)').all().some((column) => column.name === 'is_admin')) {
+      db.prepare(`
+        UPDATE users
+        SET role='owner',is_admin=1,updated_at=CURRENT_TIMESTAMP
+        WHERE id=?
+      `).run(admin.id);
+    }
+    return admin;
+  }
+
+  const passwordHash = await hashPassword(ADMIN_PASSWORD);
+  const userId = createUserAccount({
+    fullName: 'Online Sphere Administrator',
+    email: ADMIN_EMAIL,
+    phone: null,
+    passwordHash,
+    referralCode: ''
+  });
+  if (db.prepare('PRAGMA table_info(users)').all().some((column) => column.name === 'is_admin')) {
+    db.prepare(`
+      UPDATE users
+      SET role='owner',is_admin=1,updated_at=CURRENT_TIMESTAMP
+      WHERE id=?
+    `).run(userId);
+  }
+  admin = db.prepare('SELECT id,full_name,email FROM users WHERE id=?').get(userId);
+  return admin;
+}
+
 /* Administrator login */
 app.post('/api/admin/login', async (req, res, next) => {
   try {
@@ -398,20 +436,6 @@ app.post('/api/admin/login', async (req, res, next) => {
       });
     }
 
-    const admin = db.prepare(`
-      SELECT id,full_name,email
-      FROM users
-      WHERE lower(email)=?
-      LIMIT 1
-    `).get(ADMIN_EMAIL);
-
-    if (!admin) {
-      return res.status(403).json({
-        success: false,
-        message: 'Register this administrator email first.'
-      });
-    }
-
     const supplied = Buffer.from(password);
     const expected = Buffer.from(ADMIN_PASSWORD);
 
@@ -425,6 +449,7 @@ app.post('/api/admin/login', async (req, res, next) => {
       });
     }
 
+    const admin = await ensureAdministratorAccount();
     const token = crypto.randomBytes(32).toString('base64url');
     const tokenHash = sha256(token);
     const expiresAt = new Date(
