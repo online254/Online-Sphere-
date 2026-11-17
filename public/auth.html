@@ -24,12 +24,13 @@
       <button class="submit" id="submitButton" type="submit">Sign in</button><div class="notice" id="notice" role="status" aria-live="polite"></div>
     </form>
     <p class="switch" id="switchText">New to Online Sphere? <button id="switchButton" type="button">Create an account</button></p>
-    <div class="security">Use your email and password to access your account. Never share your password or M-Pesa PIN.</div>
+    <div class="security">Your account is stored on this device. No server connection is required.</div>
   </main>
 <script>
 (() => {
   'use strict';
-  const API_BASE = String(window.ONLINE_SPHERE_API_URL || 'https://online-sphere-backend.onrender.com').replace(/\/$/, '');
+  const USERS_KEY = 'onlineSphereUsers';
+  const SESSION_KEY = 'onlineSphereCurrentUser';
   const form = document.getElementById('authForm');
   const notice = document.getElementById('notice');
   const button = document.getElementById('submitButton');
@@ -37,12 +38,11 @@
   const identifier = document.getElementById('identifier');
   let mode = new URLSearchParams(location.search).get('mode') === 'register' ? 'register' : 'login';
   const notify = (message, type = 'info') => { notice.textContent = message; notice.className = `notice show ${type}`; };
-  const api = async (path, body) => {
-    const response = await fetch(`${API_BASE}${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, credentials: 'include', body: JSON.stringify(body) });
-    const result = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(result.message || 'The account service is temporarily unavailable.');
-    return result;
+  const readUsers = () => {
+    try { return JSON.parse(localStorage.getItem(USERS_KEY) || '[]'); } catch (_) { return []; }
   };
+  const saveUsers = (users) => localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  const normalizePhone = (value) => String(value || '').replace(/[\s()-]/g, '').replace(/^\+/, '').replace(/^0/, '254');
   const wireSwitch = () => document.getElementById('switchButton').addEventListener('click', () => setMode(mode === 'login' ? 'register' : 'login'));
   function setMode(next) {
     mode = next;
@@ -83,17 +83,25 @@
     button.disabled = true;
     try {
       button.textContent = mode === 'register' ? 'Creating account…' : 'Signing in…';
-      const body = { identifier: identifier.value.trim(), password: password.value };
       if (mode === 'register') {
-      body.fullName = document.getElementById('fullName').value.trim();
-      body.phone = document.getElementById('phone').value.trim();
-      body.email = document.getElementById('email').value.trim();
-      body.passwordConfirmation = document.getElementById('passwordConfirmation').value;
-      const ref = new URLSearchParams(location.search).get('ref');
-      if (ref) body.ref = ref;
+        const users = readUsers();
+        const user = {
+          fullName: document.getElementById('fullName').value.trim(),
+          email: document.getElementById('email').value.trim().toLowerCase(),
+          phone: normalizePhone(document.getElementById('phone').value),
+          password: password.value
+        };
+        if (users.some((item) => item.email === user.email || item.phone === user.phone)) throw new Error('An account with that email or phone already exists.');
+        users.push(user);
+        saveUsers(users);
+        localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+      } else {
+        const value = identifier.value.trim().toLowerCase();
+        const user = readUsers().find((item) => (item.email === value || item.phone === normalizePhone(value)) && item.password === password.value);
+        if (!user) throw new Error('The login details are incorrect.');
+        localStorage.setItem(SESSION_KEY, JSON.stringify(user));
       }
-      const result = await api(`/api/auth/${mode === 'register' ? 'register' : 'login'}`, body);
-      notify(result.message);
+      notify(mode === 'register' ? 'Account created.' : 'Signed in successfully.');
       window.location.replace('dashboard.html');
     } catch (error) {
       notify(error.message || 'Unable to reach the account service. Please try again.', 'error');

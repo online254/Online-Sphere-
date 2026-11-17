@@ -1,7 +1,7 @@
-/* Member dashboard entry. Uses backend-verified data only and an HTTP-only session cookie. */
+/* Member dashboard entry. Uses the locally stored account only. */
 (() => {
   'use strict';
-  const API_BASE = String(window.ONLINE_SPHERE_API_URL || 'https://online-sphere-backend.onrender.com').replace(/\/$/, '');
+  const SESSION_KEY = 'onlineSphereCurrentUser';
   const $ = (selector) => document.querySelector(selector);
   const statusBox = $('#loadState');
   const statusMessage = $('#loadMessage');
@@ -33,20 +33,6 @@
 
   function setStat(key, value) {
     document.querySelectorAll(`[data-stat="${key}"]`).forEach((el) => { el.textContent = value === null || value === undefined ? '—' : String(value); });
-  }
-
-  async function checkAdminAccess() {
-    const tab = $('#adminDashboardTab');
-    if (!tab) return;
-    try {
-      const response = await fetch(`${API_BASE}/api/admin/access`, {
-        headers: { Accept: 'application/json' },
-        credentials: 'include', cache: 'no-store'
-      });
-      if (response.ok) tab.hidden = false;
-    } catch (_) {
-      // Fail closed: hide the administrator tab unless the backend confirms access.
-    }
   }
 
   function showDashboard(data, authenticatedUser = {}) {
@@ -116,31 +102,24 @@
       if (copyReferralButton) copyReferralButton.disabled = false;
     }
 
-    setStatus('Your account data has loaded from the secure service.', true);
+    setStatus('Your account is stored on this device.', true);
   }
 
-  async function loadDashboard() {
-    try {
-      const [dashboardResponse, identityResponse] = await Promise.all([
-        fetch(`${API_BASE}/api/me/dashboard`, { headers: { Accept: 'application/json' }, credentials: 'include', cache: 'no-store' }),
-        fetch(`${API_BASE}/api/auth/me`, { headers: { Accept: 'application/json' }, credentials: 'include', cache: 'no-store' })
-      ]);
-      const [dashboardResult, identityResult] = await Promise.all([
-        dashboardResponse.json().catch(() => ({})), identityResponse.json().catch(() => ({}))
-      ]);
-
-      if ([dashboardResponse.status, identityResponse.status].includes(401) || [dashboardResponse.status, identityResponse.status].includes(403)) {
-        setStatus('Your session expired. Redirecting to sign in…');
-        setTimeout(() => window.location.replace('auth.html'), 700);
-        return;
-      }
-      if (!dashboardResponse.ok) throw new Error(dashboardResult.message || 'The dashboard service is temporarily unavailable.');
-      if (!identityResponse.ok) throw new Error(identityResult.message || 'Could not verify the signed-in account.');
-      showDashboard(dashboardResult.dashboard || dashboardResult, identityResult.user || {});
-      checkAdminAccess();
-    } catch (error) {
-      setStatus(`${error.message} No sample financial data is being shown.`);
+  function loadDashboard() {
+    let user = null;
+    try { user = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch (_) {}
+    if (!user) {
+      setStatus('No local account is signed in. Redirecting to sign in…');
+      setTimeout(() => window.location.replace('auth.html'), 700);
+      return;
     }
+    showDashboard({
+      user: { ...user, createdAt: user.createdAt || new Date().toISOString(), status: 'Local account' },
+      membership: { name: null, status: 'Not connected', active: false },
+      wallet: { currency: 'KES', walletBalance: 0, availableBalance: 0, pendingBalance: 0, totalDeposited: 0, totalWithdrawn: 0, totalEarnings: 0 },
+      statistics: { transactionCount: 0, todayEarnings: 0 },
+      referrals: { joinedCount: 0, verifiedCount: 0 }
+    });
   }
 
   const greeting = $('#greeting');
@@ -172,8 +151,8 @@
       if (menu) menu.hidden = true;
     }
   });
-  $('#signOutButton')?.addEventListener('click', async () => {
-    try { await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', credentials: 'include' }); } catch (_) {}
+  $('#signOutButton')?.addEventListener('click', () => {
+    localStorage.removeItem(SESSION_KEY);
     window.location.replace('auth.html');
   });
 
