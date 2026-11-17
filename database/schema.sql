@@ -99,6 +99,8 @@ CREATE TABLE IF NOT EXISTS transactions (
 
     amount INTEGER NOT NULL,
 
+    currency TEXT DEFAULT 'KES',
+
     status TEXT DEFAULT 'pending',
 
     reference TEXT UNIQUE,
@@ -147,9 +149,86 @@ CREATE TABLE IF NOT EXISTS opportunities (
 
     status TEXT DEFAULT 'active',
 
+    payment_amount INTEGER DEFAULT 0,
+
+    payment_currency TEXT DEFAULT 'KES',
+
+    payment_method TEXT DEFAULT 'Wallet credit',
+
+    payment_basis TEXT DEFAULT 'per approved submission',
+
+    positions INTEGER DEFAULT 0,
+
+    application_deadline TEXT,
+
+    start_date TEXT,
+
+    completion_date TEXT,
+
+    image_url TEXT,
+
+    attachment_url TEXT,
+
+    instructions TEXT,
+
+    eligibility TEXT,
+
+    created_by INTEGER,
+
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS opportunity_applications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    opportunity_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    application_note TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(opportunity_id, user_id),
+    FOREIGN KEY (opportunity_id) REFERENCES opportunities(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS opportunity_submissions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    application_id INTEGER NOT NULL UNIQUE,
+    user_id INTEGER NOT NULL,
+    opportunity_id INTEGER NOT NULL,
+    content TEXT,
+    attachment_url TEXT,
+    status TEXT NOT NULL DEFAULT 'pending',
+    reviewed_at DATETIME,
+    reviewed_by INTEGER,
+    review_note TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (application_id) REFERENCES opportunity_applications(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (opportunity_id) REFERENCES opportunities(id) ON DELETE CASCADE,
+    FOREIGN KEY (reviewed_by) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS opportunity_payments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    submission_id INTEGER NOT NULL UNIQUE,
+    opportunity_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    amount INTEGER NOT NULL,
+    currency TEXT NOT NULL DEFAULT 'KES',
+    status TEXT NOT NULL DEFAULT 'pending',
+    transaction_id INTEGER,
+    approved_by INTEGER,
+    approved_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (submission_id) REFERENCES opportunity_submissions(id) ON DELETE CASCADE,
+    FOREIGN KEY (opportunity_id) REFERENCES opportunities(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (transaction_id) REFERENCES transactions(id),
+    FOREIGN KEY (approved_by) REFERENCES users(id)
 );
 
 

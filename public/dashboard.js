@@ -50,6 +50,19 @@
         ? rows.map((item) => `<p><strong>${item.title}</strong><br>${item.message}<br><small>${new Date(item.created_at).toLocaleString()}</small></p>`).join('')
         : '<p class="panel-description">No account notifications.</p>';
     }
+    const opportunityList = $('#opportunityList');
+    if (opportunityList) {
+      const opportunities = (dashboard.opportunities || []).slice(0, 6);
+      opportunityList.innerHTML = opportunities.length ? opportunities.map((item) => `<article class="opportunity-card"><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.description)}</p><div class="opportunity-meta"><span>${escapeHtml(item.category)}</span><span>${escapeHtml(item.payment_currency || 'KES')} ${Number(item.payment_amount || 0).toLocaleString()}</span><span>Deadline: ${item.application_deadline ? new Date(item.application_deadline).toLocaleDateString() : 'Open'}</span></div><div class="opportunity-actions"><button type="button" data-opportunity-details="${item.id}">View details</button><button type="button" class="apply" data-opportunity-apply="${item.id}">Apply now</button></div></article>`).join('') : '<p class="panel-description">No published opportunities are currently available.</p>';
+    }
+  };
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+  const renderNotificationMenu = (notifications) => {
+    const count = notifications.filter((item) => !item.read_at).length;
+    const badge = $('#notificationCount');
+    if (badge) { badge.hidden = count === 0; badge.textContent = count > 99 ? '99+' : String(count); }
+    const panel = $('#notificationPanelList');
+    if (panel) panel.innerHTML = notifications.length ? notifications.slice(0, 30).map((item) => `<article class="notification-item ${item.read_at ? '' : 'unread'}"><strong>${escapeHtml(item.title)}</strong><br>${escapeHtml(item.message)}<small>${new Date(item.created_at).toLocaleString()}</small></article>`).join('') : '<p class="panel-description">No notifications.</p>';
   };
 
   async function checkAdminAccess() {
@@ -131,6 +144,7 @@
     }
 
     renderRecords(data);
+    renderNotificationMenu(data.notifications || []);
     setStatus('Your account data is synchronized with the live service.', true);
   }
 
@@ -183,6 +197,48 @@
   $('#signOutButton')?.addEventListener('click', async () => {
     await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
     window.location.replace('auth.html');
+  });
+  $('#notificationButton')?.addEventListener('click', async (event) => {
+    event.stopPropagation();
+    const menu = $('#notificationMenu');
+    if (!menu) return;
+    menu.hidden = !menu.hidden;
+    if (!menu.hidden) {
+      await fetch(`${API_BASE}/api/me/notifications/read-all`, { method: 'POST', credentials: 'include' }).catch(() => {});
+      document.querySelectorAll('.notification-item').forEach((item) => item.classList.remove('unread'));
+      const badge = $('#notificationCount');
+      if (badge) badge.hidden = true;
+    }
+  });
+  $('#markAllRead')?.addEventListener('click', async () => {
+    await fetch(`${API_BASE}/api/me/notifications/read-all`, { method: 'POST', credentials: 'include' }).catch(() => {});
+    document.querySelectorAll('.notification-item').forEach((item) => item.classList.remove('unread'));
+    const badge = $('#notificationCount');
+    if (badge) badge.hidden = true;
+  });
+  document.addEventListener('click', (event) => {
+    if (!event.target.closest('.top-actions')) {
+      const menu = $('#notificationMenu');
+      if (menu) menu.hidden = true;
+    }
+  });
+  $('#opportunityList')?.addEventListener('click', async (event) => {
+    const apply = event.target.closest('[data-opportunity-apply]');
+    const details = event.target.closest('[data-opportunity-details]');
+    const id = apply?.dataset.opportunityApply || details?.dataset.opportunityDetails;
+    if (!id) return;
+    if (details) {
+      const card = details.closest('.opportunity-card');
+      showToast(card?.querySelector('p')?.textContent || 'Opportunity details loaded.');
+      return;
+    }
+    try {
+      const response = await fetch(`${API_BASE}/api/opportunities/${id}/apply`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || 'Application could not be submitted.');
+      showToast(data.message || 'Application submitted.');
+      loadDashboard();
+    } catch (error) { showToast(error.message); }
   });
 
   loadDashboard();

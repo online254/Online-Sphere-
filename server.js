@@ -59,6 +59,57 @@ db.exec(`
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   );
   CREATE INDEX IF NOT EXISTS idx_notifications_user_created ON notifications(user_id, created_at);
+  CREATE TABLE IF NOT EXISTS opportunity_applications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    opportunity_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    application_note TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(opportunity_id, user_id),
+    FOREIGN KEY (opportunity_id) REFERENCES opportunities(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+  CREATE INDEX IF NOT EXISTS idx_opportunity_applications_opportunity ON opportunity_applications(opportunity_id);
+  CREATE TABLE IF NOT EXISTS opportunity_submissions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    application_id INTEGER NOT NULL UNIQUE,
+    user_id INTEGER NOT NULL,
+    opportunity_id INTEGER NOT NULL,
+    content TEXT,
+    attachment_url TEXT,
+    status TEXT NOT NULL DEFAULT 'pending',
+    reviewed_at DATETIME,
+    reviewed_by INTEGER,
+    review_note TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (application_id) REFERENCES opportunity_applications(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (opportunity_id) REFERENCES opportunities(id) ON DELETE CASCADE,
+    FOREIGN KEY (reviewed_by) REFERENCES users(id)
+  );
+  CREATE INDEX IF NOT EXISTS idx_opportunity_submissions_status ON opportunity_submissions(status);
+  CREATE TABLE IF NOT EXISTS opportunity_payments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    submission_id INTEGER NOT NULL UNIQUE,
+    opportunity_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    amount INTEGER NOT NULL,
+    currency TEXT NOT NULL DEFAULT 'KES',
+    status TEXT NOT NULL DEFAULT 'pending',
+    transaction_id INTEGER,
+    approved_by INTEGER,
+    approved_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (submission_id) REFERENCES opportunity_submissions(id) ON DELETE CASCADE,
+    FOREIGN KEY (opportunity_id) REFERENCES opportunities(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (transaction_id) REFERENCES transactions(id),
+    FOREIGN KEY (approved_by) REFERENCES users(id)
+  );
+  CREATE INDEX IF NOT EXISTS idx_opportunity_payments_status ON opportunity_payments(status);
   CREATE TABLE IF NOT EXISTS admin_audit_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     admin_user_id INTEGER NOT NULL,
@@ -73,6 +124,22 @@ db.exec(`
     FOREIGN KEY (affected_user_id) REFERENCES users(id)
   );
 `);
+[
+  ['transactions', 'currency', "TEXT DEFAULT 'KES'"],
+  ['opportunities', 'payment_amount', 'INTEGER DEFAULT 0'],
+  ['opportunities', 'payment_currency', "TEXT DEFAULT 'KES'"],
+  ['opportunities', 'payment_method', "TEXT DEFAULT 'Wallet credit'"],
+  ['opportunities', 'payment_basis', "TEXT DEFAULT 'per approved submission'"],
+  ['opportunities', 'positions', 'INTEGER DEFAULT 0'],
+  ['opportunities', 'application_deadline', 'TEXT'],
+  ['opportunities', 'start_date', 'TEXT'],
+  ['opportunities', 'completion_date', 'TEXT'],
+  ['opportunities', 'image_url', 'TEXT'],
+  ['opportunities', 'attachment_url', 'TEXT'],
+  ['opportunities', 'instructions', 'TEXT'],
+  ['opportunities', 'eligibility', 'TEXT'],
+  ['opportunities', 'created_by', 'INTEGER REFERENCES users(id)']
+].forEach(([table, column, definition]) => ensureColumn(table, column, definition));
 
 const PACKAGES = Object.freeze({ Bronze: 1000, Silver: 1750, Gold: 2500 });
 const TOKEN_TTL_DAYS = Number(process.env.SESSION_TTL_DAYS) || 30;
@@ -186,6 +253,49 @@ function recordAdminAction(adminUserId, affectedUserId, action, previousValue, n
   }
   return reference;
 }
+const OPPORTUNITY_STATUSES = new Set(['draft', 'published', 'paused', 'closed', 'active']);
+const PAYMENT_CURRENCIES = new Set(['KES', 'USD', 'EUR', 'GBP']);
+const PAYMENT_BASES = new Set(['per task', 'per approved submission', 'per completed project']);
+function notifyUser(userId, title, message, type = 'opportunity') {
+  db.prepare('INSERT INTO notifications (user_id,title,message,type) VALUES (?,?,?,?)').run(userId, title, message, type);
+}
+function notifyEligibleMembers(title, message, type = 'opportunity') {
+  const members = db.prepare(`SELECT id FROM users WHERE lower(COALESCE(role,'member'))='member' OR COALESCE(is_admin,0)=0`).all();
+  const insert = db.prepare('INSERT INTO notifications (user_id,title,message,type) VALUES (?,?,?,?)');
+  db.transaction(() => members.forEach(({ id }) => insert.run(id, title, message, type)))();
+}
+function opportunityPayload(body, partial = false) {
+  const value = (key) => String(body?.[key] ?? '').trim();
+  const title = value('title');
+  const category = value('category');
+  const description = value('description');
+  const paymentAmount = Number(body?.paymentAmount);
+  const currency = value('paymentCurrency') || 'KES';
+  const basis = value('paymentBasis') || 'per approved submission';
+  const positions = Number(body?.positions || 0);
+  const status = (value('status') || 'draft').toLowerCase();
+  if (!partial && (!title || title.length > 160 || !category || !description)) throw Object.assign(new Error('Title, category and detailed description are required.'), { status: 400 });
+  if (title && title.length > 160) throw Object.assign(new Error('Opportunity title is too long.'), { status: 400 });
+  if (body?.paymentAmount !== undefined && (!Number.isSafeInteger(paymentAmount) || paymentAmount < 0)) throw Object.assign(new Error('Payment amount must be a non-negative whole number.'), { status: 400 });
+  if (!PAYMENT_CURRENCIES.has(currency)) throw Object.assign(new Error('Select a supported payment currency.'), { status: 400 });
+  if (!PAYMENT_BASES.has(basis)) throw Object.assign(new Error('Select a supported payment basis.'), { status: 400 });
+  if (!Number.isSafeInteger(positions) || positions < 0) throw Object.assign(new Error('Available positions must be zero or a positive whole number.'), { status: 400 });
+  if (!OPPORTUNITY_STATUSES.has(status)) throw Object.assign(new Error('Invalid opportunity status.'), { status: 400 });
+  return {
+    title, category, description, difficulty: value('difficulty') || 'Beginner',
+    earningModel: value('earningModel'), requirements: value('requirements'),
+    instructions: value('instructions'), eligibility: value('eligibility'),
+    paymentAmount: body?.paymentAmount === undefined ? 0 : paymentAmount,
+    paymentCurrency: currency, paymentMethod: value('paymentMethod') || 'Wallet credit',
+    paymentBasis: basis, positions, applicationDeadline: value('applicationDeadline') || null,
+    startDate: value('startDate') || null, completionDate: value('completionDate') || null,
+    imageUrl: value('imageUrl') || null, attachmentUrl: value('attachmentUrl') || null,
+    status
+  };
+}
+function publicOpportunityWhere() {
+  return `(lower(status) IN ('published','active') AND (application_deadline IS NULL OR datetime(application_deadline)>=datetime('now')))`;
+}
 function assertSameOrigin(req, res, next) {
   const origin = req.get('origin');
   if (origin && !allowedOrigins.has(origin)) return res.status(403).json({ success: false, message: 'Request origin is not allowed.' });
@@ -273,8 +383,10 @@ app.get('/api/me/dashboard', requireSession, (req, res) => {
   `).all(member.id);
   const opportunities = db.prepare(`
     SELECT id,title,category,description,difficulty,earning_model,requirements,
+      instructions,eligibility,payment_amount,payment_currency,payment_method,payment_basis,
+      positions,application_deadline,start_date,completion_date,image_url,attachment_url,
       platform_name,external_url,risk_level,featured,status,created_at,updated_at
-    FROM opportunities WHERE lower(status)='active'
+    FROM opportunities WHERE ${publicOpportunityWhere()}
     ORDER BY featured DESC,created_at DESC,id ASC
   `).all();
   res.json({ success: true, dashboard: {
@@ -290,14 +402,58 @@ app.get('/api/me/dashboard', requireSession, (req, res) => {
   } });
 });
 
-// Opportunities are optional until a Neon DATABASE_URL is configured.
-app.get('/api/opportunities', async (_req, res) => {
-  if (!process.env.DATABASE_URL) return res.status(503).json({ success: false, message: 'Opportunities service is not configured.' });
-  try {
-    const postgres = require('./database/postgres.js');
-    const result = await postgres.query(`SELECT id,title,category,description,difficulty,earning_model,requirements,platform_name,external_url,risk_level,featured,status,created_at,updated_at FROM opportunities WHERE status=$1 ORDER BY featured DESC,created_at DESC,id ASC`, ['active']);
-    res.json({ success: true, count: result.rows.length, opportunities: result.rows });
-  } catch (error) { console.error('[opportunities]', error.message); res.status(503).json({ success: false, message: 'Opportunities are temporarily unavailable.' }); }
+app.get('/api/opportunities', (_req, res) => {
+  const opportunities = db.prepare(`
+    SELECT id,title,category,description,difficulty,earning_model,requirements,instructions,eligibility,
+      payment_amount,payment_currency,payment_method,payment_basis,positions,application_deadline,
+      start_date,completion_date,image_url,attachment_url,platform_name,external_url,risk_level,
+      featured,status,created_at,updated_at
+    FROM opportunities WHERE ${publicOpportunityWhere()}
+    ORDER BY featured DESC,created_at DESC,id ASC
+  `).all();
+  res.set('Cache-Control', 'no-store');
+  res.json({ success: true, count: opportunities.length, opportunities });
+});
+app.get('/api/me/notifications', requireSession, (req, res) => {
+  const notifications = db.prepare('SELECT id,title,message,type,read_at,created_at FROM notifications WHERE user_id=? ORDER BY id DESC LIMIT 100').all(req.member.id);
+  res.json({ success: true, unreadCount: notifications.filter((item) => !item.read_at).length, notifications });
+});
+app.post('/api/me/notifications/read-all', requireSession, (req, res) => {
+  db.prepare('UPDATE notifications SET read_at=CURRENT_TIMESTAMP WHERE user_id=? AND read_at IS NULL').run(req.member.id);
+  res.json({ success: true });
+});
+app.post('/api/me/notifications/:id/read', requireSession, (req, res) => {
+  const result = db.prepare('UPDATE notifications SET read_at=CURRENT_TIMESTAMP WHERE id=? AND user_id=?').run(Number(req.params.id), req.member.id);
+  if (!result.changes) return res.status(404).json({ success: false, message: 'Notification not found.' });
+  res.json({ success: true });
+});
+app.get('/api/opportunities/:id', requireSession, (req, res) => {
+  const opportunity = db.prepare(`SELECT * FROM opportunities WHERE id=? AND ${publicOpportunityWhere()}`).get(Number(req.params.id));
+  if (!opportunity) return res.status(404).json({ success: false, message: 'Opportunity not found or no longer active.' });
+  const application = db.prepare('SELECT id,status,application_note,created_at FROM opportunity_applications WHERE opportunity_id=? AND user_id=?').get(opportunity.id, req.member.id);
+  res.json({ success: true, opportunity, application: application || null });
+});
+app.post('/api/opportunities/:id/apply', requireSession, (req, res) => {
+  const opportunity = db.prepare(`SELECT * FROM opportunities WHERE id=? AND ${publicOpportunityWhere()}`).get(Number(req.params.id));
+  if (!opportunity) return res.status(404).json({ success: false, message: 'Opportunity not found or no longer accepting applications.' });
+  const existing = db.prepare('SELECT id,status FROM opportunity_applications WHERE opportunity_id=? AND user_id=?').get(opportunity.id, req.member.id);
+  if (existing) return res.status(409).json({ success: false, message: `You already applied for this opportunity (${existing.status}).` });
+  const filled = db.prepare(`SELECT COUNT(*) AS count FROM opportunity_applications WHERE opportunity_id=? AND lower(status) IN ('pending','accepted')`).get(opportunity.id).count;
+  if (Number(opportunity.positions) > 0 && Number(filled) >= Number(opportunity.positions)) return res.status(409).json({ success: false, message: 'All available positions have been filled.' });
+  const note = String(req.body?.applicationNote || '').trim().slice(0, 2000);
+  const result = db.prepare('INSERT INTO opportunity_applications (opportunity_id,user_id,application_note) VALUES (?,?,?)').run(opportunity.id, req.member.id, note || null);
+  notifyUser(req.member.id, 'Application received', `Your application for "${opportunity.title}" is pending administrator review.`, 'application');
+  res.status(201).json({ success: true, applicationId: Number(result.lastInsertRowid), message: 'Application submitted for review.' });
+});
+app.post('/api/opportunities/:id/submit', requireSession, (req, res) => {
+  const application = db.prepare(`SELECT a.*,o.title FROM opportunity_applications a JOIN opportunities o ON o.id=a.opportunity_id WHERE a.opportunity_id=? AND a.user_id=? AND lower(a.status)='accepted'`).get(Number(req.params.id), req.member.id);
+  if (!application) return res.status(404).json({ success: false, message: 'An accepted application is required before submitting work.' });
+  const content = String(req.body?.content || '').trim();
+  if (!content || content.length > 10000) return res.status(400).json({ success: false, message: 'Provide submission details up to 10,000 characters.' });
+  const existing = db.prepare('SELECT id FROM opportunity_submissions WHERE application_id=?').get(application.id);
+  if (existing) return res.status(409).json({ success: false, message: 'A submission already exists for this application.' });
+  const result = db.prepare('INSERT INTO opportunity_submissions (application_id,user_id,opportunity_id,content,attachment_url) VALUES (?,?,?,?,?)').run(application.id, req.member.id, application.opportunity_id, content, String(req.body?.attachmentUrl || '').trim() || null);
+  res.status(201).json({ success: true, submissionId: Number(result.lastInsertRowid), message: 'Submission sent for administrator review.' });
 });
 
 // M-Pesa Daraja STK Push remains available; membership is only activated by a validated callback.
@@ -632,6 +788,127 @@ app.get('/api/admin/stats', requireAdmin, (req, res) => {
   });
 });
 
+app.get('/api/admin/opportunities', requireAdmin, (_req, res) => {
+  const opportunities = db.prepare(`
+    SELECT o.*, (SELECT COUNT(*) FROM opportunity_applications a WHERE a.opportunity_id=o.id) AS applicant_count,
+      (SELECT COUNT(*) FROM opportunity_submissions s WHERE s.opportunity_id=o.id) AS submission_count,
+      CASE WHEN o.positions>0 THEN o.positions*o.payment_amount ELSE 0 END AS allocated_amount,
+      (SELECT COALESCE(SUM(amount),0) FROM opportunity_payments p WHERE p.opportunity_id=o.id AND p.status='approved') AS approved_amount
+    FROM opportunities o ORDER BY o.id DESC
+  `).all();
+  res.json({ success: true, opportunities });
+});
+app.post('/api/admin/opportunities', requireAdmin, (req, res, next) => {
+  try {
+    const data = opportunityPayload(req.body);
+    const result = db.prepare(`
+      INSERT INTO opportunities
+      (title,category,description,difficulty,earning_model,requirements,instructions,eligibility,
+       payment_amount,payment_currency,payment_method,payment_basis,positions,application_deadline,
+       start_date,completion_date,image_url,attachment_url,status,created_by,updated_at)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, ?,CURRENT_TIMESTAMP)
+    `).run(data.title,data.category,data.description,data.difficulty,data.earningModel,data.requirements,data.instructions,data.eligibility,
+      data.paymentAmount,data.paymentCurrency,data.paymentMethod,data.paymentBasis,data.positions,data.applicationDeadline,
+      data.startDate,data.completionDate,data.imageUrl,data.attachmentUrl,data.status,req.admin.id);
+    const opportunity = db.prepare('SELECT * FROM opportunities WHERE id=?').get(result.lastInsertRowid);
+    if (data.status === 'published') notifyEligibleMembers('New opportunity available', `A new opportunity "${data.title}" has been published. Open Opportunities to view the details and apply.`);
+    res.status(201).json({ success: true, opportunity });
+  } catch (error) { next(error); }
+});
+app.patch('/api/admin/opportunities/:id', requireAdmin, (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    const current = db.prepare('SELECT * FROM opportunities WHERE id=?').get(id);
+    if (!current) return res.status(404).json({ success: false, message: 'Opportunity not found.' });
+    const merged = {
+      title: req.body?.title ?? current.title, category: req.body?.category ?? current.category,
+      description: req.body?.description ?? current.description, paymentAmount: req.body?.paymentAmount ?? current.payment_amount,
+      paymentCurrency: req.body?.paymentCurrency ?? current.payment_currency, paymentBasis: req.body?.paymentBasis ?? current.payment_basis,
+      positions: req.body?.positions ?? current.positions, status: req.body?.status ?? current.status,
+      difficulty: req.body?.difficulty ?? current.difficulty, earningModel: req.body?.earningModel ?? current.earning_model,
+      requirements: req.body?.requirements ?? current.requirements, instructions: req.body?.instructions ?? current.instructions,
+      eligibility: req.body?.eligibility ?? current.eligibility, paymentMethod: req.body?.paymentMethod ?? current.payment_method,
+      applicationDeadline: req.body?.applicationDeadline ?? current.application_deadline, startDate: req.body?.startDate ?? current.start_date,
+      completionDate: req.body?.completionDate ?? current.completion_date, imageUrl: req.body?.imageUrl ?? current.image_url,
+      attachmentUrl: req.body?.attachmentUrl ?? current.attachment_url
+    };
+    const data = opportunityPayload(merged, false);
+    db.prepare(`
+      UPDATE opportunities SET title=?,category=?,description=?,difficulty=?,earning_model=?,requirements=?,instructions=?,eligibility=?,
+        payment_amount=?,payment_currency=?,payment_method=?,payment_basis=?,positions=?,application_deadline=?,start_date=?,
+        completion_date=?,image_url=?,attachment_url=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?
+    `).run(data.title,data.category,data.description,data.difficulty,data.earningModel,data.requirements,data.instructions,data.eligibility,
+      data.paymentAmount,data.paymentCurrency,data.paymentMethod,data.paymentBasis,data.positions,data.applicationDeadline,data.startDate,
+      data.completionDate,data.imageUrl,data.attachmentUrl,data.status,id);
+    if (current.status !== 'published' && data.status === 'published') notifyEligibleMembers('New opportunity available', `A new opportunity "${data.title}" has been published. Open Opportunities to view the details and apply.`);
+    else if (current.status === 'published') notifyEligibleMembers('Opportunity updated', `"${data.title}" has been updated. Review the latest details in Opportunities.`);
+    res.json({ success: true, opportunity: db.prepare('SELECT * FROM opportunities WHERE id=?').get(id) });
+  } catch (error) { next(error); }
+});
+app.delete('/api/admin/opportunities/:id', requireAdmin, (req, res) => {
+  const id = Number(req.params.id);
+  const opportunity = db.prepare('SELECT id,title FROM opportunities WHERE id=?').get(id);
+  if (!opportunity) return res.status(404).json({ success: false, message: 'Opportunity not found.' });
+  db.prepare('DELETE FROM opportunities WHERE id=?').run(id);
+  res.json({ success: true, message: 'Opportunity deleted.' });
+});
+app.get('/api/admin/opportunities/:id/applications', requireAdmin, (req, res) => {
+  const rows = db.prepare(`
+    SELECT a.id,a.opportunity_id,a.user_id,a.status,a.application_note,a.created_at,a.updated_at,
+      u.full_name,u.email,u.phone,s.id AS submission_id,s.status AS submission_status,s.content,s.review_note
+    FROM opportunity_applications a JOIN users u ON u.id=a.user_id
+    LEFT JOIN opportunity_submissions s ON s.application_id=a.id
+    WHERE a.opportunity_id=? ORDER BY a.id DESC
+  `).all(Number(req.params.id));
+  res.json({ success: true, applications: rows });
+});
+app.patch('/api/admin/applications/:id', requireAdmin, (req, res) => {
+  const id = Number(req.params.id);
+  const status = String(req.body?.status || '').toLowerCase();
+  if (!['accepted','rejected','pending'].includes(status)) return res.status(400).json({ success: false, message: 'Invalid application status.' });
+  const application = db.prepare('SELECT a.*,o.title FROM opportunity_applications a JOIN opportunities o ON o.id=a.opportunity_id WHERE a.id=?').get(id);
+  if (!application) return res.status(404).json({ success: false, message: 'Application not found.' });
+  db.prepare('UPDATE opportunity_applications SET status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').run(status, id);
+  notifyUser(application.user_id, `Application ${status}`, `Your application for "${application.title}" was ${status}.`, 'application');
+  res.json({ success: true });
+});
+app.get('/api/admin/submissions', requireAdmin, (_req, res) => {
+  const submissions = db.prepare(`
+    SELECT s.*,o.title,u.full_name,u.email,a.status AS application_status
+    FROM opportunity_submissions s JOIN opportunities o ON o.id=s.opportunity_id
+    JOIN users u ON u.id=s.user_id JOIN opportunity_applications a ON a.id=s.application_id
+    ORDER BY s.id DESC
+  `).all();
+  res.json({ success: true, submissions });
+});
+app.patch('/api/admin/submissions/:id', requireAdmin, (req, res) => {
+  const id = Number(req.params.id);
+  const status = String(req.body?.status || '').toLowerCase();
+  if (!['approved','rejected','pending'].includes(status)) return res.status(400).json({ success: false, message: 'Invalid submission status.' });
+  const submission = db.prepare('SELECT s.*,o.title,o.payment_amount,o.payment_currency,a.id AS account_id FROM opportunity_submissions s JOIN opportunities o ON o.id=s.opportunity_id JOIN accounts a ON a.user_id=s.user_id WHERE s.id=?').get(id);
+  if (!submission) return res.status(404).json({ success: false, message: 'Submission not found.' });
+  const note = String(req.body?.reviewNote || '').trim().slice(0, 1000) || null;
+  db.transaction(() => {
+    db.prepare('UPDATE opportunity_submissions SET status=?,reviewed_at=CURRENT_TIMESTAMP,reviewed_by=?,review_note=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').run(status, req.admin.id, note, id);
+    if (status === 'approved') {
+      const payment = db.prepare('SELECT * FROM opportunity_payments WHERE submission_id=?').get(id);
+      if (!payment) {
+        const reference = `OPP-${submission.opportunity_id}-${id}`;
+        const transaction = db.prepare(`INSERT INTO transactions (user_id,account_id,type,amount,currency,status,reference,description) VALUES (?,?,?, ?,?,'completed',?,?)`).run(submission.user_id, submission.account_id, 'task_earning', submission.payment_amount, submission.payment_currency, reference, `Approved opportunity: ${submission.title}`);
+        db.prepare('UPDATE accounts SET balance=balance+?,total_earned=total_earned+?,updated_at=CURRENT_TIMESTAMP WHERE id=?').run(submission.payment_amount, submission.payment_amount, submission.account_id);
+        db.prepare('INSERT INTO opportunity_payments (submission_id,opportunity_id,user_id,amount,currency,status,transaction_id,approved_by,approved_at) VALUES (?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)').run(id, submission.opportunity_id, submission.user_id, submission.payment_amount, submission.payment_currency, 'approved', transaction.lastInsertRowid, req.admin.id);
+      }
+    }
+  })();
+  notifyUser(submission.user_id, `Submission ${status}`, `Your submission for "${submission.title}" was ${status}.`, 'submission');
+  if (status === 'approved') notifyUser(submission.user_id, 'Payment approved and credited', `${submission.payment_currency} ${submission.payment_amount} was credited to your verified wallet for "${submission.title}".`, 'payment');
+  res.json({ success: true });
+});
+app.get('/api/admin/payments', requireAdmin, (_req, res) => {
+  const payments = db.prepare(`SELECT p.*,o.title,u.full_name,u.email,t.reference FROM opportunity_payments p JOIN opportunities o ON o.id=p.opportunity_id JOIN users u ON u.id=p.user_id LEFT JOIN transactions t ON t.id=p.transaction_id ORDER BY p.id DESC`).all();
+  res.json({ success: true, payments });
+});
+
 // List registered members
 app.get('/api/admin/members', requireAdmin, (req, res) => {
   const page = Math.max(1, Number(req.query.page) || 1);
@@ -899,8 +1176,19 @@ app.get('/api/admin/records', requireAdmin, (req, res) => {
   const section = String(req.query.section || '').toLowerCase();
   const queries = {
     opportunities: `
-      SELECT id,title,category,difficulty,status,created_at
+      SELECT id,title,category,difficulty,payment_amount,payment_currency,payment_basis,positions,status,created_at
       FROM opportunities ORDER BY id DESC LIMIT 100
+    `,
+    submissions: `
+      SELECT s.id,o.title,u.full_name AS member,s.status,s.created_at,s.reviewed_at
+      FROM opportunity_submissions s JOIN opportunities o ON o.id=s.opportunity_id
+      JOIN users u ON u.id=s.user_id ORDER BY s.id DESC LIMIT 100
+    `,
+    opportunity_payments: `
+      SELECT p.id,o.title,u.full_name AS member,p.amount,p.currency,p.status,p.approved_at,t.reference
+      FROM opportunity_payments p JOIN opportunities o ON o.id=p.opportunity_id
+      JOIN users u ON u.id=p.user_id LEFT JOIN transactions t ON t.id=p.transaction_id
+      ORDER BY p.id DESC LIMIT 100
     `,
     packages: `
       SELECT id,name,activation_fee,status,created_at

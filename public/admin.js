@@ -111,6 +111,20 @@
         panel.innerHTML = '<div class="empty-state"><strong>No administrator actions recorded.</strong></div>';
         return;
       }
+
+      async function loadOpportunities() {
+        const panel = $('#opportunityRecords');
+        if (!panel) return;
+        const data = await request('/opportunities');
+        panel.innerHTML = data.opportunities?.length ? `<div class="table-wrap"><table class="record-table"><thead><tr><th>Title</th><th>Payment</th><th>Slots</th><th>Status</th><th>Applicants</th><th>Actions</th></tr></thead><tbody>${data.opportunities.map((item) => `<tr><td>${escapeHtml(item.title)}<br><small>${escapeHtml(item.category)}</small></td><td>${escapeHtml(item.payment_currency)} ${number(item.payment_amount)}</td><td>${item.positions || 'Unlimited'}</td><td>${escapeHtml(item.status)}</td><td>${item.applicant_count || 0}</td><td><div class="actions"><button class="button button-secondary" data-op-action="edit" data-id="${item.id}">Edit</button><button class="button button-secondary" data-op-action="applications" data-id="${item.id}">Applicants</button><button class="button button-danger" data-op-action="delete" data-id="${item.id}">Delete</button></div></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty-state"><strong>No opportunities created yet.</strong></div>';
+      }
+
+      async function loadSubmissions() {
+        const panel = $('#submissionRecords');
+        if (!panel) return;
+        const data = await request('/submissions');
+        panel.innerHTML = data.submissions?.length ? `<div class="table-wrap"><table class="record-table"><thead><tr><th>Opportunity</th><th>Member</th><th>Status</th><th>Submitted</th><th>Action</th></tr></thead><tbody>${data.submissions.map((item) => `<tr><td>${escapeHtml(item.title)}</td><td>${escapeHtml(item.full_name)}<br><small>${escapeHtml(item.email)}</small></td><td>${escapeHtml(item.status)}</td><td>${new Date(item.created_at).toLocaleString()}</td><td><div class="actions"><button class="button button-primary" data-sub-action="approve" data-id="${item.id}">Approve</button><button class="button button-danger" data-sub-action="reject" data-id="${item.id}">Reject</button></div></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty-state"><strong>No submissions found.</strong></div>';
+      }
       const columns = ['action', 'administrator', 'affected_member', 'reason', 'reference', 'created_at'];
       panel.innerHTML = `<div class="table-wrap"><table class="record-table"><thead><tr>${columns.map((column) => `<th>${escapeHtml(column.replaceAll('_', ' '))}</th>`).join('')}</tr></thead><tbody>${data.logs.map((log) => `<tr>${columns.map((column) => `<td>${escapeHtml(log[column] ?? '—')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
     } catch (error) {
@@ -124,6 +138,8 @@
       await loadStats();
       const active = document.querySelector('.page-section.active')?.id;
       if (active === 'members') await loadMembers();
+      if (active === 'opportunities') await loadOpportunities();
+      if (active === 'submissions') await loadSubmissions();
       if (['opportunities', 'memberships', 'payments', 'withdrawals', 'finance', 'revenue'].includes(active)) await loadRecords(active === 'memberships' ? 'packages' : active);
       if (active === 'audit-logs') await loadAuditLogs();
       setState('Live database data loaded.');
@@ -140,6 +156,8 @@
     $('#sidebar').classList.remove('open');
     $('#menuButton').setAttribute('aria-expanded', 'false');
     if (page === 'members') loadMembers();
+    if (page === 'opportunities') loadOpportunities();
+    if (page === 'submissions') loadSubmissions();
     if (['opportunities', 'memberships', 'payments', 'withdrawals', 'finance', 'revenue'].includes(page)) loadRecords(page === 'memberships' ? 'packages' : page);
     if (page === 'audit-logs') loadAuditLogs();
   }
@@ -207,6 +225,63 @@
   $('#membersBody').addEventListener('click', (event) => {
     const button = event.target.closest('[data-action]');
     if (button) changeMember(button.dataset.action, button.dataset.id, button.dataset.status);
+  });
+  $('#newOpportunityButton').addEventListener('click', () => {
+    $('#opportunityForm').hidden = false;
+    $('#opportunityForm').reset();
+    $('#opportunityId').value = '';
+  });
+  $('#cancelOpportunityButton').addEventListener('click', () => { $('#opportunityForm').hidden = true; });
+  $('#opportunityForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const body = {
+      title: $('#opportunityTitle').value.trim(), category: $('#opportunityCategory').value.trim(),
+      description: $('#opportunityDescription').value.trim(), paymentAmount: Number($('#opportunityPayment').value),
+      paymentCurrency: $('#opportunityCurrency').value, paymentBasis: $('#opportunityBasis').value,
+      paymentMethod: $('#opportunityMethod').value.trim(), positions: Number($('#opportunityPositions').value || 0),
+      applicationDeadline: $('#opportunityDeadline').value, startDate: $('#opportunityStart').value,
+      completionDate: $('#opportunityCompletion').value, status: $('#opportunityStatus').value,
+      imageUrl: $('#opportunityImage').value.trim(), instructions: $('#opportunityInstructions').value.trim(),
+      eligibility: $('#opportunityEligibility').value.trim(), requirements: $('#opportunityRequirements').value.trim()
+    };
+    const id = $('#opportunityId').value;
+    try {
+      await request(id ? `/opportunities/${id}` : '/opportunities', { method: id ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      notify(id ? 'Opportunity updated.' : 'Opportunity saved.');
+      $('#opportunityForm').hidden = true;
+      await loadOpportunities();
+    } catch (error) { window.alert(error.message); }
+  });
+  $('#opportunityRecords').addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-op-action]');
+    if (!button) return;
+    const id = button.dataset.id;
+    try {
+      if (button.dataset.opAction === 'delete') {
+        if (!window.confirm('Delete this opportunity? Its applications and submissions will also be removed.')) return;
+        await request(`/opportunities/${id}`, { method: 'DELETE' });
+        await loadOpportunities();
+      } else if (button.dataset.opAction === 'applications') {
+        const data = await request(`/opportunities/${id}/applications`);
+        window.alert(data.applications?.length ? data.applications.map((item) => `${item.full_name} · ${item.status} · ${item.email}`).join('\n') : 'No applicants yet.');
+      } else {
+        const data = await request('/opportunities');
+        const item = data.opportunities.find((entry) => String(entry.id) === String(id));
+        if (!item) return;
+        $('#opportunityId').value = item.id; $('#opportunityTitle').value = item.title; $('#opportunityCategory').value = item.category;
+        $('#opportunityDescription').value = item.description; $('#opportunityPayment').value = item.payment_amount; $('#opportunityCurrency').value = item.payment_currency;
+        $('#opportunityBasis').value = item.payment_basis; $('#opportunityMethod').value = item.payment_method; $('#opportunityPositions').value = item.positions;
+        $('#opportunityDeadline').value = item.application_deadline?.replace(' ', 'T') || ''; $('#opportunityStart').value = item.start_date || '';
+        $('#opportunityCompletion').value = item.completion_date || ''; $('#opportunityStatus').value = item.status; $('#opportunityImage').value = item.image_url || '';
+        $('#opportunityInstructions').value = item.instructions || ''; $('#opportunityEligibility').value = item.eligibility || ''; $('#opportunityRequirements').value = item.requirements || '';
+        $('#opportunityForm').hidden = false;
+      }
+    } catch (error) { window.alert(error.message); }
+  });
+  $('#submissionRecords').addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-sub-action]');
+    if (!button) return;
+    try { await request(`/submissions/${button.dataset.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: button.dataset.subAction === 'approve' ? 'approved' : 'rejected' }) }); notify('Submission updated.'); await loadSubmissions(); } catch (error) { window.alert(error.message); }
   });
   $('#menuButton').addEventListener('click', () => {
     const open = $('#sidebar').classList.toggle('open');

@@ -89,8 +89,33 @@
           <div class="table-wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Package</th><th>Status</th><th>Balance</th><th>Actions</th></tr></thead><tbody id="membersBody"><tr><td colspan="7" class="empty">Loading members…</td></tr></tbody></table></div>
         </section>
 
-        <section class="page-section" id="opportunities"><div class="section-heading"><div><p class="eyebrow">PLATFORM CONTENT</p><h2>Opportunities</h2></div></div><div class="record-panel" data-records="opportunities"><p class="empty">Loading opportunities…</p></div></section>
-        <section class="page-section" id="submissions"><div class="section-heading"><div><p class="eyebrow">MEMBER ACTIVITY</p><h2>Submissions</h2></div></div><div class="record-panel"><div class="empty-state"><strong>Submissions are not stored by the current backend.</strong><p>No records are fabricated. This section remains available for the submission API when enabled.</p></div></div></section>
+        <section class="page-section" id="opportunities">
+          <div class="section-heading"><div><p class="eyebrow">PLATFORM CONTENT</p><h2>Post Opportunities</h2></div><button class="button button-primary" id="newOpportunityButton">Create opportunity</button></div>
+          <form id="opportunityForm" class="opportunity-form" hidden>
+            <input type="hidden" id="opportunityId">
+            <div class="form-grid">
+              <label>Title<input id="opportunityTitle" required maxlength="160"></label>
+              <label>Category<input id="opportunityCategory" required maxlength="80"></label>
+              <label>Payment amount<input id="opportunityPayment" type="number" min="0" step="1" required></label>
+              <label>Currency<select id="opportunityCurrency"><option>KES</option><option>USD</option><option>EUR</option><option>GBP</option></select></label>
+              <label>Payment basis<select id="opportunityBasis"><option>per approved submission</option><option>per task</option><option>per completed project</option></select></label>
+              <label>Payment method<input id="opportunityMethod" value="Wallet credit"></label>
+              <label>Available positions<input id="opportunityPositions" type="number" min="0" step="1" value="0"></label>
+              <label>Application deadline<input id="opportunityDeadline" type="datetime-local"></label>
+              <label>Start date<input id="opportunityStart" type="date"></label>
+              <label>Completion date<input id="opportunityCompletion" type="date"></label>
+              <label>Status<select id="opportunityStatus"><option value="draft">Draft</option><option value="published">Published</option><option value="paused">Paused</option><option value="closed">Closed</option></select></label>
+              <label>Image URL<input id="opportunityImage" type="url"></label>
+            </div>
+            <label>Description<textarea id="opportunityDescription" required maxlength="10000"></textarea></label>
+            <label>Instructions and requirements<textarea id="opportunityInstructions" maxlength="10000"></textarea></label>
+            <label>Eligibility requirements<textarea id="opportunityEligibility" maxlength="5000"></textarea></label>
+            <label>Additional requirements<textarea id="opportunityRequirements" maxlength="5000"></textarea></label>
+            <div class="form-actions"><button class="button button-primary" type="submit">Save opportunity</button><button class="button button-secondary" type="button" id="cancelOpportunityButton">Cancel</button></div>
+          </form>
+          <div class="record-panel" id="opportunityRecords"><p class="empty">Loading opportunities…</p></div>
+        </section>
+        <section class="page-section" id="submissions"><div class="section-heading"><div><p class="eyebrow">MEMBER ACTIVITY</p><h2>Applications &amp; submissions</h2></div><button class="button button-secondary" data-refresh>Refresh</button></div><div class="record-panel" id="submissionRecords"><p class="empty">Loading submissions…</p></div></section>
         <section class="page-section" id="memberships"><div class="section-heading"><div><p class="eyebrow">PLANS AND ACTIVATION</p><h2>Memberships</h2></div></div><div class="record-panel" data-records="packages"><p class="empty">Loading membership packages…</p></div></section>
         <section class="page-section" id="payments"><div class="section-heading"><div><p class="eyebrow">M-PESA AND TRANSACTIONS</p><h2>Payments</h2></div></div><div class="record-panel" data-records="payments"><p class="empty">Loading payments…</p></div></section>
         <section class="page-section" id="wallets"><div class="section-heading"><div><p class="eyebrow">MEMBER BALANCES</p><h2>Wallets</h2></div></div><div class="record-panel"><div class="empty-state"><strong>Wallet balances are managed in Members.</strong><p>Open Members to inspect balances and use the audited adjustment action.</p><button class="button button-secondary" data-go="members">Open Members</button></div></div></section>

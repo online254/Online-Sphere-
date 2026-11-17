@@ -20,7 +20,8 @@
       </a>
       <div class="top-actions">
         <a class="get-app" href="index.html#install">Get App <span aria-hidden="true">↗</span></a>
-        <button class="icon-btn notification" type="button" aria-label="Notifications" title="Notifications">♧<i></i></button>
+        <button class="icon-btn notification" id="notificationButton" type="button" aria-label="Notifications" title="Notifications">♧<i id="notificationCount" hidden></i></button>
+        <div class="notification-menu" id="notificationMenu" hidden><div class="notification-menu-head"><strong>Notifications</strong><button type="button" id="markAllRead">Mark all as read</button></div><div id="notificationPanelList"></div></div>
         <button class="avatar" id="profileButton" aria-label="Open profile menu" type="button">—</button>
         <div class="profile-menu" id="profileMenu" hidden><span id="menuName">Member</span><a href="login.html">Account / Sign in</a><button type="button" id="signOutButton">Sign out</button></div>
       </div>
@@ -76,6 +77,11 @@
               <button class="shortcut" type="button" data-not-ready="Withdrawal requests are not available in this dashboard yet."><span class="shortcut-icon">➤</span><span>Withdraw</span></button>
               <a class="shortcut" href="#team"><span class="shortcut-icon">♧</span><span>Affiliates</span></a>
             </div>
+          </section>
+
+          <section class="panel live-opportunities-panel" id="opportunities">
+            <div class="panel-heading"><div><span class="section-kicker">LIVE FROM ONLINE SPHERE</span><h2>Opportunities</h2></div><a class="quiet-link" href="opportunities.html">Browse all</a></div>
+            <div id="opportunityList" class="opportunity-list" aria-live="polite"><p class="panel-description">Loading published opportunities…</p></div>
           </section>
 
           <section class="panel wallet-panel" id="transactions">
