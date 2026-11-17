@@ -9,7 +9,16 @@ const PORT = process.env.PORT || 3000;
 const scrypt = promisify(crypto.scrypt);
 
 app.disable('x-powered-by');
-const allowedOrigins = new Set(String(process.env.PUBLIC_SITE_ORIGINS || 'https://onlinespherecommercecompany.com,https://www.onlinespherecommercecompany.com,https://online254.github.io,http://localhost:3000,http://localhost:4173,http://localhost:5500').split(',').map((origin) => origin.trim()).filter(Boolean));
+const configuredOrigins = String(process.env.PUBLIC_SITE_ORIGINS || '').split(',').map((origin) => origin.trim()).filter(Boolean);
+const allowedOrigins = new Set([
+  'https://online254.github.io',
+  'http://localhost:3000',
+  'http://localhost:4173',
+  'http://localhost:5500',
+  'https://onlinespherecommercecompany.com',
+  'https://www.onlinespherecommercecompany.com',
+  ...configuredOrigins
+]);
 app.use(cors({
   origin(origin, callback) {
     if (!origin || allowedOrigins.has(origin)) return callback(null, true);
