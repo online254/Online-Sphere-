@@ -126,6 +126,14 @@ h1{font-size:clamp(38px,6vw,68px);line-height:1.08;letter-spacing:-2.8px;margin:
 .empty h3{margin:5px 0 8px}
 .empty p{color:var(--muted);font-size:13px;max-width:480px;margin:0 auto 18px}
 .notice{margin-top:22px;padding:15px 17px;border:1px solid rgba(96,165,250,.18);background:rgba(37,99,235,.07);border-radius:14px;color:#b7c8df;font-size:11px}
+.published-section{padding:42px 0 0}
+.published-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.published-card{border:1px solid var(--border);border-radius:18px;padding:22px;background:linear-gradient(145deg,rgba(17,31,52,.98),rgba(10,23,39,.98))}
+.published-card h3{font-size:17px;margin:18px 0 7px;letter-spacing:-.3px}
+.published-card p{font-size:12px;color:var(--muted);margin:0 0 18px;min-height:58px}
+.published-meta{display:flex;flex-wrap:wrap;gap:8px 12px;padding:12px 0 15px;border-top:1px solid var(--border);color:#91a4be;font-size:10px}
+.published-card .btn{width:100%;font-size:11px}
+.published-empty{grid-column:1/-1;text-align:center;padding:35px 20px;border:1px dashed rgba(255,255,255,.18);border-radius:18px;background:rgba(14,27,45,.45);color:var(--muted);font-size:13px}
 .cta{
   margin:0 0 75px;padding:36px;border:1px solid var(--border);border-radius:24px;
   background:linear-gradient(115deg,rgba(37,99,235,.19),rgba(124,58,237,.15)),#0c192a;
@@ -141,7 +149,7 @@ footer{border-top:1px solid var(--border);padding:28px 0 35px;color:var(--muted)
 .reveal.visible{opacity:1;transform:translateY(0)}
 @media(max-width:1000px){
  .navlinks{gap:12px}.navlinks a{font-size:11px}
- .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .grid,.published-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:760px){
  .nav{min-height:68px}
@@ -161,7 +169,7 @@ footer{border-top:1px solid var(--border);padding:28px 0 35px;color:var(--muted)
  .cta{padding:25px;align-items:flex-start;flex-direction:column}
 }
 @media(max-width:520px){
- .grid{grid-template-columns:1fr}
+ .grid,.published-grid{grid-template-columns:1fr}
  .card p{min-height:0}
  .section-heading{align-items:flex-start;flex-direction:column}
  .results-line{align-items:flex-start;flex-direction:column}
@@ -350,6 +358,18 @@ footer{border-top:1px solid var(--border);padding:28px 0 35px;color:var(--muted)
         <strong>Transparency:</strong> These cards describe areas of digital work and learning, not confirmed vacancies.
         Actual opportunities, requirements, deadlines and compensation must be displayed from verified platform records when available.
       </div>
+
+      <section class="published-section" id="published-opportunities" aria-labelledby="publishedTitle">
+        <div class="section-heading">
+          <div>
+            <h2 id="publishedTitle">Published opportunities</h2>
+            <p>Available opportunities published by Online Sphere administrators.</p>
+          </div>
+        </div>
+        <div class="published-grid" id="publishedOpportunityList" aria-live="polite">
+          <p class="published-empty">Loading published opportunities…</p>
+        </div>
+      </section>
     </div>
   </section>
 
@@ -392,6 +412,8 @@ footer{border-top:1px solid var(--border);padding:28px 0 35px;color:var(--muted)
   const count = document.getElementById("resultCount");
   const empty = document.getElementById("emptyState");
   const reset = document.getElementById("resetFilters");
+  const publishedList = document.getElementById("publishedOpportunityList");
+  const apiBase = String(window.ONLINE_SPHERE_API_URL || "https://online-sphere-backend.onrender.com").replace(/\/$/, "");
   let activeCategory = "all";
 
   document.getElementById("year").textContent = new Date().getFullYear();
@@ -461,6 +483,43 @@ footer{border-top:1px solid var(--border);padding:28px 0 35px;color:var(--muted)
       button.classList.toggle("active",selected);
       button.setAttribute("aria-pressed",String(selected));
     });
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, function(char) {
+        return ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" })[char];
+      });
+    }
+
+    function renderPublished(opportunities) {
+      if (!publishedList) return;
+      if (!opportunities.length) {
+        publishedList.innerHTML = '<div class="published-empty"><div class="empty-icon">◎</div><h3>No published opportunities yet</h3><p>New opportunities will appear here after an administrator publishes them.</p></div>';
+        return;
+      }
+      publishedList.innerHTML = opportunities.map(function(item) {
+        const deadline = item.application_deadline ? new Date(item.application_deadline).toLocaleDateString() : "Open";
+        return '<article class="published-card"><span class="tag">' + escapeHtml(item.category) + '</span><h3>' + escapeHtml(item.title) + '</h3><p>' + escapeHtml(item.description) + '</p><div class="published-meta"><span>' + escapeHtml(item.difficulty || "Beginner") + '</span><span>' + escapeHtml(item.payment_currency || "KES") + ' ' + Number(item.payment_amount || 0).toLocaleString() + '</span><span>Deadline: ' + escapeHtml(deadline) + '</span></div><a class="btn btn-secondary" href="login.html">Sign in to apply →</a></article>';
+      }).join("");
+    }
+
+    fetch(apiBase + "/api/opportunities", { cache: "no-store" })
+      .then(function(response) {
+        if (!response.ok) throw new Error("Published opportunities are unavailable.");
+        return response.json();
+      })
+      .then(function(result) {
+        const requestedCategory = new URLSearchParams(window.location.search).get("category");
+        const opportunities = (result.opportunities || []).filter(function(item) {
+          return !requestedCategory || String(item.category || "").toLowerCase() === requestedCategory.toLowerCase();
+        });
+        renderPublished(opportunities);
+        if (requestedCategory) {
+          document.getElementById("published-opportunities").scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      })
+      .catch(function() {
+        if (publishedList) publishedList.innerHTML = '<div class="published-empty"><h3>Published opportunities are unavailable</h3><p>Please try again shortly.</p></div>';
+      });
     applyFilters();
   });
 

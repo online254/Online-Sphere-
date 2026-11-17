@@ -43,26 +43,22 @@
         ? `<h3>Recent transactions</h3>${rows.map((item) => `<p><strong>${String(item.type || '').replaceAll('_', ' ')}</strong> · KSh ${Number(item.amount || 0).toLocaleString('en-KE')} · ${item.status || 'pending'}<br><small>${item.description || item.reference || ''}</small></p>`).join('')}`
         : '<p class="panel-description">No transactions recorded yet.</p>';
     }
-    const notifications = $('#notificationList');
-    if (notifications) {
-      const rows = (dashboard.notifications || []).slice(0, 8);
-      notifications.innerHTML = rows.length
-        ? rows.map((item) => `<p><strong>${item.title}</strong><br>${item.message}<br><small>${new Date(item.created_at).toLocaleString()}</small></p>`).join('')
-        : '<p class="panel-description">No account notifications.</p>';
-    }
-    const opportunityList = $('#opportunityList');
-    if (opportunityList) {
-      const opportunities = (dashboard.opportunities || []).slice(0, 6);
-      opportunityList.innerHTML = opportunities.length ? opportunities.map((item) => `<article class="opportunity-card"><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.description)}</p><div class="opportunity-meta"><span>${escapeHtml(item.category)}</span><span>${escapeHtml(item.payment_currency || 'KES')} ${Number(item.payment_amount || 0).toLocaleString()}</span><span>Deadline: ${item.application_deadline ? new Date(item.application_deadline).toLocaleDateString() : 'Open'}</span></div><div class="opportunity-actions"><button type="button" data-opportunity-details="${item.id}">View details</button><button type="button" class="apply" data-opportunity-apply="${item.id}">Apply now</button></div></article>`).join('') : '<p class="panel-description">No published opportunities are currently available.</p>';
-    }
+    renderNotifications(dashboard.notifications || []);
   };
   const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
-  const renderNotificationMenu = (notifications) => {
+  const notificationIcon = (type) => ({ opportunity: '◇', application: '✓', submission: '▣', payment: 'KSh', membership: '★', admin: '!' }[String(type || '').toLowerCase()] || '•');
+  const renderNotificationItems = (notifications, limit) => {
+    const rows = notifications.slice(0, limit);
+    return rows.length ? rows.map((item) => `<article class="notification-item ${item.read_at ? '' : 'unread'}"><span class="notification-type-icon" aria-hidden="true">${notificationIcon(item.type)}</span><div><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.message)}</p><small>${new Date(item.created_at).toLocaleString()}</small>${item.read_at ? '' : `<button type="button" class="notification-read" data-notification-read="${item.id}">Mark as read</button>`}</div></article>`).join('') : '<p class="panel-description">No notifications.</p>';
+  };
+  const renderNotifications = (notifications) => {
     const count = notifications.filter((item) => !item.read_at).length;
     const badge = $('#notificationCount');
     if (badge) { badge.hidden = count === 0; badge.textContent = count > 99 ? '99+' : String(count); }
     const panel = $('#notificationPanelList');
-    if (panel) panel.innerHTML = notifications.length ? notifications.slice(0, 30).map((item) => `<article class="notification-item ${item.read_at ? '' : 'unread'}"><strong>${escapeHtml(item.title)}</strong><br>${escapeHtml(item.message)}<small>${new Date(item.created_at).toLocaleString()}</small></article>`).join('') : '<p class="panel-description">No notifications.</p>';
+    if (panel) panel.innerHTML = renderNotificationItems(notifications, 30);
+    const dashboardList = $('#notificationList');
+    if (dashboardList) dashboardList.innerHTML = renderNotificationItems(notifications, 8);
   };
 
   async function checkAdminAccess() {
@@ -144,7 +140,7 @@
     }
 
     renderRecords(data);
-    renderNotificationMenu(data.notifications || []);
+    renderNotifications(data.notifications || []);
     setStatus('Your account data is synchronized with the live service.', true);
   }
 
@@ -203,18 +199,20 @@
     const menu = $('#notificationMenu');
     if (!menu) return;
     menu.hidden = !menu.hidden;
-    if (!menu.hidden) {
-      await fetch(`${API_BASE}/api/me/notifications/read-all`, { method: 'POST', credentials: 'include' }).catch(() => {});
-      document.querySelectorAll('.notification-item').forEach((item) => item.classList.remove('unread'));
-      const badge = $('#notificationCount');
-      if (badge) badge.hidden = true;
-    }
   });
-  $('#markAllRead')?.addEventListener('click', async () => {
-    await fetch(`${API_BASE}/api/me/notifications/read-all`, { method: 'POST', credentials: 'include' }).catch(() => {});
-    document.querySelectorAll('.notification-item').forEach((item) => item.classList.remove('unread'));
-    const badge = $('#notificationCount');
-    if (badge) badge.hidden = true;
+  async function markAllNotificationsRead() {
+    const response = await fetch(`${API_BASE}/api/me/notifications/read-all`, { method: 'POST', credentials: 'include' });
+    if (!response.ok) throw new Error('Notifications could not be updated.');
+    loadDashboard();
+  }
+  $('#markAllRead')?.addEventListener('click', () => markAllNotificationsRead().catch((error) => showToast(error.message)));
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-notification-read]');
+    if (!button) return;
+    fetch(`${API_BASE}/api/me/notifications/${encodeURIComponent(button.dataset.notificationRead)}/read`, { method: 'POST', credentials: 'include' })
+      .then((response) => { if (!response.ok) throw new Error('Notification could not be updated.'); return response; })
+      .then(() => loadDashboard())
+      .catch((error) => showToast(error.message));
   });
   document.addEventListener('click', (event) => {
     if (!event.target.closest('.top-actions')) {
@@ -222,25 +220,6 @@
       if (menu) menu.hidden = true;
     }
   });
-  $('#opportunityList')?.addEventListener('click', async (event) => {
-    const apply = event.target.closest('[data-opportunity-apply]');
-    const details = event.target.closest('[data-opportunity-details]');
-    const id = apply?.dataset.opportunityApply || details?.dataset.opportunityDetails;
-    if (!id) return;
-    if (details) {
-      const card = details.closest('.opportunity-card');
-      showToast(card?.querySelector('p')?.textContent || 'Opportunity details loaded.');
-      return;
-    }
-    try {
-      const response = await fetch(`${API_BASE}/api/opportunities/${id}/apply`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.message || 'Application could not be submitted.');
-      showToast(data.message || 'Application submitted.');
-      loadDashboard();
-    } catch (error) { showToast(error.message); }
-  });
-
   loadDashboard();
   setInterval(loadDashboard, 15000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) loadDashboard(); });

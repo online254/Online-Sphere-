@@ -241,15 +241,7 @@ function recordAdminAction(adminUserId, affectedUserId, action, previousValue, n
     reference
   );
   if (affectedUserId) {
-    db.prepare(`
-      INSERT INTO notifications (user_id,title,message,type)
-      VALUES (?,?,?,?)
-    `).run(
-      affectedUserId,
-      'Account updated',
-      `${action.replaceAll('_', ' ')} was updated by an administrator.`,
-      'admin'
-    );
+    notifyUser(affectedUserId, 'Account updated', `${action.replaceAll('_', ' ')} was updated by an administrator.`, action.includes('status') ? 'membership' : 'admin');
   }
   return reference;
 }
@@ -257,12 +249,19 @@ const OPPORTUNITY_STATUSES = new Set(['draft', 'published', 'paused', 'closed', 
 const PAYMENT_CURRENCIES = new Set(['KES', 'USD', 'EUR', 'GBP']);
 const PAYMENT_BASES = new Set(['per task', 'per approved submission', 'per completed project']);
 function notifyUser(userId, title, message, type = 'opportunity') {
+  const duplicate = db.prepare(`
+    SELECT id FROM notifications
+    WHERE user_id=? AND title=? AND message=? AND type=?
+      AND datetime(created_at)>=datetime('now','-5 minutes')
+    LIMIT 1
+  `).get(userId, title, message, type);
+  if (duplicate) return false;
   db.prepare('INSERT INTO notifications (user_id,title,message,type) VALUES (?,?,?,?)').run(userId, title, message, type);
+  return true;
 }
 function notifyEligibleMembers(title, message, type = 'opportunity') {
   const members = db.prepare(`SELECT id FROM users WHERE lower(COALESCE(role,'member'))='member' OR COALESCE(is_admin,0)=0`).all();
-  const insert = db.prepare('INSERT INTO notifications (user_id,title,message,type) VALUES (?,?,?,?)');
-  db.transaction(() => members.forEach(({ id }) => insert.run(id, title, message, type)))();
+  db.transaction(() => members.forEach(({ id }) => notifyUser(id, title, message, type)))();
 }
 function opportunityPayload(body, partial = false) {
   const value = (key) => String(body?.[key] ?? '').trim();
@@ -381,14 +380,6 @@ app.get('/api/me/dashboard', requireSession, (req, res) => {
     SELECT id,title,message,type,read_at,created_at
     FROM notifications WHERE user_id=? ORDER BY id DESC LIMIT 50
   `).all(member.id);
-  const opportunities = db.prepare(`
-    SELECT id,title,category,description,difficulty,earning_model,requirements,
-      instructions,eligibility,payment_amount,payment_currency,payment_method,payment_basis,
-      positions,application_deadline,start_date,completion_date,image_url,attachment_url,
-      platform_name,external_url,risk_level,featured,status,created_at,updated_at
-    FROM opportunities WHERE ${publicOpportunityWhere()}
-    ORDER BY featured DESC,created_at DESC,id ASC
-  `).all();
   res.json({ success: true, dashboard: {
     user: { id: member.id, fullName: member.full_name, email: member.email, phone: member.phone, createdAt: member.created_at, status: member.account_status },
     membership: { name: member.package, package: member.package, status: member.account_status, active: membershipActive },
@@ -397,8 +388,7 @@ app.get('/api/me/dashboard', requireSession, (req, res) => {
     referrals: { sponsorName: null, joinedCount: Number(referralCount), verifiedCount: Number(referralCount), url: member.referral_code ? `${process.env.PUBLIC_SITE_URL || 'https://onlinespherecommercecompany.com'}/register?ref=${encodeURIComponent(member.referral_code)}` : null, pendingCommissions: 0, paidCommissions: 0 },
     transactions,
     withdrawals,
-    notifications,
-    opportunities
+    notifications
   } });
 });
 
@@ -497,6 +487,8 @@ app.post('/api/mpesa/callback', (req, res) => {
     const resultCode = Number(callback.ResultCode);
     if (resultCode !== 0) {
       db.prepare(`UPDATE payment_attempts SET status='failed',result_code=?,result_description=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(resultCode, String(callback.ResultDesc || 'Payment failed'), attempt.id);
+      const failedUser = db.prepare('SELECT id FROM users WHERE phone=?').get(attempt.phone);
+      if (failedUser) notifyUser(failedUser.id, 'Payment rejected', `Your ${attempt.package_name} membership payment was rejected. ${String(callback.ResultDesc || 'Please try again.')}`, 'payment');
       return res.json({ ResultCode: 0, ResultDesc: 'Payment failure recorded' });
     }
     const metadata = Object.fromEntries((callback.CallbackMetadata?.Item || []).filter((item) => item.Name).map((item) => [item.Name, item.Value ?? null]));
@@ -511,6 +503,7 @@ app.post('/api/mpesa/callback', (req, res) => {
       if (user && account) {
         db.prepare(`INSERT INTO transactions (user_id,account_id,type,amount,status,reference,description) VALUES (?,?,?,?,'completed',?,?)`).run(user.id, account.id, 'membership_payment', attempt.amount, receipt, `Online Sphere ${attempt.package_name} membership`);
         db.prepare(`UPDATE accounts SET package=?,activation_fee=?,status='active',updated_at=CURRENT_TIMESTAMP WHERE id=? AND user_id=?`).run(attempt.package_name, attempt.amount, account.id, user.id);
+        notifyUser(user.id, 'Membership activated', `Your ${attempt.package_name} membership is active after payment confirmation.`, 'membership');
       }
       db.prepare(`UPDATE payment_attempts SET status=?,mpesa_receipt=?,result_code=?,result_description=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(user && account ? 'paid' : 'paid_unlinked', receipt, resultCode, String(callback.ResultDesc || 'Success'), attempt.id);
     })();
@@ -833,6 +826,15 @@ app.patch('/api/admin/opportunities/:id', requireAdmin, (req, res, next) => {
       attachmentUrl: req.body?.attachmentUrl ?? current.attachment_url
     };
     const data = opportunityPayload(merged, false);
+    const changed = ['title', 'category', 'description', 'difficulty', 'earningModel', 'requirements', 'instructions', 'eligibility', 'paymentAmount', 'paymentCurrency', 'paymentMethod', 'paymentBasis', 'positions', 'applicationDeadline', 'startDate', 'completionDate', 'imageUrl', 'attachmentUrl', 'status']
+      .some((key) => String(data[key] ?? '') !== String({
+        title: current.title, category: current.category, description: current.description, difficulty: current.difficulty,
+        earningModel: current.earning_model, requirements: current.requirements, instructions: current.instructions,
+        eligibility: current.eligibility, paymentAmount: current.payment_amount, paymentCurrency: current.payment_currency,
+        paymentMethod: current.payment_method, paymentBasis: current.payment_basis, positions: current.positions,
+        applicationDeadline: current.application_deadline, startDate: current.start_date, completionDate: current.completion_date,
+        imageUrl: current.image_url, attachmentUrl: current.attachment_url, status: current.status
+      }[key] ?? ''));
     db.prepare(`
       UPDATE opportunities SET title=?,category=?,description=?,difficulty=?,earning_model=?,requirements=?,instructions=?,eligibility=?,
         payment_amount=?,payment_currency=?,payment_method=?,payment_basis=?,positions=?,application_deadline=?,start_date=?,
@@ -841,7 +843,8 @@ app.patch('/api/admin/opportunities/:id', requireAdmin, (req, res, next) => {
       data.paymentAmount,data.paymentCurrency,data.paymentMethod,data.paymentBasis,data.positions,data.applicationDeadline,data.startDate,
       data.completionDate,data.imageUrl,data.attachmentUrl,data.status,id);
     if (current.status !== 'published' && data.status === 'published') notifyEligibleMembers('New opportunity available', `A new opportunity "${data.title}" has been published. Open Opportunities to view the details and apply.`);
-    else if (current.status === 'published') notifyEligibleMembers('Opportunity updated', `"${data.title}" has been updated. Review the latest details in Opportunities.`);
+    else if (current.status === 'published' && changed) notifyEligibleMembers('Opportunity updated', `"${data.title}" has been updated. Review the latest details in Opportunities.`);
+    if (current.status === 'published' && ['paused', 'closed'].includes(data.status) && changed) notifyEligibleMembers('Opportunity unavailable', `"${data.title}" is no longer accepting applications.`, 'opportunity');
     res.json({ success: true, opportunity: db.prepare('SELECT * FROM opportunities WHERE id=?').get(id) });
   } catch (error) { next(error); }
 });
@@ -850,6 +853,7 @@ app.delete('/api/admin/opportunities/:id', requireAdmin, (req, res) => {
   const opportunity = db.prepare('SELECT id,title FROM opportunities WHERE id=?').get(id);
   if (!opportunity) return res.status(404).json({ success: false, message: 'Opportunity not found.' });
   db.prepare('DELETE FROM opportunities WHERE id=?').run(id);
+  notifyEligibleMembers('Opportunity removed', `"${opportunity.title}" has been removed from Opportunities.`, 'opportunity');
   res.json({ success: true, message: 'Opportunity deleted.' });
 });
 app.get('/api/admin/opportunities/:id/applications', requireAdmin, (req, res) => {
