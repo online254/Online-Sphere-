@@ -1,7 +1,7 @@
-/* Member dashboard entry. Uses the locally stored account only. */
+/* Member dashboard entry. Uses authoritative backend account data. */
 (() => {
   'use strict';
-  const SESSION_KEY = 'onlineSphereCurrentUser';
+  const API_BASE = String(window.ONLINE_SPHERE_API_URL || 'https://online-sphere-backend.onrender.com').replace(/\/$/, '');
   const $ = (selector) => document.querySelector(selector);
   const statusBox = $('#loadState');
   const statusMessage = $('#loadMessage');
@@ -35,8 +35,33 @@
     document.querySelectorAll(`[data-stat="${key}"]`).forEach((el) => { el.textContent = value === null || value === undefined ? '—' : String(value); });
   }
 
-  const adminTab = $('#adminDashboardTab');
-  if (adminTab) adminTab.hidden = false;
+  const renderRecords = (dashboard) => {
+    const transactions = $('#transactionList');
+    if (transactions) {
+      const rows = (dashboard.transactions || []).slice(0, 8);
+      transactions.innerHTML = rows.length
+        ? `<h3>Recent transactions</h3>${rows.map((item) => `<p><strong>${String(item.type || '').replaceAll('_', ' ')}</strong> · KSh ${Number(item.amount || 0).toLocaleString('en-KE')} · ${item.status || 'pending'}<br><small>${item.description || item.reference || ''}</small></p>`).join('')}`
+        : '<p class="panel-description">No transactions recorded yet.</p>';
+    }
+    const notifications = $('#notificationList');
+    if (notifications) {
+      const rows = (dashboard.notifications || []).slice(0, 8);
+      notifications.innerHTML = rows.length
+        ? rows.map((item) => `<p><strong>${item.title}</strong><br>${item.message}<br><small>${new Date(item.created_at).toLocaleString()}</small></p>`).join('')
+        : '<p class="panel-description">No account notifications.</p>';
+    }
+  };
+
+  async function checkAdminAccess() {
+    const tab = $('#adminDashboardTab');
+    if (!tab) return;
+    try {
+      const response = await fetch(`${API_BASE}/api/admin/access`, { credentials: 'include', cache: 'no-store' });
+      tab.hidden = !response.ok;
+    } catch (_) {
+      tab.hidden = true;
+    }
+  }
 
   function showDashboard(data, authenticatedUser = {}) {
     const user = { ...(data.user || {}), ...authenticatedUser };
@@ -105,24 +130,25 @@
       if (copyReferralButton) copyReferralButton.disabled = false;
     }
 
-    setStatus('Your account is stored on this device.', true);
+    renderRecords(data);
+    setStatus('Your account data is synchronized with the live service.', true);
   }
 
-  function loadDashboard() {
-    let user = null;
-    try { user = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch (_) {}
-    if (!user) {
-      setStatus('No local account is signed in. Redirecting to sign in…');
-      setTimeout(() => window.location.replace('auth.html'), 700);
-      return;
+  async function loadDashboard() {
+    try {
+      const response = await fetch(`${API_BASE}/api/me/dashboard`, { credentials: 'include', cache: 'no-store' });
+      const result = await response.json().catch(() => ({}));
+      if (response.status === 401 || response.status === 403) {
+        setStatus('Your session expired. Redirecting to sign in…');
+        setTimeout(() => window.location.replace('auth.html'), 700);
+        return;
+      }
+      if (!response.ok) throw new Error(result.message || 'The dashboard service is temporarily unavailable.');
+      showDashboard(result.dashboard || result);
+      checkAdminAccess();
+    } catch (error) {
+      setStatus(error.message, false);
     }
-    showDashboard({
-      user: { ...user, createdAt: user.createdAt || new Date().toISOString(), status: 'Local account' },
-      membership: { name: null, status: 'Not connected', active: false },
-      wallet: { currency: 'KES', walletBalance: 0, availableBalance: 0, pendingBalance: 0, totalDeposited: 0, totalWithdrawn: 0, totalEarnings: 0 },
-      statistics: { transactionCount: 0, todayEarnings: 0 },
-      referrals: { joinedCount: 0, verifiedCount: 0 }
-    });
   }
 
   const greeting = $('#greeting');
@@ -154,10 +180,12 @@
       if (menu) menu.hidden = true;
     }
   });
-  $('#signOutButton')?.addEventListener('click', () => {
-    localStorage.removeItem(SESSION_KEY);
+  $('#signOutButton')?.addEventListener('click', async () => {
+    await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
     window.location.replace('auth.html');
   });
 
   loadDashboard();
+  setInterval(loadDashboard, 15000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) loadDashboard(); });
 })();

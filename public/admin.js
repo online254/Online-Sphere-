@@ -94,10 +94,27 @@
         panel.innerHTML = '<div class="empty-state"><strong>No records found.</strong><p>The database returned an empty result for this section.</p></div>';
         return;
       }
+
       const columns = Object.keys(data.records[0]);
       panel.innerHTML = `<div class="table-wrap"><table class="record-table"><thead><tr>${columns.map((column) => `<th>${escapeHtml(column.replaceAll('_', ' '))}</th>`).join('')}</tr></thead><tbody>${data.records.map((record) => `<tr>${columns.map((column) => `<td>${escapeHtml(record[column] ?? '—')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
     } catch (error) {
       panel.innerHTML = `<div class="empty-state"><strong>Unable to load records.</strong><p>${escapeHtml(error.message)}</p></div>`;
+    }
+  }
+
+  async function loadAuditLogs() {
+    const panel = document.querySelector('[data-audit-logs]');
+    if (!panel) return;
+    try {
+      const data = await request('/audit-logs');
+      if (!data.logs?.length) {
+        panel.innerHTML = '<div class="empty-state"><strong>No administrator actions recorded.</strong></div>';
+        return;
+      }
+      const columns = ['action', 'administrator', 'affected_member', 'reason', 'reference', 'created_at'];
+      panel.innerHTML = `<div class="table-wrap"><table class="record-table"><thead><tr>${columns.map((column) => `<th>${escapeHtml(column.replaceAll('_', ' '))}</th>`).join('')}</tr></thead><tbody>${data.logs.map((log) => `<tr>${columns.map((column) => `<td>${escapeHtml(log[column] ?? '—')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+    } catch (error) {
+      panel.innerHTML = `<div class="empty-state"><strong>Unable to load audit logs.</strong><p>${escapeHtml(error.message)}</p></div>`;
     }
   }
 
@@ -108,6 +125,7 @@
       const active = document.querySelector('.page-section.active')?.id;
       if (active === 'members') await loadMembers();
       if (['opportunities', 'memberships', 'payments', 'withdrawals', 'finance', 'revenue'].includes(active)) await loadRecords(active === 'memberships' ? 'packages' : active);
+      if (active === 'audit-logs') await loadAuditLogs();
       setState('Live database data loaded.');
     } catch (error) {
       setState(error.message, true);
@@ -123,6 +141,7 @@
     $('#menuButton').setAttribute('aria-expanded', 'false');
     if (page === 'members') loadMembers();
     if (['opportunities', 'memberships', 'payments', 'withdrawals', 'finance', 'revenue'].includes(page)) loadRecords(page === 'memberships' ? 'packages' : page);
+    if (page === 'audit-logs') loadAuditLogs();
   }
 
   async function changeMember(action, id, status) {

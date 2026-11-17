@@ -88,7 +88,8 @@
               <article class="wallet-card"><span class="wallet-symbol">↗</span><div><small>TOTAL WITHDRAWN</small><strong data-money="totalWithdrawn">—</strong></div><span class="wallet-caption">Verified withdrawals</span></article>
               <article class="wallet-card"><span class="wallet-symbol teal">✦</span><div><small>TOTAL EARNINGS</small><strong data-money="totalEarnings">—</strong></div><span class="wallet-caption">Verified earnings</span></article>
             </div>
-            <div class="wallet-note"><span class="note-dot"></span>Balances will appear when your authenticated account data is connected.</div>
+            <div class="wallet-note"><span class="note-dot"></span>Balances and transactions are synchronized from your account records.</div>
+            <div class="dashboard-records" id="transactionList" aria-live="polite"></div>
           </section>
 
           <section class="panel stats-panel">
@@ -115,6 +116,10 @@
             <p class="panel-description">Explore listed opportunities, review the requirements, and choose what fits your skills.</p>
             <a class="primary-action" href="opportunities.html">Browse opportunities <span>↗</span></a>
             <a class="secondary-action" href="assistant.html">Talk to Online Sphere AI <span>→</span></a>
+          </section>
+          <section class="panel notifications-panel">
+            <div class="panel-heading"><div><span class="section-kicker">ACCOUNT UPDATES</span><h2>Notifications</h2></div></div>
+            <div id="notificationList" class="dashboard-records" aria-live="polite"><p class="panel-description">Loading notifications…</p></div>
           </section>
           <div class="privacy-note"><span>◈</span><p>Your financial details should come from verified account records. We never estimate balances or promise earnings.</p></div>
         </aside>

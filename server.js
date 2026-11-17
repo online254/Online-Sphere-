@@ -25,7 +25,7 @@ app.use(cors({
     return callback(null, false);
   },
   credentials: true,
-  methods: ['GET', 'POST', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token']
 }));
 app.use(express.json({ limit: '100kb' }));
@@ -47,6 +47,32 @@ function ensureColumn(table, column, definition) {
 ensureColumn('users', 'referral_code', 'TEXT');
 ensureColumn('users', 'referred_by_user_id', 'INTEGER REFERENCES users(id)');
 db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_referral_code ON users(referral_code) WHERE referral_code IS NOT NULL; CREATE INDEX IF NOT EXISTS idx_sessions_token_hash ON sessions(token_hash);`);
+db.exec(`
+  CREATE TABLE IF NOT EXISTS notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    message TEXT NOT NULL,
+    type TEXT NOT NULL DEFAULT 'account',
+    read_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+  CREATE INDEX IF NOT EXISTS idx_notifications_user_created ON notifications(user_id, created_at);
+  CREATE TABLE IF NOT EXISTS admin_audit_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    admin_user_id INTEGER NOT NULL,
+    affected_user_id INTEGER,
+    action TEXT NOT NULL,
+    previous_value TEXT,
+    new_value TEXT,
+    reason TEXT,
+    reference TEXT UNIQUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (admin_user_id) REFERENCES users(id),
+    FOREIGN KEY (affected_user_id) REFERENCES users(id)
+  );
+`);
 
 const PACKAGES = Object.freeze({ Bronze: 1000, Silver: 1750, Gold: 2500 });
 const TOKEN_TTL_DAYS = Number(process.env.SESSION_TTL_DAYS) || 30;
@@ -132,6 +158,34 @@ function createUserAccount({ fullName, email, phone, passwordHash, referralCode 
 function audit(event, details = {}) {
   console.info(`[auth] ${event}`, JSON.stringify(details));
 }
+function recordAdminAction(adminUserId, affectedUserId, action, previousValue, newValue, reason) {
+  const reference = `AUDIT-${crypto.randomUUID()}`;
+  db.prepare(`
+    INSERT INTO admin_audit_logs
+      (admin_user_id,affected_user_id,action,previous_value,new_value,reason,reference)
+    VALUES (?,?,?,?,?,?,?)
+  `).run(
+    adminUserId,
+    affectedUserId || null,
+    action,
+    previousValue == null ? null : JSON.stringify(previousValue),
+    newValue == null ? null : JSON.stringify(newValue),
+    reason || null,
+    reference
+  );
+  if (affectedUserId) {
+    db.prepare(`
+      INSERT INTO notifications (user_id,title,message,type)
+      VALUES (?,?,?,?)
+    `).run(
+      affectedUserId,
+      'Account updated',
+      `${action.replaceAll('_', ' ')} was updated by an administrator.`,
+      'admin'
+    );
+  }
+  return reference;
+}
 function assertSameOrigin(req, res, next) {
   const origin = req.get('origin');
   if (origin && !allowedOrigins.has(origin)) return res.status(403).json({ success: false, message: 'Request origin is not allowed.' });
@@ -205,12 +259,34 @@ app.get('/api/me/dashboard', requireSession, (req, res) => {
   const totalEarned = Number(member.total_earned || 0) || sumTypes(['earning', 'task_earning', 'commission']);
   const totalWithdrawn = Number(member.total_withdrawn || 0) || sumTypes(['withdrawal']);
   const pendingWithdrawal = Number(member.pending_withdrawal || 0);
+  const transactions = db.prepare(`
+    SELECT id,type,amount,status,reference,description,created_at
+    FROM transactions WHERE user_id=? ORDER BY id DESC LIMIT 100
+  `).all(member.id);
+  const withdrawals = db.prepare(`
+    SELECT id,amount,method,phone,status,reference,notes,created_at,processed_at
+    FROM withdrawals WHERE user_id=? ORDER BY id DESC LIMIT 100
+  `).all(member.id);
+  const notifications = db.prepare(`
+    SELECT id,title,message,type,read_at,created_at
+    FROM notifications WHERE user_id=? ORDER BY id DESC LIMIT 50
+  `).all(member.id);
+  const opportunities = db.prepare(`
+    SELECT id,title,category,description,difficulty,earning_model,requirements,
+      platform_name,external_url,risk_level,featured,status,created_at,updated_at
+    FROM opportunities WHERE lower(status)='active'
+    ORDER BY featured DESC,created_at DESC,id ASC
+  `).all();
   res.json({ success: true, dashboard: {
     user: { id: member.id, fullName: member.full_name, email: member.email, phone: member.phone, createdAt: member.created_at, status: member.account_status },
     membership: { name: member.package, package: member.package, status: member.account_status, active: membershipActive },
     wallet: { currency: member.currency || 'KES', walletBalance: accountBalance, availableBalance: Math.max(0, accountBalance - pendingWithdrawal), pendingBalance: Number(pending), totalDeposited: sumTypes(['deposit','membership_payment']), totalWithdrawn, totalEarnings: totalEarned },
     statistics: { transactionCount: Number(txCount), totalDeposited: sumTypes(['deposit','membership_payment']), totalWithdrawn, todayEarnings: totalEarned },
-    referrals: { sponsorName: null, joinedCount: Number(referralCount), verifiedCount: Number(referralCount), url: member.referral_code ? `${process.env.PUBLIC_SITE_URL || 'https://onlinespherecommercecompany.com'}/register?ref=${encodeURIComponent(member.referral_code)}` : null, pendingCommissions: 0, paidCommissions: 0 }
+    referrals: { sponsorName: null, joinedCount: Number(referralCount), verifiedCount: Number(referralCount), url: member.referral_code ? `${process.env.PUBLIC_SITE_URL || 'https://onlinespherecommercecompany.com'}/register?ref=${encodeURIComponent(member.referral_code)}` : null, pendingCommissions: 0, paidCommissions: 0 },
+    transactions,
+    withdrawals,
+    notifications,
+    opportunities
   } });
 });
 
@@ -662,7 +738,7 @@ app.patch('/api/admin/members/:id/status', requireAdmin, (req, res) => {
   }
 
   const account = db.prepare(
-    'SELECT id FROM accounts WHERE user_id=?'
+    'SELECT id,status FROM accounts WHERE user_id=?'
   ).get(userId);
 
   if (!account) {
@@ -677,6 +753,7 @@ app.patch('/api/admin/members/:id/status', requireAdmin, (req, res) => {
     SET status=?,updated_at=CURRENT_TIMESTAMP
     WHERE user_id=?
   `).run(status, userId);
+  recordAdminAction(req.admin.id, userId, 'account_status_changed', { status: account.status }, { status }, `Administrator changed account status to ${status}.`);
 
   res.json({
     success: true,
@@ -754,6 +831,7 @@ app.post('/api/admin/members/:id/balance', requireAdmin, (req, res) => {
       `Administrator adjustment: ${description}`
     );
   })();
+  recordAdminAction(req.admin.id, userId, amount > 0 ? 'wallet_credit' : 'wallet_debit', { balance: account.balance }, { balance: newBalance, amount }, description);
 
   res.json({
     success: true,
@@ -807,6 +885,7 @@ app.delete('/api/admin/members/:id', requireAdmin, (req, res) => {
     });
   }
 
+  recordAdminAction(req.admin.id, userId, 'member_deleted', { email: member.email }, null, 'Administrator deleted member without financial records.');
   db.prepare('DELETE FROM users WHERE id=?').run(userId);
 
   res.json({
@@ -860,6 +939,23 @@ app.get('/api/admin/records', requireAdmin, (req, res) => {
 
   res.set('Cache-Control', 'no-store');
   res.json({ success: true, section, records: db.prepare(queries[section]).all() });
+});
+
+app.get('/api/admin/audit-logs', requireAdmin, (req, res, next) => {
+  try {
+    const logs = db.prepare(`
+      SELECT l.id,l.action,l.previous_value,l.new_value,l.reason,l.reference,l.created_at,
+        a.email AS administrator,m.email AS affected_member
+      FROM admin_audit_logs l
+      JOIN users a ON a.id=l.admin_user_id
+      LEFT JOIN users m ON m.id=l.affected_user_id
+      ORDER BY l.id DESC LIMIT 200
+    `).all();
+    res.set('Cache-Control', 'no-store');
+    res.json({ success: true, logs });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // All administrator API routes above this point.
